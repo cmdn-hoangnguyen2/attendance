@@ -16,6 +16,7 @@ import {
   roomRepository,
   userRepository,
 } from "@/lib/repository";
+import { useLobbyRealtime } from "@/lib/realtime/useLobbyRealtime";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   PlusSignIcon,
@@ -39,6 +40,15 @@ export default function HomePage() {
   const [requestStatusMap, setRequestStatusMap] = useState<
     Record<string, "none" | "pending" | "approved" | "rejected">
   >({});
+
+  // Refresh trigger for realtime updates
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Subscribe to real-time changes across rooms, memberships, and join requests
+  useLobbyRealtime({
+    onDataChange: () => setRefreshKey((k) => k + 1),
+    enabled: true,
+  });
 
   // Fetch initial data from Supabase
   useEffect(() => {
@@ -86,7 +96,7 @@ export default function HomePage() {
     return () => {
       isMounted = false;
     };
-  }, [currentUser]);
+  }, [currentUser, refreshKey]);
 
   // Filtered rooms logic
   const filteredRooms = useMemo(() => {
@@ -165,6 +175,10 @@ export default function HomePage() {
 
   // Handle cancel join request
   const handleCancelRequest = async (roomId: string) => {
+    // Guard: Do not cancel if already joined or already approved
+    if (joinedRoomIds.has(roomId) || requestStatusMap[roomId] === "approved") {
+      return;
+    }
     const userId = currentUser?.id ?? "00000000-0000-0000-0000-000000000004";
     try {
       const userRequests = await joinRequestRepository.findByRequesterId(userId);

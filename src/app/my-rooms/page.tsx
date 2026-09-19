@@ -7,6 +7,7 @@ import type { Room, RoomVisibility, User } from "@/types/domain";
 import { RoomCard } from "@/modules/rooms/presentation/RoomCard";
 import { CreateRoomModal } from "@/modules/rooms/presentation/CreateRoomModal";
 import { roomRepository, userRepository } from "@/lib/repository";
+import { useLobbyRealtime } from "@/lib/realtime/useLobbyRealtime";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Folder01Icon,
@@ -34,6 +35,12 @@ export default function MyRoomsPage() {
   const [usersMap, setUsersMap] = useState<Map<string, User>>(new Map());
 
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Subscribe to real-time changes across rooms, memberships, and join requests
+  useLobbyRealtime({
+    onDataChange: () => setRefreshKey((k) => k + 1),
+    enabled: Boolean(currentUser),
+  });
 
   // Load data from Supabase
   useEffect(() => {

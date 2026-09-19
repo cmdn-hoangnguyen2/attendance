@@ -33,7 +33,11 @@ export function RoomCard({
   onCancelRequest,
 }: RoomCardProps) {
   const isPublic = room.visibility === "public";
-  const canDirectlyEnter = isMember || isOwner || currentUser?.role === "admin";
+  const canDirectlyEnter =
+    isMember ||
+    isOwner ||
+    currentUser?.role === "admin" ||
+    joinRequestStatus === "approved";
 
   const handleRequestClick = (e: React.MouseEvent) => {
     e.preventDefault();

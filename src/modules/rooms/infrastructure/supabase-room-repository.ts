@@ -308,6 +308,8 @@ export class SupabaseMembershipRepository implements MembershipRepository {
       .select("*")
       .eq("room_id", roomId)
       .eq("user_id", userId)
+      .order("joined_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (error || !data) return null;
@@ -362,6 +364,7 @@ export class SupabaseMembershipRepository implements MembershipRepository {
       })
       .eq("room_id", roomId)
       .eq("user_id", userId)
+      .eq("status", "active")
       .select("*")
       .single();
 
@@ -389,6 +392,7 @@ export class SupabaseMembershipRepository implements MembershipRepository {
       })
       .eq("room_id", roomId)
       .eq("user_id", userId)
+      .eq("status", "active")
       .select("*")
       .single();
 

@@ -27,6 +27,7 @@ import { RoomFundsTab } from "@/modules/meetings/presentation/RoomFundsTab";
 import { ArchiveRoomModal } from "@/modules/rooms/presentation/ArchiveRoomModal";
 import { TransferOwnershipModal } from "@/modules/rooms/presentation/TransferOwnershipModal";
 import { UploadPaymentQrModal } from "@/modules/funds/presentation/UploadPaymentQrModal";
+import { AccessRevokedModal } from "@/modules/meetings/presentation/AccessRevokedModal";
 import { useRoomRealtime } from "@/lib/realtime/useRoomRealtime";
 import {
   attendanceRepository,
@@ -186,6 +187,21 @@ export default function MeetingDetailPage() {
       ),
   );
   const hasAccess = isOwnerOrAdmin || isMember;
+
+  // Kiểm tra xem currentUser có bị chủ phòng/admin xóa khỏi phòng không
+  const isCurrentUserRemoved = useMemo(() => {
+    if (!currentUser || isOwnerOrAdmin) return false;
+    // Nếu vẫn còn bản ghi membership active thì không bị xóa
+    const hasActive = memberships.some(
+      (m) => m.userId === currentUser.id && m.status === "active"
+    );
+    if (hasActive) return false;
+
+    // Kiểm tra xem có bản ghi bị removed không
+    return memberships.some(
+      (m) => m.userId === currentUser.id && m.status === "removed"
+    );
+  }, [currentUser, isOwnerOrAdmin, memberships]);
 
   // Map nợ quỹ của các thành viên trong room
   const hasOutstandingDebtMap = useMemo(() => {
@@ -439,7 +455,19 @@ export default function MeetingDetailPage() {
     );
   }
 
-  // Trường hợp 2: Người dùng chưa đăng nhập hoặc không có quyền truy cập phòng kín
+  // Trường hợp 2A: Người dùng bị chủ phòng hoặc admin xóa khỏi phòng (Kicked member)
+  if (isCurrentUserRemoved) {
+    return (
+      <main className="mx-auto max-w-xl px-6 py-16 text-center">
+        <AccessRevokedModal
+          isOpen={true}
+          roomName={room.name}
+        />
+      </main>
+    );
+  }
+
+  // Trường hợp 2B: Người dùng chưa đăng nhập hoặc không có quyền truy cập phòng kín
   if (!hasAccess) {
     return (
       <main className="mx-auto max-w-xl px-6 py-16 text-center">
@@ -604,6 +632,12 @@ export default function MeetingDetailPage() {
           }}
         />
       )}
+
+      {/* Modal thông báo khi bị xóa khỏi phòng (Kicked member) */}
+      <AccessRevokedModal
+        isOpen={isCurrentUserRemoved}
+        roomName={room?.name}
+      />
     </main>
   );
 }
