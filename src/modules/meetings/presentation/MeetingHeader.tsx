@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import type { Room, User } from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -11,8 +11,9 @@ import {
   UserGroupIcon,
   Calendar01Icon,
   Coins01Icon,
-  QrCode01Icon,
+  Settings01Icon,
 } from "@hugeicons/core-free-icons";
+import { RoomSettingsModal } from "@/modules/rooms/presentation/RoomSettingsModal";
 
 export type MeetingTab = "members" | "attendance" | "funds";
 
@@ -41,6 +42,7 @@ export function MeetingHeader({
   onOpenTransferModal,
   onOpenPaymentQrModal,
 }: MeetingHeaderProps) {
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const isPublic = room.visibility === "public";
   const isArchived = room.status === "archived";
 
@@ -104,42 +106,31 @@ export function MeetingHeader({
           </div>
         </div>
 
-        {/* Action Buttons for Owner / Admin */}
+        {/* Action Button: Settings Icon Button for Owner / Admin */}
         {isOwnerOrAdmin && !isArchived && (
-          <div className="flex flex-wrap items-center gap-2.5">
-            {onOpenPaymentQrModal && (
-              <button
-                type="button"
-                onClick={onOpenPaymentQrModal}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#C9F2E3] bg-[#E8FBF4] px-3.5 py-2 text-xs font-semibold text-[#05966B] hover:bg-[#C9F2E3]/50 shadow-2xs transition-colors"
-              >
-                <HugeiconsIcon icon={QrCode01Icon} size={14} />
-                <span>Mã QR thanh toán</span>
-              </button>
-            )}
-
-            {onOpenTransferModal && (
-              <button
-                type="button"
-                onClick={onOpenTransferModal}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3.5 py-2 text-xs font-semibold text-[#0B1F1A] hover:bg-neutral-50 shadow-2xs transition-colors"
-              >
-                <span>Chuyển quyền chủ phòng</span>
-              </button>
-            )}
-
-            {onOpenArchiveModal && (
-              <button
-                type="button"
-                onClick={onOpenArchiveModal}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/50 px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100/70 transition-colors"
-              >
-                <span>Lưu trữ phòng</span>
-              </button>
-            )}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsSettingsModalOpen(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#C9F2E3] bg-[#E8FBF4] text-[#05966B] shadow-2xs transition-all hover:border-[#10D9A3] hover:bg-[#10D9A3] hover:text-[#0B1F1A] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
+              title="Cài đặt phòng họp (Mã QR, Chuyển quyền, Lưu trữ)"
+              aria-label="Cài đặt phòng họp"
+            >
+              <HugeiconsIcon icon={Settings01Icon} size={20} />
+            </button>
           </div>
         )}
       </div>
+
+      {/* Modal Cài Đặt Phòng Họp */}
+      <RoomSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        roomName={room.name}
+        onOpenPaymentQrModal={onOpenPaymentQrModal}
+        onOpenTransferModal={onOpenTransferModal}
+        onOpenArchiveModal={onOpenArchiveModal}
+      />
 
       {/* Tab Navigation Row: Margin top 16px (mt-4, space-3) */}
       <nav aria-label="Tab điều hướng phòng họp" className="mt-6 flex flex-wrap gap-2">

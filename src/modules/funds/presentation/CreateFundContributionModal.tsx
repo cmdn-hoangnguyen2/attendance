@@ -5,6 +5,7 @@ import type { FundCandidate, FundContributionReason, User } from "@/types/domain
 import { formatVND } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, Coins01Icon } from "@hugeicons/core-free-icons";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
 
 export interface CreateFundContributionModalProps {
   isOpen: boolean;
@@ -131,19 +132,16 @@ export function CreateFundContributionModal({
             <label htmlFor="contributor-select" className="text-sm font-semibold text-[#0B1F1A]">
               Thành viên đóng quỹ <span className="text-rose-500">*</span>
             </label>
-            <select
+            <SelectDropdown
               id="contributor-select"
               value={selectedUserId}
-              onChange={(e) => setSelectedUserId(e.target.value)}
+              onChange={(val) => setSelectedUserId(val)}
               disabled={!!candidate}
-              className="w-full rounded-lg border border-[#C9F2E3] bg-neutral-50/50 px-4 py-2 text-sm text-[#0B1F1A] focus:border-[#10D9A3] focus:bg-white focus:outline-none"
-            >
-              {roomMembers.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.displayName} ({member.email})
-                </option>
-              ))}
-            </select>
+              options={roomMembers.map((member) => ({
+                value: member.id,
+                label: `${member.displayName} (${member.email})`,
+              }))}
+            />
           </div>
 
           {/* Field 2: Số tiền (integer VND) */}
@@ -187,16 +185,16 @@ export function CreateFundContributionModal({
             <label htmlFor="fund-reason" className="text-sm font-semibold text-[#0B1F1A]">
               Lý do đóng quỹ <span className="text-rose-500">*</span>
             </label>
-            <select
+            <SelectDropdown
               id="fund-reason"
               value={reason}
-              onChange={(e) => setReason(e.target.value as FundContributionReason)}
-              className="w-full rounded-lg border border-[#C9F2E3] bg-neutral-50/50 px-4 py-2 text-sm text-[#0B1F1A] focus:border-[#10D9A3] focus:bg-white focus:outline-none"
-            >
-              <option value="Đi trễ">Đi trễ</option>
-              <option value="Bận nhưng chưa xin phép">Bận nhưng chưa xin phép</option>
-              <option value="Khác">Khác (Yêu cầu nhập chi tiết)</option>
-            </select>
+              onChange={(val) => setReason(val as FundContributionReason)}
+              options={[
+                { value: "Đi trễ", label: "Đi trễ" },
+                { value: "Bận nhưng chưa xin phép", label: "Bận nhưng chưa xin phép" },
+                { value: "Khác", label: "Khác (Yêu cầu nhập chi tiết)" },
+              ]}
+            />
           </div>
 
           {/* Field 4 (Conditional): Chi tiết lý do nếu chọn 'Khác' */}

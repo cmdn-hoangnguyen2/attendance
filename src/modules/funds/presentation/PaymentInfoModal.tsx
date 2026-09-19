@@ -10,8 +10,8 @@ export interface PaymentInfoModalProps {
   onClose: () => void;
   roomName: string;
   ownerName: string;
-  amount: number;
-  reason: string;
+  amount?: number;
+  reason?: string;
   paymentImageUrl?: string | null;
   isRoomArchived?: boolean;
 }
@@ -43,7 +43,7 @@ export function PaymentInfoModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="payment-info-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in"
       onClick={onClose}
     >
       {/* Modal Container: Padding 32px (p-8, space-5), bo góc 16px (rounded-2xl) */}
@@ -59,7 +59,7 @@ export function PaymentInfoModal({
             </span>
             <div>
               <h2 id="payment-info-title" className="text-lg font-bold text-[#0B1F1A]">
-                Thông tin nộp quỹ
+                {amount && amount > 0 ? "Thông tin nộp quỹ" : "Mã QR thanh toán phòng"}
               </h2>
               <p className="text-xs text-[#4B665D]">{roomName}</p>
             </div>
@@ -89,17 +89,21 @@ export function PaymentInfoModal({
             </div>
           ) : null}
 
-          {/* Chi tiết khoản quỹ */}
-          <div className="rounded-xl border border-[#C9F2E3] bg-[#E8FBF4]/40 p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#4B665D]">Số tiền cần nộp:</span>
-              <span className="text-xl font-black text-[#05966B]">{formatVND(amount)}</span>
+          {/* Chi tiết khoản quỹ nếu có */}
+          {amount && amount > 0 ? (
+            <div className="rounded-xl border border-[#C9F2E3] bg-[#E8FBF4]/40 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#4B665D]">Số tiền cần nộp:</span>
+                <span className="text-xl font-black text-[#05966B]">{formatVND(amount)}</span>
+              </div>
+              {reason ? (
+                <div className="mt-2 flex items-center justify-between border-t border-[#C9F2E3]/60 pt-2 text-xs">
+                  <span className="text-[#4B665D]">Lý do:</span>
+                  <span className="font-semibold text-[#0B1F1A]">{reason}</span>
+                </div>
+              ) : null}
             </div>
-            <div className="mt-2 flex items-center justify-between border-t border-[#C9F2E3]/60 pt-2 text-xs">
-              <span className="text-[#4B665D]">Lý do:</span>
-              <span className="font-semibold text-[#0B1F1A]">{reason}</span>
-            </div>
-          </div>
+          ) : null}
 
           {/* Khu vực ảnh QR thanh toán hoặc thông tin liên hệ */}
           <div className="flex flex-col items-center justify-center">

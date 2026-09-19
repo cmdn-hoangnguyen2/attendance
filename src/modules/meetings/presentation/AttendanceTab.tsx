@@ -17,6 +17,7 @@ import {
   Coins01Icon,
   Clock01Icon,
 } from "@hugeicons/core-free-icons";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
 
 export interface AttendanceTabProps {
   meetingSession?: MeetingSession;
@@ -318,17 +319,21 @@ export function AttendanceTab({
                     {/* Owner/Admin Override Dropdown */}
                     {isOwnerOrAdmin ? (
                       <td className="py-3 px-4 text-right">
-                        <select
-                          value={status}
-                          onChange={(e) =>
-                            onOwnerOverride(member.id, e.target.value as AttendanceStatus)
-                          }
-                          className="rounded-md border border-[#C9F2E3] bg-white px-2.5 py-1 text-xs font-semibold text-[#0B1F1A] focus:border-[#10D9A3] focus:outline-none"
-                        >
-                          <option value="present">Có mặt</option>
-                          <option value="leave">Xin phép</option>
-                          <option value="absent">Vắng</option>
-                        </select>
+                        <div className="flex justify-end">
+                          <SelectDropdown
+                            value={status}
+                            onChange={(val) =>
+                              onOwnerOverride(member.id, val as AttendanceStatus)
+                            }
+                            options={[
+                              { value: "present", label: "Có mặt" },
+                              { value: "leave", label: "Xin phép" },
+                              { value: "absent", label: "Vắng" },
+                            ]}
+                            className="w-32 text-left"
+                            ariaLabel={`Điều chỉnh điểm danh cho ${member.displayName}`}
+                          />
+                        </div>
                       </td>
                     ) : null}
                   </tr>

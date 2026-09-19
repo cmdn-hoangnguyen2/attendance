@@ -130,6 +130,29 @@ export function useRoomRealtime({
       triggerUpdate
     );
 
+    // 8. Fund contributions changes for this room
+    channel.on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "fund_contributions",
+        filter: `room_id=eq.${roomId}`,
+      },
+      triggerUpdate
+    );
+
+    // 9. Payments changes
+    channel.on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "payments",
+      },
+      triggerUpdate
+    );
+
     channel.subscribe((status) => {
       if (status === "SUBSCRIBED") {
         // Channel connected successfully

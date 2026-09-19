@@ -9,6 +9,7 @@ import {
   Alert02Icon,
   CheckmarkCircle01Icon,
 } from "@hugeicons/core-free-icons";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
 
 export interface ArchiveUserModalProps {
   isOpen: boolean;
@@ -151,21 +152,18 @@ export function ArchiveUserModal({
                 Chọn Admin tiếp nhận quyền sở hữu các phòng này:
               </label>
               {eligibleAdmins.length > 0 ? (
-                <select
+                <SelectDropdown
                   id="replacement-admin-select"
                   value={selectedAdminId}
-                  onChange={(e) => {
-                    setSelectedAdminId(e.target.value);
+                  onChange={(val) => {
+                    setSelectedAdminId(val);
                     if (error) setError("");
                   }}
-                  className="w-full rounded-xl border border-amber-300 bg-white px-4 py-2 text-xs text-[#0B1F1A] focus:border-[#10D9A3] focus:outline-none focus:ring-2 focus:ring-[#10D9A3]/20"
-                >
-                  {eligibleAdmins.map((adm) => (
-                    <option key={adm.id} value={adm.id}>
-                      {adm.displayName} ({adm.email})
-                    </option>
-                  ))}
-                </select>
+                  options={eligibleAdmins.map((adm) => ({
+                    value: adm.id,
+                    label: `${adm.displayName} (${adm.email})`,
+                  }))}
+                />
               ) : (
                 <p className="text-xs text-rose-700 font-semibold">
                   Không tìm thấy Admin nào khác để tiếp nhận quyền sở hữu. Không thể xóa mềm!

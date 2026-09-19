@@ -23,7 +23,7 @@ import {
   CreditCardIcon,
   Building01Icon,
 } from "@hugeicons/core-free-icons";
-
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useUserRealtime } from "@/lib/realtime/useUserRealtime";
 
 type FundStatusFilter = "all" | "outstanding" | "paid";
@@ -209,7 +209,7 @@ export default function PersonalFundsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-8 space-y-8">
+    <PageContainer as="main">
       {/* Header Trang: Tiêu đề & Tổng quan */}
       <section aria-labelledby="funds-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -446,6 +446,6 @@ export default function PersonalFundsPage() {
           isRoomArchived={activeRoom?.status === "archived"}
         />
       )}
-    </main>
+    </PageContainer>
   );
 }

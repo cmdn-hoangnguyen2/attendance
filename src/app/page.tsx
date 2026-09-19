@@ -22,6 +22,7 @@ import {
   PlusSignIcon,
   Search01Icon,
 } from "@hugeicons/core-free-icons";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function HomePage() {
   const { currentUser, isAuthenticated, setRole } = useAuthMock();
@@ -198,8 +199,8 @@ export default function HomePage() {
   };
 
   return (
-    <main className="flex-1 bg-neutral-50/50 py-8 lg:py-12">
-      <div className="mx-auto max-w-7xl px-6">
+    <main className="flex-1 bg-neutral-50/50">
+      <PageContainer>
         {/* Hero Banner / Page Intro (Padding: 32px = p-8) */}
         <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#C9F2E3] bg-gradient-to-r from-white via-[#E8FBF4]/40 to-white p-8 shadow-xs">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -304,7 +305,7 @@ export default function HomePage() {
             ) : null}
           </div>
         )}
-      </div>
+      </PageContainer>
 
       {/* Modal Tạo Phòng Họp */}
       <CreateRoomModal

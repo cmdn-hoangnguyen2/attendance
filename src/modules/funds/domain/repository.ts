@@ -28,6 +28,7 @@ export interface PaymentRepository {
     amount: number; // Integer VND
     confirmedBy: string;
   }): Promise<Payment>;
+  revertPayment(contributionId: string, actorId: string): Promise<void>;
 }
 
 export interface RoomPaymentImageRepository {

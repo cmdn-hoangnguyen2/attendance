@@ -11,6 +11,8 @@ import {
   CheckmarkCircle01Icon,
   InformationCircleIcon,
   Clock01Icon,
+  QrCode01Icon,
+  ArrowTurnBackwardIcon,
 } from "@hugeicons/core-free-icons";
 
 export interface RoomFundsTabProps {
@@ -27,6 +29,7 @@ export interface RoomFundsTabProps {
     reasonDetails?: string;
   }) => void;
   onConfirmPayment: (contributionId: string) => void;
+  onRevertPayment?: (contributionId: string) => void;
 }
 
 export function RoomFundsTab({
@@ -38,9 +41,10 @@ export function RoomFundsTab({
   isOwnerOrAdmin,
   onCreateContribution,
   onConfirmPayment,
+  onRevertPayment,
 }: RoomFundsTabProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedContributionForInfo, setSelectedContributionForInfo] = useState<FundContribution | null>(null);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   const isArchived = room.status === "archived";
 
@@ -62,7 +66,7 @@ export function RoomFundsTab({
           <div>
             <strong className="font-bold">Chế độ Xem Quỹ Phòng Đã Lưu Trữ:</strong>
             <p className="mt-0.5">
-              Phòng họp này đã được lưu trữ (Archive). Không thể tạo thêm khoản đóng quỹ mới; Chủ phòng và Admin chỉ được xác nhận các khoản đã nộp từ trước.
+              Phòng họp này đã được lưu trữ (Archive). Không thể tạo thêm khoản đóng quỹ mới; Chủ phòng và Admin chỉ được xác nhận hoặc hoàn tác các khoản đã nộp từ trước.
             </p>
           </div>
         </div>
@@ -96,31 +100,39 @@ export function RoomFundsTab({
           </span>
         </div>
 
-        {/* Card 3: Nút tạo khoản quỹ nhanh & Thông tin QR */}
+        {/* Card 3: Nút tạo khoản quỹ nhanh & Nút xem QR phòng */}
         <div className="flex flex-col justify-between rounded-2xl border border-[#C9F2E3] bg-white p-6 shadow-xs">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-[#4B665D]">
-              Hành động quản lý
+              Hành động quỹ phòng
             </span>
             <p className="text-xs text-[#4B665D] mt-1">
-              {isArchived ? "Phòng đã đóng, không tạo mới" : "Tạo khoản quỹ kỷ luật cho thành viên"}
+              Quét mã QR để chuyển khoản hoặc tạo khoản nghĩa vụ quỹ
             </p>
           </div>
 
-          {!isArchived && isOwnerOrAdmin ? (
+          <div className="mt-4 flex flex-col sm:flex-row items-stretch gap-2.5">
+            {/* Nút xem mã QR phòng: Tất cả thành viên đều có thể bấm để quét */}
             <button
               type="button"
-              onClick={() => setIsCreateModalOpen(true)}
-              className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-[#10D9A3] px-4 py-2 text-sm font-bold text-[#0B1F1A] shadow-xs hover:bg-[#05966B] hover:text-white transition-colors"
+              onClick={() => setIsQrModalOpen(true)}
+              className="flex items-center justify-center gap-2 rounded-xl border border-[#C9F2E3] bg-[#E8FBF4] px-4 py-2.5 text-xs font-bold text-[#05966B] hover:bg-[#C9F2E3]/60 transition-colors shadow-2xs"
             >
-              <HugeiconsIcon icon={PlusSignIcon} size={18} />
-              <span>Tạo khoản đóng quỹ</span>
+              <HugeiconsIcon icon={QrCode01Icon} size={16} />
+              <span>Xem mã QR thanh toán</span>
             </button>
-          ) : (
-            <div className="mt-4 text-xs text-[#4B665D]">
-              {isArchived ? "🔒 Chỉ đọc" : "Chỉ Chủ phòng/Admin mới được tạo"}
-            </div>
-          )}
+
+            {!isArchived && isOwnerOrAdmin ? (
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex items-center justify-center gap-2 rounded-xl bg-[#10D9A3] px-4 py-2.5 text-xs font-bold text-[#0B1F1A] shadow-xs hover:bg-[#05966B] hover:text-white transition-colors"
+              >
+                <HugeiconsIcon icon={PlusSignIcon} size={16} />
+                <span>Tạo khoản đóng quỹ</span>
+              </button>
+            ) : null}
+          </div>
         </div>
       </section>
 
@@ -147,7 +159,10 @@ export function RoomFundsTab({
                   <th className="py-3 px-4">Lý do</th>
                   <th className="py-3 px-4">Trạng thái</th>
                   <th className="py-3 px-4">Thời gian</th>
-                  <th className="py-3 px-4 text-right">Thao tác</th>
+                  {/* Chỉ hiển thị cột Thao tác cho Chủ phòng / Admin */}
+                  {isOwnerOrAdmin ? (
+                    <th className="py-3 px-4 text-right">Thao tác</th>
+                  ) : null}
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
@@ -202,30 +217,36 @@ export function RoomFundsTab({
                         {new Date(item.createdAt).toLocaleDateString("vi-VN")}
                       </td>
 
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {/* Nút xem QR thanh toán */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedContributionForInfo(item)}
-                            className="rounded-md border border-[#C9F2E3] px-2.5 py-1 text-xs font-semibold text-[#05966B] hover:bg-[#E8FBF4]"
-                          >
-                            Xem QR
-                          </button>
-
-                          {/* Xác nhận nộp quỹ: chỉ cho Owner/Admin khi chưa nộp */}
-                          {isOwnerOrAdmin && !isPaid ? (
-                            <button
-                              type="button"
-                              onClick={() => onConfirmPayment(item.id)}
-                              className="rounded-md bg-[#05966B] px-3 py-1 text-xs font-bold text-white hover:bg-[#0B1F1A] transition-colors"
-                              title="Xác nhận thành viên đã nộp đủ tiền (All-or-nothing)"
-                            >
-                              Xác nhận đã nộp
-                            </button>
-                          ) : null}
-                        </div>
-                      </td>
+                      {/* Cột thao tác: Chỉ hiển thị cho Admin/Owner */}
+                      {isOwnerOrAdmin ? (
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {/* Khi chưa nộp: Nút xác nhận đã nộp */}
+                            {!isPaid ? (
+                              <button
+                                type="button"
+                                onClick={() => onConfirmPayment(item.id)}
+                                className="inline-flex items-center gap-1 rounded-lg bg-[#05966B] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#0B1F1A] transition-colors shadow-2xs"
+                                title="Xác nhận thành viên đã nộp đủ tiền"
+                              >
+                                <HugeiconsIcon icon={CheckmarkCircle01Icon} size={14} />
+                                <span>Xác nhận đã nộp</span>
+                              </button>
+                            ) : onRevertPayment ? (
+                              /* Khi đã nộp: Nút hoàn tác về Chưa nộp */
+                              <button
+                                type="button"
+                                onClick={() => onRevertPayment(item.id)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 transition-colors shadow-2xs"
+                                title="Hoàn tác trạng thái về Chưa nộp"
+                              >
+                                <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={14} />
+                                <span>Hoàn tác</span>
+                              </button>
+                            ) : null}
+                          </div>
+                        </td>
+                      ) : null}
                     </tr>
                   );
                 })}
@@ -247,15 +268,13 @@ export function RoomFundsTab({
         onCreateContribution={onCreateContribution}
       />
 
-      {/* Modal Xem QR Thanh Toán */}
-      {selectedContributionForInfo ? (
+      {/* Modal Xem QR Thanh Toán Của Phòng */}
+      {isQrModalOpen ? (
         <PaymentInfoModal
-          isOpen={!!selectedContributionForInfo}
-          onClose={() => setSelectedContributionForInfo(null)}
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
           roomName={room.name}
           ownerName={owner?.displayName ?? "Chủ phòng"}
-          amount={selectedContributionForInfo.amount}
-          reason={selectedContributionForInfo.reason}
           paymentImageUrl={room.paymentImageUrl}
           isRoomArchived={isArchived}
         />

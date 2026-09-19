@@ -15,6 +15,7 @@ import {
   Folder01Icon,
   Home01Icon,
 } from "@hugeicons/core-free-icons";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 type SettingsTab = "users" | "rooms";
 
@@ -161,7 +162,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-8 space-y-8">
+    <PageContainer as="main">
       {/* Header Trang Settings */}
       <section aria-labelledby="settings-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#C9F2E3] pb-6">
         <div>
@@ -232,6 +233,6 @@ export default function SettingsPage() {
           onRestoreRoom={handleRestoreRoom}
         />
       )}
-    </main>
+    </PageContainer>
   );
 }

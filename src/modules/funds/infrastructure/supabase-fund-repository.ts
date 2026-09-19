@@ -195,6 +195,36 @@ export class SupabasePaymentRepository implements PaymentRepository {
 
     return this.mapPayment(payment);
   }
+
+  async revertPayment(contributionId: string, actorId: string): Promise<void> {
+    // 1. Delete payment records for this contribution
+    const { error: delError } = await this.client
+      .from("payments")
+      .delete()
+      .eq("contribution_id", contributionId);
+
+    if (delError) {
+      throw new Error(`Failed to delete payment record: ${delError.message}`);
+    }
+
+    // 2. Revert fund contribution status to outstanding
+    const { error: updateError } = await this.client
+      .from("fund_contributions")
+      .update({ status: "outstanding" })
+      .eq("id", contributionId);
+
+    if (updateError) {
+      throw new Error(`Failed to revert fund contribution: ${updateError.message}`);
+    }
+
+    // 3. Log audit
+    await this.client.from("audit_logs").insert({
+      actor_id: actorId,
+      action: "payment.reverted",
+      target_type: "fund_contribution",
+      target_id: contributionId,
+    });
+  }
 }
 
 export class SupabaseRoomPaymentImageRepository implements RoomPaymentImageRepository {

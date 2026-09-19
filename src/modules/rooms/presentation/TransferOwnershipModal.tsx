@@ -10,6 +10,7 @@ import {
   CrownIcon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
 
 export interface TransferOwnershipModalProps {
   isOpen: boolean;
@@ -131,21 +132,18 @@ export function TransferOwnershipModal({
             </label>
 
             {eligibleMembers.length > 0 ? (
-              <select
+              <SelectDropdown
                 id="new-owner-select"
                 value={selectedMemberId}
-                onChange={(e) => {
-                  setSelectedMemberId(e.target.value);
+                onChange={(val) => {
+                  setSelectedMemberId(val);
                   if (error) setError("");
                 }}
-                className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-xs text-[#0B1F1A] focus:border-[#10D9A3] focus:outline-none focus:ring-2 focus:ring-[#10D9A3]/20"
-              >
-                {eligibleMembers.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.displayName} ({member.email})
-                  </option>
-                ))}
-              </select>
+                options={eligibleMembers.map((member) => ({
+                  value: member.id,
+                  label: `${member.displayName} (${member.email})`,
+                }))}
+              />
             ) : (
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
                 Phòng này hiện chưa có thành viên nào khác để chuyển giao quyền chủ phòng.

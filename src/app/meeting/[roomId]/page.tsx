@@ -28,6 +28,7 @@ import { ArchiveRoomModal } from "@/modules/rooms/presentation/ArchiveRoomModal"
 import { TransferOwnershipModal } from "@/modules/rooms/presentation/TransferOwnershipModal";
 import { UploadPaymentQrModal } from "@/modules/funds/presentation/UploadPaymentQrModal";
 import { AccessRevokedModal } from "@/modules/meetings/presentation/AccessRevokedModal";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useRoomRealtime } from "@/lib/realtime/useRoomRealtime";
 import {
   attendanceRepository,
@@ -257,10 +258,32 @@ export default function MeetingDetailPage() {
 
   // Handler: Tự điểm danh (Self check-in)
   const handleSelfCheckIn = async (status: AttendanceStatus) => {
-    if (!currentUser || !meetingSession) return;
+    if (!currentUser) return;
     try {
+      let session = meetingSession;
+      if (!session) {
+        const sessions = await meetingSessionRepository.findByRoomId(roomId);
+        const activeOrScheduled = sessions.find((s) => s.status !== "closed");
+        if (activeOrScheduled) {
+          session = activeOrScheduled;
+          setMeetingSession(activeOrScheduled);
+        } else {
+          const now = new Date();
+          const startsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+          const created = await meetingSessionRepository.create({
+            roomId,
+            title: "Phiên họp định kỳ",
+            startsAt,
+            attendanceDeadline: startsAt,
+            closesAt: new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString(),
+          });
+          session = created;
+          setMeetingSession(created);
+        }
+      }
+
       const record = await attendanceRepository.submitSelfAttendance(
-        meetingSession.id,
+        session.id,
         currentUser.id,
         status
       );
@@ -280,11 +303,31 @@ export default function MeetingDetailPage() {
 
   // Handler: Chủ phòng override điểm danh
   const handleOwnerOverride = async (userId: string, status: AttendanceStatus) => {
-    if (!meetingSession) return;
+    let session = meetingSession;
+    if (!session) {
+      const sessions = await meetingSessionRepository.findByRoomId(roomId);
+      const activeOrScheduled = sessions.find((s) => s.status !== "closed");
+      if (activeOrScheduled) {
+        session = activeOrScheduled;
+        setMeetingSession(activeOrScheduled);
+      } else {
+        const now = new Date();
+        const startsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+        const created = await meetingSessionRepository.create({
+          roomId,
+          title: "Phiên họp định kỳ",
+          startsAt,
+          attendanceDeadline: startsAt,
+          closesAt: new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString(),
+        });
+        session = created;
+        setMeetingSession(created);
+      }
+    }
     try {
       const actorId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
       const record = await attendanceRepository.overrideAttendance(
-        meetingSession.id,
+        session.id,
         userId,
         status,
         actorId
@@ -378,6 +421,23 @@ export default function MeetingDetailPage() {
       );
     } catch (err) {
       console.error("Failed to confirm payment:", err);
+    }
+  };
+
+  // Handler: Hoàn tác thanh toán quỹ
+  const handleRevertPayment = async (contributionId: string) => {
+    try {
+      const actorId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
+      await paymentRepository.revertPayment(contributionId, actorId);
+      setContributions((prev) =>
+        prev.map((c) =>
+          c.id === contributionId
+            ? { ...c, status: "outstanding" as const, updatedAt: new Date().toISOString() }
+            : c,
+        ),
+      );
+    } catch (err) {
+      console.error("Failed to revert payment:", err);
     }
   };
 
@@ -519,7 +579,7 @@ export default function MeetingDetailPage() {
 
   // Trường hợp 3: Thành viên hoặc Chủ phòng / Admin truy cập thành công
   return (
-    <main className="mx-auto max-w-7xl px-6 py-8 space-y-8">
+    <PageContainer as="main">
       {/* Header Room Chi Tiết */}
       <MeetingHeader
         room={room}
@@ -575,6 +635,7 @@ export default function MeetingDetailPage() {
           isOwnerOrAdmin={isOwnerOrAdmin}
           onCreateContribution={handleCreateContribution}
           onConfirmPayment={handleConfirmPayment}
+          onRevertPayment={handleRevertPayment}
         />
       )}
 
@@ -638,6 +699,6 @@ export default function MeetingDetailPage() {
         isOpen={isCurrentUserRemoved}
         roomName={room?.name}
       />
-    </main>
+    </PageContainer>
   );
 }

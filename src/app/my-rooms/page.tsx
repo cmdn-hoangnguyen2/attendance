@@ -18,6 +18,7 @@ import {
   Login01Icon,
   Home01Icon,
 } from "@hugeicons/core-free-icons";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 type MyRoomsTab = "owned" | "joined";
 
@@ -146,7 +147,7 @@ export default function MyRoomsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-8 space-y-8">
+    <PageContainer as="main">
       {/* Header Trang: Tiêu đề & Quick action */}
       <section aria-labelledby="my-rooms-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -308,6 +309,6 @@ export default function MyRoomsPage() {
         onClose={() => setIsCreateModalOpen(false)}
         onCreateRoom={handleCreateRoom}
       />
-    </main>
+    </PageContainer>
   );
 }
