@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { mockRepository } from "@/mocks/repository";
+import React, { useState, useMemo, useEffect } from "react";
 import type { Room, RoomVisibility, User } from "@/types/domain";
 import { useAuthMock } from "@/context/AuthMockContext";
 import { RoomCard } from "@/modules/rooms/presentation/RoomCard";
@@ -10,6 +9,13 @@ import {
   type RoomFilterTab,
 } from "@/modules/rooms/presentation/RoomListFilter";
 import { CreateRoomModal } from "@/modules/rooms/presentation/CreateRoomModal";
+import { RoomSkeletonGrid } from "@/modules/rooms/presentation/RoomSkeletonGrid";
+import {
+  joinRequestRepository,
+  membershipRepository,
+  roomRepository,
+  userRepository,
+} from "@/lib/repository";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   PlusSignIcon,
@@ -19,10 +25,10 @@ import {
 export default function HomePage() {
   const { currentUser, isAuthenticated, setRole } = useAuthMock();
 
-  // In-memory state for rooms in Phase 1 UI Mock
-  const [roomsList, setRoomsList] = useState<Room[]>(() =>
-    [...mockRepository.listRooms()].filter((r) => r.status === "active"),
-  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [roomsList, setRoomsList] = useState<Room[]>([]);
+  const [usersMap, setUsersMap] = useState<Map<string, User>>(new Map());
+  const [joinedRoomIds, setJoinedRoomIds] = useState<Set<string>>(new Set());
 
   // Search and filter tab state
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,21 +38,55 @@ export default function HomePage() {
   // Map to track join request status per room for current user
   const [requestStatusMap, setRequestStatusMap] = useState<
     Record<string, "none" | "pending" | "approved" | "rejected">
-  >(() => {
-    const map: Record<string, "none" | "pending" | "approved" | "rejected"> = {};
-    // Seed initial statuses from fixtures for user-member-minh
-    map["room-private-product"] = "pending";
-    return map;
-  });
+  >({});
 
-  // Users lookup map
-  const usersMap = useMemo(() => {
-    const map = new Map<string, User>();
-    mockRepository.listUsers().forEach((user) => {
-      map.set(user.id, user as User);
-    });
-    return map;
-  }, []);
+  // Fetch initial data from Supabase
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchData() {
+      try {
+        const [fetchedRooms, fetchedUsers] = await Promise.all([
+          roomRepository.findCatalog({ includeArchived: false }),
+          userRepository.listAll({ includeArchived: true }),
+        ]);
+
+        if (!isMounted) return;
+
+        setRoomsList(fetchedRooms);
+
+        const uMap = new Map<string, User>();
+        fetchedUsers.forEach((u) => uMap.set(u.id, u));
+        setUsersMap(uMap);
+
+        if (currentUser) {
+          const joined = await roomRepository.findJoinedByUserId(currentUser.id);
+          if (!isMounted) return;
+          setJoinedRoomIds(new Set(joined.map((r) => r.id)));
+
+          const reqs = await joinRequestRepository.findByRequesterId(currentUser.id);
+          if (!isMounted) return;
+          const sMap: Record<string, "none" | "pending" | "approved" | "rejected"> = {};
+          reqs.forEach((r) => {
+            sMap[r.roomId] = r.status as "pending" | "approved" | "rejected";
+          });
+          setRequestStatusMap(sMap);
+        }
+      } catch (err) {
+        console.error("Failed to fetch rooms from Supabase:", err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser]);
 
   // Filtered rooms logic
   const filteredRooms = useMemo(() => {
@@ -66,56 +106,92 @@ export default function HomePage() {
   }, [roomsList, activeTab, searchQuery]);
 
   // Handle creating a new room
-  const handleCreateRoom = ({
+  const handleCreateRoom = async ({
     name,
     visibility,
   }: {
     name: string;
     visibility: RoomVisibility;
   }) => {
-    const newRoom: Room = {
-      id: `room-custom-${Date.now()}`,
-      name,
-      visibility,
-      ownerId: currentUser?.id ?? "user-admin-primary",
-      status: "active",
-      memberCount: 1,
-      paymentImageUrl: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setRoomsList((prev) => [newRoom, ...prev]);
+    const ownerId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
+    try {
+      const created = await roomRepository.create({
+        name,
+        visibility,
+        ownerId,
+      });
+      setRoomsList((prev) => [created, ...prev]);
+      setJoinedRoomIds((prev) => new Set([...prev, created.id]));
+    } catch (err) {
+      console.error("Failed to create room:", err);
+    }
   };
 
   // Handle request to join room
-  const handleRequestJoin = (roomId: string) => {
+  const handleRequestJoin = async (roomId: string) => {
     if (!isAuthenticated) {
       setRole("user");
     }
-    setRequestStatusMap((prev) => ({
-      ...prev,
-      [roomId]: "pending",
-    }));
+
+    const targetRoom = roomsList.find((r) => r.id === roomId);
+    const userId = currentUser?.id ?? "00000000-0000-0000-0000-000000000004";
+
+    if (targetRoom?.visibility === "public") {
+      // Direct join
+      try {
+        await membershipRepository.addMember(roomId, userId);
+        setJoinedRoomIds((prev) => new Set([...prev, roomId]));
+        setRoomsList((prev) =>
+          prev.map((r) =>
+            r.id === roomId ? { ...r, memberCount: (r.memberCount ?? 0) + 1 } : r
+          )
+        );
+      } catch (err) {
+        console.error("Failed to join public room:", err);
+      }
+    } else {
+      // Private request
+      try {
+        await joinRequestRepository.create(roomId, userId);
+        setRequestStatusMap((prev) => ({
+          ...prev,
+          [roomId]: "pending",
+        }));
+      } catch (err) {
+        console.error("Failed to send join request:", err);
+      }
+    }
   };
 
   // Handle cancel join request
-  const handleCancelRequest = (roomId: string) => {
-    setRequestStatusMap((prev) => ({
-      ...prev,
-      [roomId]: "none",
-    }));
+  const handleCancelRequest = async (roomId: string) => {
+    const userId = currentUser?.id ?? "00000000-0000-0000-0000-000000000004";
+    try {
+      const userRequests = await joinRequestRepository.findByRequesterId(userId);
+      const pendingReq = userRequests.find(
+        (r) => r.roomId === roomId && r.status === "pending"
+      );
+      if (pendingReq) {
+        await joinRequestRepository.cancel(pendingReq.id, userId);
+      }
+      setRequestStatusMap((prev) => ({
+        ...prev,
+        [roomId]: "none",
+      }));
+    } catch (err) {
+      console.error("Failed to cancel request:", err);
+    }
   };
 
   return (
     <main className="flex-1 bg-neutral-50/50 py-8 lg:py-12">
       <div className="mx-auto max-w-7xl px-6">
-        {/* Hero Banner / Page Intro (Padding: 32px = p-8, space-5) */}
+        {/* Hero Banner / Page Intro (Padding: 32px = p-8) */}
         <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#C9F2E3] bg-gradient-to-r from-white via-[#E8FBF4]/40 to-white p-8 shadow-xs">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="max-w-2xl flex flex-col gap-2">
               <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#E8FBF4] px-3 py-1 text-xs font-semibold text-[#05966B] border border-[#C9F2E3]">
-                DiemDanhCMDN v1.0 • Phase 1 Mock UI
+                DiemDanhCMDN v1.0 • Supabase Live Database
               </span>
               <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-[#0B1F1A]">
                 Không gian Phòng họp & Quản lý Điểm danh
@@ -126,7 +202,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* CTA Create Room Button: px-5 py-2.5 (chuẩn button), bo góc 12px */}
+            {/* CTA Create Room Button: bo góc 12px */}
             <div className="flex shrink-0">
               <button
                 type="button"
@@ -145,7 +221,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Filter and Search Bar: margin-bottom 24px (mb-6, space-4) */}
+        {/* Filter and Search Bar */}
         <div className="mb-6">
           <RoomListFilter
             searchQuery={searchQuery}
@@ -157,17 +233,17 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Rooms Bento Grid: Desktop-first 4 cột (lg:grid-cols-4), gap 24px (gap-6, space-4) */}
-        {filteredRooms.length > 0 ? (
+        {/* Loading State */}
+        {isLoading ? (
+          <RoomSkeletonGrid />
+        ) : filteredRooms.length > 0 ? (
+          /* Rooms Bento Grid: Desktop-first 4 cột (lg:grid-cols-4), gap 24px (gap-6) */
           <section aria-label="Danh sách các phòng họp">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredRooms.map((room) => {
                 const owner = usersMap.get(room.ownerId);
                 const isOwner = currentUser?.id === room.ownerId;
-                const isMember =
-                  isOwner ||
-                  (currentUser?.id === "user-member-minh" &&
-                    room.id === "room-public-engineering");
+                const isMember = isOwner || joinedRoomIds.has(room.id);
                 const joinStatus = requestStatusMap[room.id] ?? "none";
 
                 return (
@@ -187,7 +263,7 @@ export default function HomePage() {
             </div>
           </section>
         ) : (
-          /* Empty State khi không tìm thấy kết quả */
+          /* Empty State */
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#C9F2E3] bg-white p-12 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E8FBF4] text-[#05966B] mb-4">
               <HugeiconsIcon icon={Search01Icon} size={32} />

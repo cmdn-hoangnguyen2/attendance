@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { mockRepository } from "@/mocks/repository";
 import { useAuthMock } from "@/context/AuthMockContext";
 import type {
   AttendanceRecord,
@@ -27,6 +26,16 @@ import { AttendanceTab } from "@/modules/meetings/presentation/AttendanceTab";
 import { RoomFundsTab } from "@/modules/meetings/presentation/RoomFundsTab";
 import { ArchiveRoomModal } from "@/modules/rooms/presentation/ArchiveRoomModal";
 import { TransferOwnershipModal } from "@/modules/rooms/presentation/TransferOwnershipModal";
+import {
+  attendanceRepository,
+  fundContributionRepository,
+  joinRequestRepository,
+  meetingSessionRepository,
+  membershipRepository,
+  paymentRepository,
+  roomRepository,
+  userRepository,
+} from "@/lib/repository";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
@@ -42,74 +51,99 @@ export default function MeetingDetailPage() {
 
   const { currentUser } = useAuthMock();
 
-  // 1. Lấy thông tin Room cơ bản từ repository & quản lý state
-  const [room, setRoom] = useState<Room | undefined>(() => {
-    if (!roomId) return undefined;
-    return mockRepository.findRoomById(roomId);
-  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [room, setRoom] = useState<Room | undefined>(undefined);
+  const [usersMap, setUsersMap] = useState<Map<string, User>>(new Map());
+  const [memberships, setMemberships] = useState<RoomMembership[]>([]);
+  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
+  const [meetingSession, setMeetingSession] = useState<MeetingSession | undefined>(undefined);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [fundCandidates, setFundCandidates] = useState<FundCandidate[]>([]);
+  const [contributions, setContributions] = useState<FundContribution[]>([]);
 
   // State cho các modal Archive và Transfer Ownership
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
-  // 2. Tra cứu chủ phòng (owner)
-  const owner = useMemo(() => {
-    if (!room) return undefined;
-    return mockRepository.findUserById(room.ownerId);
-  }, [room]);
-
-  // 3. Toàn bộ người dùng phục vụ lookup
-  const usersMap = useMemo(() => {
-    const map = new Map<string, User>();
-    mockRepository.listUsers().forEach((u) => {
-      map.set(u.id, u as User);
-    });
-    return map;
-  }, []);
-
-  // 4. In-memory state cho Memberships của Room này
-  const [memberships, setMemberships] = useState<RoomMembership[]>(() => {
-    if (!roomId) return [];
-    return [...mockRepository.listMembershipsByRoomId(roomId)];
-  });
-
-  // 5. In-memory state cho Join Requests
-  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>(() => {
-    if (!roomId) return [];
-    return [...mockRepository.listJoinRequestsByRoomId(roomId)];
-  });
-
-  // 6. Buổi họp gần nhất & Attendance Records
-  const meetingSession = useMemo<MeetingSession | undefined>(() => {
-    if (!roomId) return undefined;
-    const sessions = mockRepository.listMeetingsByRoomId(roomId);
-    return sessions.length > 0 ? (sessions[0] as MeetingSession) : undefined;
-  }, [roomId]);
-
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => {
-    if (!roomId) return [];
-    const sessions = mockRepository.listMeetingsByRoomId(roomId);
-    if (sessions.length === 0) return [];
-    return [...mockRepository.listAttendanceByMeetingId(sessions[0].id)];
-  });
-
-  // 7. Fund Candidates của buổi họp
-  const [fundCandidates, setFundCandidates] = useState<FundCandidate[]>(() => {
-    if (!meetingSession) return [];
-    return [...mockRepository.listFundCandidatesByMeetingId(meetingSession.id)];
-  });
-
-  // 8. In-memory state cho Quỹ phòng (Fund Contributions)
-  const [contributions, setContributions] = useState<FundContribution[]>(() => {
-    if (!roomId) return [];
-    return [...mockRepository.listFundContributionsByRoomId(roomId)];
-  });
-
-  // 9. Tab điều hướng hiện tại
+  // Tab điều hướng hiện tại
   const [activeTab, setActiveTab] = useState<MeetingTab>("members");
 
-  // 10. Trạng thái yêu cầu tham gia của currentUser nếu đang ở ngoài phòng
+  // Trạng thái yêu cầu tham gia của currentUser nếu đang ở ngoài phòng
   const [requestJoinStatus, setRequestJoinStatus] = useState<"none" | "pending" | "approved">("none");
+
+  // Refresh trigger
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Load live data from Supabase
+  useEffect(() => {
+    if (!roomId) return;
+    let isMounted = true;
+
+    async function fetchData() {
+      try {
+        const [fetchedRoom, fetchedUsers, fetchedMembers, fetchedRequests, fetchedSessions, fetchedFunds] =
+          await Promise.all([
+            roomRepository.findById(roomId),
+            userRepository.listAll({ includeArchived: true }),
+            membershipRepository.findByRoomId(roomId),
+            joinRequestRepository.findByRoomId(roomId),
+            meetingSessionRepository.findByRoomId(roomId),
+            fundContributionRepository.findByRoomId(roomId),
+          ]);
+
+        if (!isMounted) return;
+
+        setRoom(fetchedRoom ?? undefined);
+
+        const uMap = new Map<string, User>();
+        fetchedUsers.forEach((u) => uMap.set(u.id, u));
+        setUsersMap(uMap);
+
+        setMemberships(fetchedMembers);
+        setJoinRequests(fetchedRequests);
+        setContributions(fetchedFunds);
+
+        if (fetchedSessions.length > 0) {
+          const currentSession = fetchedSessions[0];
+          setMeetingSession(currentSession);
+          const [fetchedAtt, fetchedCand] = await Promise.all([
+            attendanceRepository.findBySessionId(currentSession.id),
+            attendanceRepository.getCandidates(currentSession.id),
+          ]);
+          if (!isMounted) return;
+          setAttendanceRecords(fetchedAtt);
+          setFundCandidates(fetchedCand);
+        }
+
+        if (currentUser) {
+          const userReq = fetchedRequests.find(
+            (r) => r.requesterId === currentUser.id && r.status === "pending"
+          );
+          if (userReq) {
+            setRequestJoinStatus("pending");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load room details:", err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [roomId, currentUser, refreshKey]);
+
+  // Tra cứu chủ phòng (owner)
+  const owner = useMemo(() => {
+    if (!room) return undefined;
+    return usersMap.get(room.ownerId);
+  }, [room, usersMap]);
 
   // Danh sách thành viên kích hoạt (User[])
   const activeMembers = useMemo(() => {
@@ -143,196 +177,221 @@ export default function MeetingDetailPage() {
   }, [contributions]);
 
   // Handler: Phê duyệt yêu cầu tham gia
-  const handleApproveRequest = (requestId: string) => {
-    const req = joinRequests.find((r) => r.id === requestId);
-    if (!req) return;
-
-    setJoinRequests((prev) =>
-      prev.map((r) => (r.id === requestId ? { ...r, status: "approved" as const } : r)),
-    );
-
-    // Thêm vào membership
-    setMemberships((prev) => [
-      ...prev,
-      {
-        roomId: room!.id,
-        userId: req.requesterId,
-        status: "active",
-        joinedAt: new Date().toISOString(),
-      },
-    ]);
+  const handleApproveRequest = async (requestId: string) => {
+    try {
+      const reviewerId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
+      await joinRequestRepository.approve(requestId, reviewerId);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("Failed to approve request:", err);
+    }
   };
 
   // Handler: Từ chối yêu cầu tham gia
-  const handleRejectRequest = (requestId: string) => {
-    setJoinRequests((prev) =>
-      prev.map((r) => (r.id === requestId ? { ...r, status: "rejected" as const } : r)),
-    );
+  const handleRejectRequest = async (requestId: string) => {
+    try {
+      const reviewerId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
+      await joinRequestRepository.reject(requestId, reviewerId);
+      setJoinRequests((prev) =>
+        prev.map((r) => (r.id === requestId ? { ...r, status: "rejected" as const } : r)),
+      );
+    } catch (err) {
+      console.error("Failed to reject request:", err);
+    }
   };
 
   // Handler: Xóa thành viên
-  const handleRemoveMember = (userId: string) => {
-    setMemberships((prev) =>
-      prev.map((m) =>
-        m.userId === userId
-          ? { ...m, status: "removed" as const, leftAt: new Date().toISOString() }
-          : m,
-      ),
-    );
+  const handleRemoveMember = async (userId: string, reason?: string, phrase?: string) => {
+    try {
+      const actorId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
+      await membershipRepository.removeMember(room!.id, userId, actorId, reason, phrase);
+      setMemberships((prev) =>
+        prev.map((m) =>
+          m.userId === userId
+            ? { ...m, status: "removed" as const, leftAt: new Date().toISOString() }
+            : m,
+        ),
+      );
+    } catch (err) {
+      console.error("Failed to remove member:", err);
+    }
   };
 
   // Handler: Tự điểm danh (Self check-in)
-  const handleSelfCheckIn = (status: AttendanceStatus) => {
+  const handleSelfCheckIn = async (status: AttendanceStatus) => {
     if (!currentUser || !meetingSession) return;
-    setAttendanceRecords((prev) => {
-      const existingIndex = prev.findIndex((r) => r.userId === currentUser.id);
-      if (existingIndex >= 0) {
-        const updated = [...prev];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          status,
-          changedBy: currentUser.id,
-          updatedAt: new Date().toISOString(),
-        };
-        return updated;
-      }
-      return [
-        ...prev,
-        {
-          id: `att-${Date.now()}`,
-          meetingSessionId: meetingSession.id,
-          userId: currentUser.id,
-          status,
-          changedBy: currentUser.id,
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-    });
+    try {
+      const record = await attendanceRepository.submitSelfAttendance(
+        meetingSession.id,
+        currentUser.id,
+        status
+      );
+      setAttendanceRecords((prev) => {
+        const idx = prev.findIndex((r) => r.userId === currentUser.id);
+        if (idx >= 0) {
+          const updated = [...prev];
+          updated[idx] = record;
+          return updated;
+        }
+        return [...prev, record];
+      });
+    } catch (err) {
+      console.error("Failed to submit attendance:", err);
+    }
   };
 
   // Handler: Chủ phòng override điểm danh
-  const handleOwnerOverride = (userId: string, status: AttendanceStatus) => {
+  const handleOwnerOverride = async (userId: string, status: AttendanceStatus) => {
     if (!meetingSession) return;
-    setAttendanceRecords((prev) => {
-      const existingIndex = prev.findIndex((r) => r.userId === userId);
-      if (existingIndex >= 0) {
-        const updated = [...prev];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          status,
-          changedBy: currentUser?.id ?? "admin",
-          updatedAt: new Date().toISOString(),
-        };
-        return updated;
-      }
-      return [
-        ...prev,
-        {
-          id: `att-${Date.now()}`,
-          meetingSessionId: meetingSession.id,
-          userId,
-          status,
-          changedBy: currentUser?.id ?? "admin",
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-    });
+    try {
+      const actorId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
+      const record = await attendanceRepository.overrideAttendance(
+        meetingSession.id,
+        userId,
+        status,
+        actorId
+      );
+      setAttendanceRecords((prev) => {
+        const idx = prev.findIndex((r) => r.userId === userId);
+        if (idx >= 0) {
+          const updated = [...prev];
+          updated[idx] = record;
+          return updated;
+        }
+        return [...prev, record];
+      });
+    } catch (err) {
+      console.error("Failed to override attendance:", err);
+    }
   };
 
   // Handler: Tạo khoản đóng quỹ từ Candidate (khi vắng mặt)
-  const handleCreateFundFromCandidate = (candidate: FundCandidate) => {
+  const handleCreateFundFromCandidate = async (candidate: FundCandidate) => {
     if (!room) return;
-    const newContrib: FundContribution = {
-      id: `contrib-${Date.now()}`,
-      roomId: room.id,
-      meetingSessionId: candidate.meetingSessionId,
-      contributorId: candidate.userId,
-      amount: candidate.suggestedAmount || 50000,
-      reason:
-        candidate.attendanceStatus === "absent"
-          ? "Bận nhưng chưa xin phép"
-          : "Đi trễ",
-      reasonDetails: `Ghi nhận từ ứng viên vắng mặt buổi họp`,
-      status: "outstanding",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setContributions((prev) => [newContrib, ...prev]);
-    // Loại candidate đã được tạo ra khỏi danh sách
-    setFundCandidates((prev) =>
-      prev.filter(
-        (c) =>
-          !(
-            c.userId === candidate.userId &&
-            c.meetingSessionId === candidate.meetingSessionId
-          ),
-      ),
-    );
+    try {
+      const actorId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
+      const newContrib = await fundContributionRepository.create({
+        roomId: room.id,
+        meetingSessionId: candidate.meetingSessionId,
+        contributorId: candidate.userId,
+        amount: candidate.suggestedAmount || 50000,
+        reason: candidate.attendanceStatus === "absent" ? "Bận nhưng chưa xin phép" : "Đi trễ",
+        reasonDetails: "Ghi nhận từ ứng viên vắng mặt buổi họp",
+        createdBy: actorId,
+      });
+
+      setContributions((prev) => [newContrib, ...prev]);
+      setFundCandidates((prev) =>
+        prev.filter(
+          (c) =>
+            !(
+              c.userId === candidate.userId &&
+              c.meetingSessionId === candidate.meetingSessionId
+            ),
+        ),
+      );
+    } catch (err) {
+      console.error("Failed to create fund from candidate:", err);
+    }
   };
 
   // Handler: Tạo khoản đóng quỹ thủ công
-  const handleCreateContribution = (data: {
+  const handleCreateContribution = async (data: {
     contributorId: string;
     amount: number;
     reason: FundContributionReason;
     reasonDetails?: string;
   }) => {
     if (!room) return;
-    const newContrib: FundContribution = {
-      id: `contrib-${Date.now()}`,
-      roomId: room.id,
-      meetingSessionId: meetingSession?.id,
-      contributorId: data.contributorId,
-      amount: data.amount,
-      reason: data.reason,
-      reasonDetails: data.reasonDetails,
-      status: "outstanding",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setContributions((prev) => [newContrib, ...prev]);
+    try {
+      const actorId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
+      const created = await fundContributionRepository.create({
+        roomId: room.id,
+        contributorId: data.contributorId,
+        amount: data.amount,
+        reason: data.reason,
+        reasonDetails: data.reasonDetails,
+        meetingSessionId: meetingSession?.id,
+        createdBy: actorId,
+      });
+      setContributions((prev) => [created, ...prev]);
+    } catch (err) {
+      console.error("Failed to create contribution:", err);
+    }
   };
 
   // Handler: Xác nhận thanh toán đủ (All-or-nothing)
-  const handleConfirmPayment = (contributionId: string) => {
-    setContributions((prev) =>
-      prev.map((c) =>
-        c.id === contributionId
-          ? { ...c, status: "paid" as const, updatedAt: new Date().toISOString() }
-          : c,
-      ),
-    );
+  const handleConfirmPayment = async (contributionId: string) => {
+    const target = contributions.find((c) => c.id === contributionId);
+    if (!target) return;
+    try {
+      const actorId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
+      await paymentRepository.confirmPayment({
+        contributionId,
+        amount: target.amount,
+        confirmedBy: actorId,
+      });
+      setContributions((prev) =>
+        prev.map((c) =>
+          c.id === contributionId
+            ? { ...c, status: "paid" as const, updatedAt: new Date().toISOString() }
+            : c,
+        ),
+      );
+    } catch (err) {
+      console.error("Failed to confirm payment:", err);
+    }
   };
 
   // Handler: Lưu trữ phòng họp
-  const handleArchiveRoom = () => {
+  const handleArchiveRoom = async (phrase = "Archive this room") => {
     if (!room) return;
-    setRoom((prev: Room | undefined) =>
-      prev ? { ...prev, status: "archived", updatedAt: new Date().toISOString() } : prev,
-    );
+    try {
+      const actorId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
+      const archived = await roomRepository.archive(room.id, actorId, phrase);
+      setRoom(archived);
+      setIsArchiveModalOpen(false);
+    } catch (err) {
+      console.error("Failed to archive room:", err);
+    }
   };
 
   // Handler: Chuyển giao quyền chủ phòng
-  const handleTransferOwnership = (newOwnerId: string) => {
+  const handleTransferOwnership = async (newOwnerId: string) => {
     if (!room) return;
-    setRoom((prev: Room | undefined) =>
-      prev ? { ...prev, ownerId: newOwnerId, updatedAt: new Date().toISOString() } : prev,
-    );
+    try {
+      const actorId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
+      const updated = await roomRepository.transferOwnership(room.id, newOwnerId, actorId);
+      setRoom(updated);
+      setIsTransferModalOpen(false);
+    } catch (err) {
+      console.error("Failed to transfer ownership:", err);
+    }
   };
 
   // Handler: Gửi yêu cầu xin vào phòng
-  const handleRequestJoinRoom = () => {
+  const handleRequestJoinRoom = async () => {
     if (!currentUser || !room) return;
-    setRequestJoinStatus("pending");
-    const newRequest: JoinRequest = {
-      id: `req-${Date.now()}`,
-      roomId: room.id,
-      requesterId: currentUser.id,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-    };
-    setJoinRequests((prev) => [...prev, newRequest]);
+    try {
+      await joinRequestRepository.create(room.id, currentUser.id);
+      setRequestJoinStatus("pending");
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("Failed to request join room:", err);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <main className="mx-auto max-w-7xl px-6 py-12">
+        <div className="flex flex-col gap-6 animate-pulse">
+          <div className="h-32 rounded-3xl bg-neutral-200" />
+          <div className="h-12 w-96 rounded-xl bg-neutral-200" />
+          <div className="h-64 rounded-2xl bg-neutral-100" />
+        </div>
+      </main>
+    );
+  }
 
   // Trường hợp 1: Không tìm thấy phòng
   if (!room) {
@@ -434,7 +493,7 @@ export default function MeetingDetailPage() {
           isOwnerOrAdmin={isOwnerOrAdmin}
           onApproveRequest={handleApproveRequest}
           onRejectRequest={handleRejectRequest}
-          onRemoveMember={handleRemoveMember}
+          onRemoveMember={(userId) => handleRemoveMember(userId)}
           hasOutstandingDebtMap={hasOutstandingDebtMap}
         />
       )}

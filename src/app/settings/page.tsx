@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { mockRepository } from "@/mocks/repository";
 import { useAuthMock } from "@/context/AuthMockContext";
 import type { Room, User } from "@/types/domain";
 import { UsersManagementTab } from "@/modules/admin/presentation/UsersManagementTab";
 import { RoomsManagementTab } from "@/modules/admin/presentation/RoomsManagementTab";
+import { roomRepository, userRepository } from "@/lib/repository";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Settings01Icon,
   ShieldAlertIcon,
   SecurityCheckIcon,
   UserGroupIcon,
@@ -22,15 +21,42 @@ type SettingsTab = "users" | "rooms";
 export default function SettingsPage() {
   const { currentUser, setRole } = useAuthMock();
   const [activeTab, setActiveTab] = useState<SettingsTab>("users");
+  const [isLoading, setIsLoading] = useState(true);
 
-  // In-memory state cho users và rooms để phục vụ phản hồi UI tức thì
-  const [usersList, setUsersList] = useState<User[]>(() =>
-    [...mockRepository.listUsers()],
-  );
+  const [usersList, setUsersList] = useState<User[]>([]);
+  const [roomsList, setRoomsList] = useState<Room[]>([]);
 
-  const [roomsList, setRoomsList] = useState<Room[]>(() =>
-    [...mockRepository.listRooms()],
-  );
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Load data from Supabase
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchData() {
+      try {
+        const [fetchedUsers, fetchedRooms] = await Promise.all([
+          userRepository.listAll({ includeArchived: true }),
+          roomRepository.findCatalog({ includeArchived: true }),
+        ]);
+
+        if (!isMounted) return;
+        setUsersList(fetchedUsers);
+        setRoomsList(fetchedRooms);
+      } catch (err) {
+        console.error("Failed to load settings data from Supabase:", err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [refreshKey]);
 
   // Map tra cứu Users
   const usersMap = useMemo(() => {
@@ -45,76 +71,69 @@ export default function SettingsPage() {
   const isAdmin = Boolean(currentUser && currentUser.role === "admin");
 
   // Handler: Xóa mềm người dùng
-  const handleArchiveUser = (userId: string, replacementAdminId?: string) => {
-    // 1. Chuyển giao các phòng active của user nếu có admin thay thế
-    if (replacementAdminId) {
-      setRoomsList((prev) =>
-        prev.map((r) =>
-          r.ownerId === userId && r.status === "active"
-            ? { ...r, ownerId: replacementAdminId, updatedAt: new Date().toISOString() }
-            : r,
-        ),
+  const handleArchiveUser = async (userId: string, replacementAdminId?: string) => {
+    if (!currentUser) return;
+    try {
+      await userRepository.archiveUser(
+        userId,
+        replacementAdminId ?? "",
+        currentUser.id,
+        "Archive this user"
       );
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("Failed to archive user:", err);
     }
-
-    // 2. Chuyển trạng thái user sang soft_deleted
-    setUsersList((prev) =>
-      prev.map((u) =>
-        u.id === userId
-          ? { ...u, status: "soft_deleted" as const, updatedAt: new Date().toISOString() }
-          : u,
-      ),
-    );
   };
 
   // Handler: Khôi phục người dùng
-  const handleRestoreUser = (userId: string) => {
-    setUsersList((prev) =>
-      prev.map((u) =>
-        u.id === userId
-          ? { ...u, status: "active" as const, updatedAt: new Date().toISOString() }
-          : u,
-      ),
-    );
+  const handleRestoreUser = async (userId: string) => {
+    if (!currentUser) return;
+    try {
+      await userRepository.restoreUser(userId, currentUser.id);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("Failed to restore user:", err);
+    }
   };
 
   // Handler: Lưu trữ phòng họp
-  const handleArchiveRoom = (roomId: string) => {
-    setRoomsList((prev) =>
-      prev.map((r) =>
-        r.id === roomId
-          ? { ...r, status: "archived" as const, updatedAt: new Date().toISOString() }
-          : r,
-      ),
-    );
+  const handleArchiveRoom = async (roomId: string) => {
+    if (!currentUser) return;
+    try {
+      await roomRepository.archive(roomId, currentUser.id, "Archive this room");
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("Failed to archive room:", err);
+    }
   };
 
   // Handler: Khôi phục phòng họp
-  const handleRestoreRoom = (roomId: string) => {
-    setRoomsList((prev) =>
-      prev.map((r) =>
-        r.id === roomId
-          ? { ...r, status: "active" as const, updatedAt: new Date().toISOString() }
-          : r,
-      ),
-    );
+  const handleRestoreRoom = async (roomId: string) => {
+    if (!currentUser) return;
+    try {
+      await roomRepository.restore(roomId, currentUser.id);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("Failed to restore room:", err);
+    }
   };
 
-  // Trường hợp KHÔNG PHẢI ADMIN: Chặn truy cập (403 Forbidden)
+  // Trường hợp người dùng không có quyền Admin
   if (!isAdmin) {
     return (
       <main className="mx-auto max-w-xl px-6 py-16 text-center">
-        {/* Container: Bo góc 24px (rounded-3xl), padding 32px (p-8) */}
-        <div className="rounded-3xl border border-rose-200 bg-white p-8 shadow-md">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-100 text-rose-700 mb-6">
+        <div className="rounded-3xl border border-red-200 bg-white p-8 shadow-md">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-red-600 mb-6">
             <HugeiconsIcon icon={ShieldAlertIcon} size={32} />
           </div>
           <h1 className="text-2xl font-bold text-[#0B1F1A] mb-2">
-            Truy cập bị từ chối (403 Forbidden)
+            Từ chối truy cập (403 Forbidden)
           </h1>
-          <p className="text-sm text-[#4B665D] mb-6">
-            Trang Cài đặt hệ thống chỉ dành riêng cho tài khoản có quyền{" "}
-            <strong className="text-rose-700">Quản trị viên (Global Admin)</strong>. Tài khoản hiện tại của bạn không đủ đặc quyền để truy cập dữ liệu này.
+          <p className="text-sm text-[#4B665D] mb-6 leading-relaxed">
+            Khu vực Quản trị Hệ thống chỉ dành riêng cho tài khoản có vai trò{" "}
+            <span className="font-semibold text-red-600">Global Admin</span>.
+            Tài khoản hiện tại của bạn không có đủ thẩm quyền truy cập.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -126,10 +145,11 @@ export default function SettingsPage() {
               <span>Về trang chủ</span>
             </Link>
 
+            {/* Helper chuyển role nhanh sang Admin cho việc kiểm thử UI */}
             <button
               type="button"
               onClick={() => setRole("admin")}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-purple-700 px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-purple-800"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#05966B]/90 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
             >
               <HugeiconsIcon icon={SecurityCheckIcon} size={18} />
               <span>Chuyển sang vai trò Admin</span>
@@ -140,34 +160,31 @@ export default function SettingsPage() {
     );
   }
 
-  // Trường hợp ADMIN: Render giao diện quản trị đầy đủ
   return (
     <main className="mx-auto max-w-7xl px-6 py-8 space-y-8">
-      {/* Header Trang Admin */}
+      {/* Header Trang Settings */}
       <section aria-labelledby="settings-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#C9F2E3] pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 text-purple-800">
-              <HugeiconsIcon icon={Settings01Icon} size={18} />
-            </span>
-            <span className="rounded-md bg-purple-100 px-2.5 py-0.5 text-xs font-bold text-purple-800">
-              Global Admin
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-3 py-0.5 text-xs font-bold text-red-700">
+              <HugeiconsIcon icon={SecurityCheckIcon} size={14} />
+              <span>Admin Console</span>
             </span>
           </div>
           <h1 id="settings-title" className="text-2xl lg:text-3xl font-bold tracking-tight text-[#0B1F1A]">
-            Cài đặt & Quản trị Hệ thống
+            Quản trị hệ thống (Settings)
           </h1>
           <p className="text-sm text-[#4B665D] mt-1">
-            Quản trị vòng đời tài khoản người dùng, toàn bộ phòng họp và khôi phục dữ liệu lưu trữ.
+            Quản lý vòng đời người dùng, giám sát phòng họp và dữ liệu lưu trữ trên Supabase.
           </p>
         </div>
 
-        {/* Tabs điều hướng cấp cao: Người dùng vs Phòng họp */}
-        <div className="flex items-center gap-2 p-1 bg-neutral-100 rounded-2xl border border-neutral-200">
+        {/* Tabs Điều hướng: Users vs Rooms */}
+        <div className="flex items-center gap-2 p-1 bg-neutral-100/80 rounded-xl border border-neutral-200/80 w-fit self-start md:self-auto">
           <button
             type="button"
             onClick={() => setActiveTab("users")}
-            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all ${
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
               activeTab === "users"
                 ? "bg-white text-[#05966B] shadow-xs"
                 : "text-[#4B665D] hover:text-[#0B1F1A]"
@@ -180,7 +197,7 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setActiveTab("rooms")}
-            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all ${
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
               activeTab === "rooms"
                 ? "bg-white text-[#05966B] shadow-xs"
                 : "text-[#4B665D] hover:text-[#0B1F1A]"
@@ -192,8 +209,13 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* Nội dung Tab 1: Quản lý Người dùng */}
-      {activeTab === "users" && (
+      {isLoading ? (
+        <div className="flex flex-col gap-6 animate-pulse">
+          <div className="h-16 rounded-2xl bg-neutral-200" />
+          <div className="h-64 rounded-2xl bg-neutral-100" />
+        </div>
+      ) : activeTab === "users" ? (
+        /* Tab 1: Quản lý Users */
         <UsersManagementTab
           users={usersList}
           rooms={roomsList}
@@ -201,10 +223,8 @@ export default function SettingsPage() {
           onArchiveUser={handleArchiveUser}
           onRestoreUser={handleRestoreUser}
         />
-      )}
-
-      {/* Nội dung Tab 2: Quản lý Phòng họp */}
-      {activeTab === "rooms" && (
+      ) : (
+        /* Tab 2: Quản lý Rooms */
         <RoomsManagementTab
           rooms={roomsList}
           usersMap={usersMap}
