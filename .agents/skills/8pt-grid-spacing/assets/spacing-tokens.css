@@ -1,0 +1,37 @@
+/**
+ * 8-Point Grid Spacing Tokens (CSS Variables)
+ * 
+ * Sử dụng khi dự án dùng CSS Modules, Vanilla CSS, Styled Components,
+ * hoặc Vue <style scoped> mà không sử dụng Tailwind CSS.
+ * 
+ * Import file này vào root CSS:
+ * @import "./styles/tokens/spacing.css";
+ */
+
+:root {
+  /* Base Spacing Scale */
+  --space-1: 4px;   /* Fine-tuning, micro icon gap, hairline adjustments */
+  --space-2: 8px;   /* Internal spacing minimum (icon-text, label-input) */
+  --space-3: 16px;  /* Component padding (Button, Input, Chip) */
+  --space-4: 24px;  /* Card padding, field-to-field gap in same form */
+  --space-5: 32px;  /* Section sub-spacing, gap between field groups */
+  --space-6: 48px;  /* Section padding, gap between distinct major blocks */
+  --space-7: 64px;  /* Large hero block spacing, page container padding */
+  --space-8: 80px;  /* Desktop hero display spacing */
+  --space-9: 96px;  /* Full page layout vertical rhythm */
+
+  /* Semantic Container Padding */
+  --container-padding-button: var(--space-2) var(--space-3); /* 8px 16px */
+  --container-padding-input: var(--space-2) var(--space-3);  /* 8px 16px */
+  --container-padding-card: var(--space-4);                   /* 24px */
+  --container-padding-section: var(--space-6);                /* 48px */
+  --container-padding-page: var(--space-7);                   /* 64px */
+
+  /* Border Radius (Aligned with 8-Point Grid) */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+}
