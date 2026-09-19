@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DiemDanhCMDN — Canonical Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Brand & Neutral Tokens */
+      --color-primary: #10D9A3;
+      --color-primary-hover: #05966B;
+      --color-primary-subtle: #E8FBF4;
+      --color-primary-border: #C9F2E3;
+
+      --color-bg-base: #FFFFFF;
+      --color-bg-subtle: #F8FAFC;
+      --color-bg-muted: #F1F5F9;
+      --color-surface: #FFFFFF;
+
+      --color-text-main: #0B1F1A;
+      --color-text-muted: #4B665D;
+      --color-text-subtle: #94A3B8;
+      --color-border-subtle: #E2E8F0;
+      --color-border-strong: #CBD5E1;
+
+      /* Semantic Status Tokens (Attendance & Money) */
+      --color-status-present: #05966B;
+      --color-status-present-bg: #D1FAE5;
+      --color-status-present-border: #A7F3D0;
+
+      --color-status-absent: #DC2626;
+      --color-status-absent-bg: #FEE2E2;
+      --color-status-absent-border: #FECACA;
+
+      --color-status-leave: #475569;
+      --color-status-leave-bg: #F1F5F9;
+      --color-status-leave-border: #E2E8F0;
+
+      --color-status-pending: #D97706;
+      --color-status-pending-bg: #FEF3C7;
+      --color-status-pending-border: #FDE68A;
+
+      /* Font Families */
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Radius & Spacing Tokens */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-10: 40px;
+      --space-12: 48px;
+      --space-16: 64px;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+
+      --shadow-xs: 0 1px 2px 0 rgba(11, 31, 26, 0.05);
+      --shadow-sm: 0 1px 3px 0 rgba(11, 31, 26, 0.08), 0 1px 2px -1px rgba(11, 31, 26, 0.08);
+      --shadow-md: 0 4px 6px -1px rgba(11, 31, 26, 0.07), 0 2px 4px -2px rgba(11, 31, 26, 0.07);
+      --shadow-lg: 0 10px 15px -3px rgba(11, 31, 26, 0.08), 0 4px 6px -4px rgba(11, 31, 26, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-bg-subtle);
+      color: var(--color-text-main);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Layout structure */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Left Sidebar Navigation */
+    .sidebar {
+      width: 290px;
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border-subtle);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 8px 12px;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0B1F1A;
+      font-weight: 800;
+      font-size: 17px;
+      box-shadow: 0 2px 8px rgba(16, 217, 163, 0.4);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--color-text-main);
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Sidebar Search */
+    .sidebar-search-box {
+      position: relative;
+    }
+
+    .sidebar-search-input {
+      width: 100%;
+      padding: 8px 12px 8px 32px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-bg-subtle);
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--color-text-main);
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .sidebar-search-input:focus {
+      background: var(--color-surface);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(16, 217, 163, 0.15);
+    }
+
+    .sidebar-search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-text-subtle);
+      pointer-events: none;
+    }
+
+    /* Navigation items */
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .nav-heading {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 10px 10px 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-count-badge {
+      background: var(--color-bg-muted);
+      color: var(--color-text-muted);
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: var(--radius-full);
+      font-family: var(--font-mono);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid transparent;
+    }
+
+    .nav-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-item-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.75;
+      font-size: 13px;
+    }
+
+    .nav-item:hover {
+      background: var(--color-primary-subtle);
+      color: var(--color-primary-hover);
+      border-color: rgba(16, 217, 163, 0.2);
+    }
+
+    .nav-item.active {
+      background: var(--color-primary-subtle);
+      color: #047857;
+      font-weight: 600;
+      border-color: var(--color-primary-border);
+      box-shadow: 0 1px 3px rgba(16, 217, 163, 0.15);
+    }
+
+    .nav-item.active .nav-item-icon {
+      opacity: 1;
+      color: #047857;
+    }
+
+    .nav-item-pill {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: var(--radius-full);
+      background: var(--color-bg-muted);
+      color: var(--color-text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .nav-item.active .nav-item-pill {
+      background: #A7F3D0;
+      color: #065F46;
+      font-weight: 600;
+    }
+
+    /* Main Content Area */
+    .content-area {
+      flex: 1;
+      max-width: 1140px;
+      padding: 28px 40px 100px;
+      margin: 0 auto;
+      overflow-y: auto;
+    }
+
+    /* Top Control Bar */
+    .top-control-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 12px 18px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-xs);
+    }
+
+    .breadcrumb-trail {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--color-text-muted);
+    }
+
+    .breadcrumb-trail strong {
+      color: var(--color-text-main);
+      font-weight: 600;
+    }
+
+    .view-mode-toggle {
+      display: inline-flex;
+      background: var(--color-bg-subtle);
+      padding: 3px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-subtle);
+      gap: 2px;
+    }
+
+    .view-mode-btn {
+      padding: 6px 12px;
+      border: none;
+      background: transparent;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .view-mode-btn.active {
+      background: var(--color-surface);
+      color: var(--color-text-main);
+      box-shadow: var(--shadow-xs);
+    }
+
+    /* Role switcher */
+    .role-bar {
+      background: #0B1F1A;
+      color: #FFFFFF;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .role-btn {
+      background: rgba(255,255,255,0.15);
+      color: #FFFFFF;
+      border: none;
+      padding: 3px 9px;
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+
+    .role-btn.active {
+      background: var(--color-primary);
+      color: #0B1F1A;
+    }
+
+    /* Section Styling */
+    .section-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-xs);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .section-highlight {
+      animation: sectionPulse 1.2s ease-out;
+    }
+
+    @keyframes sectionPulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 217, 163, 0.4); border-color: var(--color-primary); }
+      50% { box-shadow: 0 0 0 8px rgba(16, 217, 163, 0.15); border-color: var(--color-primary); }
+      100% { box-shadow: var(--shadow-xs); border-color: var(--color-border-subtle); }
+    }
+
+    .section-header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--color-border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--color-text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-desc {
+      color: var(--color-text-muted);
+      font-size: 14px;
+      margin-top: 6px;
+      line-height: 1.6;
+      max-width: 800px;
+    }
+
+    .section-badge-category {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-primary-subtle);
+      color: #047857;
+      border: 1px solid var(--color-primary-border);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Grid layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    /* Color Swatch Card */
+    .swatch-card {
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--color-surface);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .swatch-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .swatch-color {
+      height: 72px;
+      width: 100%;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      display: flex;
+      align-items: flex-end;
+      padding: 8px;
+    }
+
+    .swatch-info {
+      padding: 12px;
+    }
+
+    .swatch-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-main);
+    }
+
+    .swatch-hex {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    .swatch-usage {
+      font-size: 11px;
+      color: var(--color-text-subtle);
+      margin-top: 4px;
+    }
+
+    /* Typography rows */
+    .type-specimen {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .type-row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      align-items: baseline;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .type-meta {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+
+    .type-meta span {
+      display: block;
+      color: var(--color-text-subtle);
+      font-size: 11px;
+    }
+
+    /* Numeric tabular style */
+    .tabular-numbers {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
+    }
+
+    /* Spacing & Radius Visual Showcase */
+    .scale-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      background: var(--color-bg-subtle);
+      border: 1px solid var(--color-border-subtle);
+      margin-bottom: 10px;
+    }
+
+    .scale-token {
+      width: 130px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-main);
+    }
+
+    .scale-value {
+      width: 60px;
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+
+    .scale-bar-container {
+      flex: 1;
+      height: 20px;
+      background: rgba(16, 217, 163, 0.1);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding: 2px;
+    }
+
+    .scale-bar {
+      height: 100%;
+      background: var(--color-primary);
+      border-radius: 3px;
+    }
+
+    .radius-box {
+      height: 80px;
+      background: var(--color-bg-subtle);
+      border: 2px solid var(--color-primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .radius-box:hover {
+      background: var(--color-primary-subtle);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .shadow-box {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-main);
+      border: 1px solid var(--color-border-subtle);
+    }
+
+    /* Badges & Pills */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .badge-present {
+      background: var(--color-status-present-bg);
+      color: var(--color-status-present);
+      border: 1px solid var(--color-status-present-border);
+    }
+    .badge-present .badge-dot { background: var(--color-status-present); }
+
+    .badge-absent {
+      background: var(--color-status-absent-bg);
+      color: var(--color-status-absent);
+      border: 1px solid var(--color-status-absent-border);
+    }
+    .badge-absent .badge-dot { background: var(--color-status-absent); }
+
+    .badge-leave {
+      background: var(--color-status-leave-bg);
+      color: var(--color-status-leave);
+      border: 1px solid var(--color-status-leave-border);
+    }
+    .badge-leave .badge-dot { background: var(--color-status-leave); }
+
+    .badge-pending {
+      background: var(--color-status-pending-bg);
+      color: var(--color-status-pending);
+      border: 1px solid var(--color-status-pending-border);
+    }
+    .badge-pending .badge-dot { background: var(--color-status-pending); }
+
+    .badge-archived {
+      background: #E2E8F0;
+      color: #475569;
+      border: 1px solid #CBD5E1;
+    }
+
+    .badge-role-owner {
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border: 1px solid #BFDBFE;
+    }
+
+    .badge-role-admin {
+      background: #FAF5FF;
+      color: #7E22CE;
+      border: 1px solid #E9D5FF;
+    }
+
+    /* Button Variants */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      text-decoration: none;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: var(--radius-sm);
+    }
+
+    .btn-lg {
+      padding: 12px 24px;
+      font-size: 15px;
+      border-radius: var(--radius-md);
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: #0B1F1A;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+      background: var(--color-primary-hover);
+      color: #FFFFFF;
+    }
+
+    .btn-secondary {
+      background: var(--color-surface);
+      border-color: var(--color-primary-border);
+      color: var(--color-text-main);
+    }
+    .btn-secondary:hover {
+      background: var(--color-primary-subtle);
+      border-color: var(--color-primary);
+      color: var(--color-primary-hover);
+    }
+
+    .btn-outline {
+      background: var(--color-surface);
+      border-color: var(--color-border-subtle);
+      color: var(--color-text-main);
+    }
+    .btn-outline:hover {
+      background: var(--color-bg-subtle);
+      border-color: var(--color-border-strong);
+    }
+
+    .btn-destructive {
+      background: #DC2626;
+      color: #FFFFFF;
+    }
+    .btn-destructive:hover {
+      background: #B91C1C;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-muted);
+    }
+    .btn-ghost:hover {
+      background: var(--color-bg-muted);
+      color: var(--color-text-main);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* Form Elements */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-main);
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+
+    .input-field {
+      padding: 9px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--color-text-main);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%;
+    }
+
+    .input-field:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(16, 217, 163, 0.2);
+    }
+
+    .input-field.input-error {
+      border-color: #DC2626;
+    }
+    .input-field.input-error:focus {
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+    }
+
+    .input-field::placeholder {
+      color: var(--color-text-subtle);
+    }
+
+    .select-field {
+      padding: 9px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--color-text-main);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .select-field:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(16, 217, 163, 0.2);
+    }
+
+    /* Attendance Selector Widget Component */
+    .attendance-selector {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .attendance-option {
+      border: 2px solid var(--color-border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      background: var(--color-surface);
+      transition: all 0.15s ease;
+      text-align: center;
+      user-select: none;
+    }
+
+    .attendance-option:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-subtle);
+    }
+
+    .attendance-option.selected-present {
+      border-color: var(--color-status-present);
+      background: var(--color-status-present-bg);
+      color: var(--color-status-present);
+    }
+
+    .attendance-option.selected-absent {
+      border-color: var(--color-status-absent);
+      background: var(--color-status-absent-bg);
+      color: var(--color-status-absent);
+    }
+
+    .attendance-option.selected-leave {
+      border-color: #64748B;
+      background: #F1F5F9;
+      color: #334155;
+    }
+
+    .option-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .option-desc {
+      font-size: 11px;
+      color: var(--color-text-muted);
+    }
+
+    /* Bento Room Cards */
+    .room-card {
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      background: var(--color-surface);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .room-card:hover {
+      border-color: var(--color-primary-border);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .room-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .room-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-text-main);
+    }
+
+    .room-owner {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-top: 4px;
+    }
+
+    .room-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      border-top: 1px solid var(--color-border-subtle);
+      padding-top: 12px;
+    }
+
+    /* Modal Component */
+    .modal-backdrop {
+      background: rgba(11, 31, 26, 0.6);
+      backdrop-filter: blur(4px);
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 500px;
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--color-border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: var(--color-text-muted);
+    }
+
+    /* Table Component */
+    .table-container {
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      background: var(--color-surface);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+      min-width: 600px;
+    }
+
+    .data-table th {
+      background: var(--color-bg-subtle);
+      padding: 12px 16px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      border-bottom: 1px solid var(--color-border-subtle);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .data-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--color-border-subtle);
+      color: var(--color-text-main);
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .data-table tr:hover td {
+      background: var(--color-bg-subtle);
+    }
+
+    /* Interactive Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 2000;
+      pointer-events: none;
+    }
+
+    .toast-pill {
+      background: #0B1F1A;
+      color: #FFFFFF;
+      padding: 10px 18px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideUp 0.2s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* QR Code Display */
+    .qr-frame {
+      width: 180px;
+      height: 180px;
+      background: var(--color-bg-subtle);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .qr-frame img, .qr-frame svg {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* Countdown Widget */
+    .countdown-box {
+      background: #FEF3C7;
+      border: 1px solid #FDE68A;
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #92400E;
+    }
+
+    /* Section Navigator Footer */
+    .section-nav-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 24px;
+      margin-top: 24px;
+      border-top: 1px dashed var(--color-border-subtle);
+    }
+
+    .section-nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      background: var(--color-bg-subtle);
+      border: 1px solid var(--color-border-subtle);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .section-nav-btn:hover {
+      background: var(--color-primary-subtle);
+      color: var(--color-primary-hover);
+      border-color: var(--color-primary-border);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 900px) {
+      .app-layout {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--color-border-subtle);
+      }
+      .content-area {
+        padding: 20px;
+      }
+      .grid-2, .grid-3, .grid-4 {
+        grid-template-columns: 1fr;
+      }
+      .attendance-selector {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body data-view-mode="focused">
+  <div class="app-layout">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" data-od-id="ds-sidebar">
+      <div class="brand-header">
+        <div class="brand-logo">CM</div>
+        <div>
+          <div class="brand-title">DiemDanhCMDN</div>
+          <div class="brand-subtitle">Design System v1.3</div>
+        </div>
+      </div>
+
+      <!-- Quick Search in Sidebar -->
+      <div class="sidebar-search-box">
+        <span class="sidebar-search-icon">🔍</span>
+        <input 
+          type="text" 
+          id="sidebarSearch" 
+          class="sidebar-search-input" 
+          placeholder="Tìm component, token..." 
+          oninput="filterSidebar(this.value)" 
+        />
+      </div>
+
+      <nav class="nav-group" id="navGroup">
+        <div class="nav-heading">
+          <span>Nền tảng (Foundations)</span>
+          <span class="nav-count-badge">4</span>
+        </div>
+        <a class="nav-item active" data-target="colors" onclick="handleNavClick('colors')">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">🎨</span>
+            <span>Bảng màu & Token</span>
+          </div>
+          <span class="nav-item-pill">01</span>
+        </a>
+        <a class="nav-item" data-target="typography" onclick="handleNavClick('typography')">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">🔤</span>
+            <span>Typography & Con số</span>
+          </div>
+          <span class="nav-item-pill">02</span>
+        </a>
+        <a class="nav-item" data-target="spacing-radius" onclick="handleNavClick('spacing-radius')">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">📐</span>
+            <span>Khoảng cách & Bo góc</span>
+          </div>
+          <span class="nav-item-pill">03</span>
+        </a>
+        <a class="nav-item" data-target="badges" onclick="handleNavClick('badges')">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">🏷️</span>
+            <span>Trạng thái & Badges</span>
+          </div>
+          <span class="nav-item-pill">04</span>
+        </a>
+
+        <div class="nav-heading" style="margin-top: 12px;">
+          <span>Thành phần (Components)</span>
+          <span class="nav-count-badge">7</span>
+        </div>
+        <a class="nav-item" data-target="buttons" onclick="handleNavClick('buttons')">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">🔘</span>
+            <span>Nút bấm (Buttons)</span>
+          </div>
+          <span class="nav-item-pill">05</span>
+        </a>
+        <a class="nav-item" data-target="inputs" onclick="handleNavClick('inputs')">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">📝</span>
+            <span>Biểu mẫu & Input</span>
+          </div>
+          <span class="nav-item-pill">06</span>
+        </a>
+        <a class="nav-item" data-target="attendance-widget" onclick="handleNavClick('attendance-widget')">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">⏱️</span>
+            <span>Widget Điểm danh</span>
+          </div>
+          <span class="nav-item-pill">07</span>
+        </a>
+        <a class="nav-item" data-target="room-cards" onclick="handleNavClick('room-cards')">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">🗂️</span>
+            <span>Thẻ phòng (Room Cards)</span>
+          </div>
+          <span class="nav-item-pill">08</span>
+        </a>
+        <a class="nav-item" data-target="tables" onclick="handleNavClick('tables')">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">📊</span>
+            <span>Bảng thành viên & Quỹ</span>
+          </div>
+          <span class="nav-item-pill">09</span>
+        </a>
+        <a class="nav-item" data-target="modals" onclick="handleNavClick('modals')">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">⚠️</span>
+            <span>Modal xác nhận an toàn</span>
+          </div>
+          <span class="nav-item-pill">10</span>
+        </a>
+        <a class="nav-item" data-target="qr-payments" onclick="handleNavClick('qr-payments')">
+          <div class="nav-item-left">
+            <span class="nav-item-icon">📱</span>
+            <span>Thanh toán VietQR</span>
+          </div>
+          <span class="nav-item-pill">11</span>
+        </a>
+      </nav>
+
+      <div style="margin-top: auto; padding: 12px; background: var(--color-bg-subtle); border-radius: var(--radius-md); font-size: 11px; color: var(--color-text-muted); border: 1px solid var(--color-border-subtle);">
+        <strong style="color: var(--color-text-main);">Quy tắc bất biến:</strong><br/>
+        File này là nguồn chân lý (Single Source of Truth). Mọi component đều phải tái sử dụng chuẩn hóa.
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-area" id="contentArea">
+      <!-- Top Control Bar -->
+      <div class="top-control-bar" data-od-id="top-control-bar">
+        <div class="breadcrumb-trail" id="breadcrumbTrail">
+          <span>DiemDanhCMDN</span>
+          <span>/</span>
+          <span>Nền tảng</span>
+          <span>/</span>
+          <strong id="breadcrumbCurrent">1. Bảng màu & Token</strong>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <!-- View Mode Toggle: Focused (Single) vs Full View (All) -->
+          <div class="view-mode-toggle">
+            <button class="view-mode-btn active" id="btnModeFocused" onclick="setViewMode('focused')" title="Xem chi tiết từng mục khi bấm sidebar">
+              <span>📑 Từng mục</span>
+            </button>
+            <button class="view-mode-btn" id="btnModeAll" onclick="setViewMode('all')" title="Xem toàn bộ tài liệu theo cuộn dọc">
+              <span>📜 Xem tất cả</span>
+            </button>
+          </div>
+
+          <!-- Role switcher mock -->
+          <div class="role-bar" data-od-id="demo-role-switcher">
+            <span style="font-size: 11px; color: #94A3B8;">Giả lập vai trò:</span>
+            <button class="role-btn active" onclick="switchRole('member', this)">Thành viên</button>
+            <button class="role-btn" onclick="switchRole('owner', this)">Chủ phòng</button>
+            <button class="role-btn" onclick="switchRole('admin', this)">Quản trị</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. Colors & Tokens -->
+      <section id="colors" class="section-card" data-od-id="section-colors" data-title="1. Bảng màu & Token" data-category="Nền tảng">
+        <div class="section-header">
+          <div>
+            <span class="section-badge-category">Nền tảng</span>
+            <h2 class="section-title" style="margin-top: 4px;">1. Bảng màu chuẩn hóa (Color Palette & Tokens)</h2>
+            <p class="section-desc">Bấm vào từng thẻ màu để sao chép biến CSS. Tông màu Mint (#10D9A3) chủ đạo thể hiện sự minh bạch, hiện đại và thúc đẩy năng lượng vận hành.</p>
+          </div>
+          <button class="btn btn-sm btn-secondary" onclick="copyToken('--color-primary', '#10D9A3')">📋 Sao chép Brand Token</button>
+        </div>
+
+        <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--color-text-main);">Màu thương hiệu (Brand Mint)</h3>
+        <div class="grid-4" style="margin-bottom: 24px;">
+          <div class="swatch-card" onclick="copyToken('--color-primary', '#10D9A3')">
+            <div class="swatch-color" style="background: #10D9A3;"></div>
+            <div class="swatch-info">
+              <div class="swatch-name">Primary Mint</div>
+              <div class="swatch-hex">#10D9A3</div>
+              <div class="swatch-usage">Nút chính, điểm nhấn, active</div>
+            </div>
+          </div>
+          <div class="swatch-card" onclick="copyToken('--color-primary-hover', '#05966B')">
+            <div class="swatch-color" style="background: #05966B;"></div>
+            <div class="swatch-info">
+              <div class="swatch-name">Primary Hover</div>
+              <div class="swatch-hex">#05966B</div>
+              <div class="swatch-usage">Hover của nút chính, chữ xanh đậm</div>
+            </div>
+          </div>
+          <div class="swatch-card" onclick="copyToken('--color-primary-subtle', '#E8FBF4')">
+            <div class="swatch-color" style="background: #E8FBF4;"></div>
+            <div class="swatch-info">
+              <div class="swatch-name">Mint Subtle</div>
+              <div class="swatch-hex">#E8FBF4</div>
+              <div class="swatch-usage">Nền badge, hover menu, highlight</div>
+            </div>
+          </div>
+          <div class="swatch-card" onclick="copyToken('--color-primary-border', '#C9F2E3')">
+            <div class="swatch-color" style="background: #C9F2E3;"></div>
+            <div class="swatch-info">
+              <div class="swatch-name">Mint Border</div>
+              <div class="swatch-hex">#C9F2E3</div>
+              <div class="swatch-usage">Viền card, viền phân cách</div>
+            </div>
+          </div>
+        </div>
+
+        <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--color-text-main);">Màu trạng thái nghiệp vụ (Attendance & Money)</h3>
+        <div class="grid-4">
+          <div class="swatch-card" onclick="copyToken('--color-status-present', '#05966B')">
+            <div class="swatch-color" style="background: #05966B;"></div>
+            <div class="swatch-info">
+              <div class="swatch-name">Có mặt / Đã thanh toán</div>
+              <div class="swatch-hex">#05966B</div>
+              <div class="swatch-usage">Đúng giờ, hoàn thành nghĩa vụ</div>
+            </div>
+          </div>
+          <div class="swatch-card" onclick="copyToken('--color-status-absent', '#DC2626')">
+            <div class="swatch-color" style="background: #DC2626;"></div>
+            <div class="swatch-info">
+              <div class="swatch-name">Vắng mặt / Chưa đóng</div>
+              <div class="swatch-hex">#DC2626</div>
+              <div class="swatch-usage">Ứng viên quỹ, nợ tiền phạt</div>
+            </div>
+          </div>
+          <div class="swatch-card" onclick="copyToken('--color-status-leave', '#475569')">
+            <div class="swatch-color" style="background: #475569;"></div>
+            <div class="swatch-info">
+              <div class="swatch-name">Xin phép vắng</div>
+              <div class="swatch-hex">#475569</div>
+              <div class="swatch-usage">Bận đột xuất có thông báo</div>
+            </div>
+          </div>
+          <div class="swatch-card" onclick="copyToken('--color-status-pending', '#D97706')">
+            <div class="swatch-color" style="background: #D97706;"></div>
+            <div class="swatch-info">
+              <div class="swatch-name">Chờ duyệt / Join Request</div>
+              <div class="swatch-hex">#D97706</div>
+              <div class="swatch-usage">Phòng kín đang đợi Owner duyệt</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-nav-footer">
+          <span style="font-size: 12px; color: var(--color-text-muted);">Mục 01 / 11</span>
+          <button class="section-nav-btn" onclick="handleNavClick('typography')">Mục tiếp theo: Typography & Con số →</button>
+        </div>
+      </section>
+
+      <!-- 2. Typography & Numbers -->
+      <section id="typography" class="section-card" data-od-id="section-typography" data-title="2. Typography & Con số" data-category="Nền tảng">
+        <div class="section-header">
+          <div>
+            <span class="section-badge-category">Nền tảng</span>
+            <h2 class="section-title" style="margin-top: 4px;">2. Phân cấp chữ & Định dạng con số (Typography)</h2>
+            <p class="section-desc">Sử dụng font chữ <strong>Inter</strong> cho giao diện và <strong>JetBrains Mono</strong> cho mã code, ID phòng. Tiền tệ và đồng hồ đếm ngược bắt buộc bật tính năng căn thẳng hàng (tabular-nums).</p>
+          </div>
+          <span class="badge badge-present"><span class="badge-dot"></span> Font Inter & Mono</span>
+        </div>
+
+        <div class="type-specimen">
+          <div class="type-row">
+            <div class="type-meta">Heading 1<span>28px / Bold (-0.02em)</span></div>
+            <div style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">Phiên họp tổng kết Quý 3 — Phòng Kỹ Thuật</div>
+          </div>
+          <div class="type-row">
+            <div class="type-meta">Heading 2<span>20px / SemiBold (-0.01em)</span></div>
+            <div style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em;">Danh sách nghĩa vụ quỹ phòng</div>
+          </div>
+          <div class="type-row">
+            <div class="type-meta">Heading 3<span>16px / SemiBold</span></div>
+            <div style="font-size: 16px; font-weight: 600;">Thông tin tài khoản nhận đóng góp</div>
+          </div>
+          <div class="type-row">
+            <div class="type-meta">Body Regular<span>14px / Line-height 1.5</span></div>
+            <div style="font-size: 14px; color: var(--color-text-main);">Hạn chót điểm danh tự do là chính xác giờ bắt đầu cuộc họp (10:00:00). Sau thời điểm này, thành viên chưa điểm danh sẽ tự động được đưa vào danh sách ứng viên đóng quỹ.</div>
+          </div>
+          <div class="type-row">
+            <div class="type-meta">Tabular Numbers<span>Tiền tệ & Thời gian</span></div>
+            <div class="tabular-numbers" style="font-size: 18px; font-weight: 700; color: #DC2626;">
+              50,000 VND <span style="font-size: 14px; font-weight: 500; color: var(--color-text-muted); margin-left: 12px;">(So sánh thẳng hàng: 100,000 VND vs 50,000 VND)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-nav-footer">
+          <button class="section-nav-btn" onclick="handleNavClick('colors')">← Mục trước: Bảng màu & Token</button>
+          <button class="section-nav-btn" onclick="handleNavClick('spacing-radius')">Mục tiếp theo: Khoảng cách & Bo góc →</button>
+        </div>
+      </section>
+
+      <!-- 3. Spacing & Radius (Newly added & fully polished) -->
+      <section id="spacing-radius" class="section-card" data-od-id="section-spacing" data-title="3. Khoảng cách & Bo góc" data-category="Nền tảng">
+        <div class="section-header">
+          <div>
+            <span class="section-badge-category">Nền tảng</span>
+            <h2 class="section-title" style="margin-top: 4px;">3. Hệ thống Khoảng cách & Bo góc (8-Point Grid)</h2>
+            <p class="section-desc">Tuân thủ nghiêm ngặt hệ thống lưới 8-point grid. Khoảng cách và bo góc nhất quán tạo nên nhịp điệu thị giác chặt chẽ, dễ dự đoán.</p>
+          </div>
+          <span class="badge badge-present"><span class="badge-dot"></span> 8-Point Grid Standard</span>
+        </div>
+
+        <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--color-text-main);">Thang đo khoảng cách (Spacing Scale)</h3>
+        <div style="margin-bottom: 24px;">
+          <div class="scale-row" onclick="copyToken('--space-1', '4px')">
+            <span class="scale-token">--space-1</span>
+            <span class="scale-value">4px</span>
+            <div class="scale-bar-container"><div class="scale-bar" style="width: 4px;"></div></div>
+            <span style="font-size: 11px; color: var(--color-text-subtle);">Khoảng cách viền, padding badge siêu nhỏ</span>
+          </div>
+          <div class="scale-row" onclick="copyToken('--space-2', '8px')">
+            <span class="scale-token">--space-2</span>
+            <span class="scale-value">8px</span>
+            <div class="scale-bar-container"><div class="scale-bar" style="width: 8px;"></div></div>
+            <span style="font-size: 11px; color: var(--color-text-subtle);">Khoảng cách giữa icon và chữ, gap nút bấm</span>
+          </div>
+          <div class="scale-row" onclick="copyToken('--space-4', '16px')">
+            <span class="scale-token">--space-4</span>
+            <span class="scale-value">16px</span>
+            <div class="scale-bar-container"><div class="scale-bar" style="width: 16px;"></div></div>
+            <span style="font-size: 11px; color: var(--color-text-subtle);">Padding thẻ card nhỏ, khoảng cách cột chuẩn</span>
+          </div>
+          <div class="scale-row" onclick="copyToken('--space-6', '24px')">
+            <span class="scale-token">--space-6</span>
+            <span class="scale-value">24px</span>
+            <div class="scale-bar-container"><div class="scale-bar" style="width: 24px;"></div></div>
+            <span style="font-size: 11px; color: var(--color-text-subtle);">Padding thẻ bento, khoảng cách giữa các nhóm form</span>
+          </div>
+          <div class="scale-row" onclick="copyToken('--space-8', '32px')">
+            <span class="scale-token">--space-8</span>
+            <span class="scale-value">32px</span>
+            <div class="scale-bar-container"><div class="scale-bar" style="width: 32px;"></div></div>
+            <span style="font-size: 11px; color: var(--color-text-subtle);">Padding section lớn, khoảng cách giữa các khối chính</span>
+          </div>
+        </div>
+
+        <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--color-text-main);">Thang đo bo góc (Border Radius) & Đổ bóng (Shadows)</h3>
+        <div class="grid-4" style="margin-bottom: 16px;">
+          <div class="radius-box" style="border-radius: var(--radius-sm);" onclick="copyToken('--radius-sm', '6px')">
+            <span>radius-sm (6px)</span>
+            <span style="font-size: 11px; color: var(--color-text-muted); margin-top: 4px;">Badge, Sub-item</span>
+          </div>
+          <div class="radius-box" style="border-radius: var(--radius-md);" onclick="copyToken('--radius-md', '10px')">
+            <span>radius-md (10px)</span>
+            <span style="font-size: 11px; color: var(--color-text-muted); margin-top: 4px;">Buttons, Inputs</span>
+          </div>
+          <div class="radius-box" style="border-radius: var(--radius-lg);" onclick="copyToken('--radius-lg', '16px')">
+            <span>radius-lg (16px)</span>
+            <span style="font-size: 11px; color: var(--color-text-muted); margin-top: 4px;">Cards, Modals</span>
+          </div>
+          <div class="radius-box" style="border-radius: var(--radius-full);" onclick="copyToken('--radius-full', '9999px')">
+            <span>radius-full (Pill)</span>
+            <span style="font-size: 11px; color: var(--color-text-muted); margin-top: 4px;">Status Pills, Avatars</span>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="shadow-box" style="box-shadow: var(--shadow-sm);">
+            <div>Shadow Subtle (sm)</div>
+            <div style="font-size: 11px; color: var(--color-text-muted); margin-top: 4px;">Dùng cho Card tĩnh</div>
+          </div>
+          <div class="shadow-box" style="box-shadow: var(--shadow-md);">
+            <div>Shadow Medium (md)</div>
+            <div style="font-size: 11px; color: var(--color-text-muted); margin-top: 4px;">Dùng khi Card hover / Dropdown</div>
+          </div>
+          <div class="shadow-box" style="box-shadow: var(--shadow-lg);">
+            <div>Shadow Elevated (lg)</div>
+            <div style="font-size: 11px; color: var(--color-text-muted); margin-top: 4px;">Dùng cho Modal Dialog & Toast</div>
+          </div>
+        </div>
+
+        <div class="section-nav-footer">
+          <button class="section-nav-btn" onclick="handleNavClick('typography')">← Mục trước: Typography & Con số</button>
+          <button class="section-nav-btn" onclick="handleNavClick('badges')">Mục tiếp theo: Trạng thái & Badges →</button>
+        </div>
+      </section>
+
+      <!-- 4. Badges & State Machine -->
+      <section id="badges" class="section-card" data-od-id="section-badges" data-title="4. Trạng thái & Badges" data-category="Nền tảng">
+        <div class="section-header">
+          <div>
+            <span class="section-badge-category">Nền tảng</span>
+            <h2 class="section-title" style="margin-top: 4px;">4. Huy hiệu trạng thái nghiệp vụ (State Badges)</h2>
+            <p class="section-desc">Mỗi trạng thái điểm danh và quản trị phòng đều có badge với chấm tròn màu (dot) chuẩn hóa nhằm hỗ trợ nhận diện thị giác tức thì.</p>
+          </div>
+          <span class="badge badge-present"><span class="badge-dot"></span> Nhận diện tức thì</span>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 16px; background: var(--color-bg-subtle); border-radius: var(--radius-md); border: 1px solid var(--color-border-subtle);">
+          <span class="badge badge-present"><span class="badge-dot"></span> Có mặt</span>
+          <span class="badge badge-absent"><span class="badge-dot"></span> Vắng mặt</span>
+          <span class="badge badge-leave"><span class="badge-dot"></span> Xin phép</span>
+          <span class="badge badge-pending"><span class="badge-dot"></span> Chờ duyệt</span>
+          <span class="badge badge-archived">Phòng đã lưu trữ</span>
+          <span class="badge badge-role-owner">Chủ phòng (Owner)</span>
+          <span class="badge badge-role-admin">Quản trị (Admin)</span>
+        </div>
+
+        <div class="section-nav-footer">
+          <button class="section-nav-btn" onclick="handleNavClick('spacing-radius')">← Mục trước: Khoảng cách & Bo góc</button>
+          <button class="section-nav-btn" onclick="handleNavClick('buttons')">Mục tiếp theo: Nút bấm (Buttons) →</button>
+        </div>
+      </section>
+
+      <!-- 5. Button Components -->
+      <section id="buttons" class="section-card" data-od-id="section-buttons" data-title="5. Nút bấm (Buttons)" data-category="Thành phần">
+        <div class="section-header">
+          <div>
+            <span class="section-badge-category">Thành phần</span>
+            <h2 class="section-title" style="margin-top: 4px;">5. Thư viện nút bấm (Button Matrix)</h2>
+            <p class="section-desc">Tuân thủ nguyên tắc: Tối đa 1 nút Primary solid trên mỗi viewport để tối ưu hóa Action Economy, tránh nhiễu thị giác.</p>
+          </div>
+          <span class="badge badge-present"><span class="badge-dot"></span> 1 Solid CTA / Viewport</span>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 24px;">
+          <button class="btn btn-primary" data-od-id="btn-demo-primary" onclick="showToast('Bấm nút: Tạo phòng mới')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tạo phòng mới
+          </button>
+          <button class="btn btn-secondary" data-od-id="btn-demo-secondary" onclick="showToast('Bấm nút: Xác nhận thanh toán')">Xác nhận thanh toán</button>
+          <button class="btn btn-outline" data-od-id="btn-demo-outline" onclick="showToast('Bấm nút: Xuất báo cáo')">Xuất báo cáo</button>
+          <button class="btn btn-destructive" data-od-id="btn-demo-destructive" onclick="openDestructiveModal('Nguyễn Văn A')">Lưu trữ phòng (Archive)</button>
+          <button class="btn btn-ghost" data-od-id="btn-demo-ghost" onclick="showToast('Bấm nút: Hủy bỏ')">Hủy bỏ</button>
+          <button class="btn btn-primary" disabled>Đã hết giờ</button>
+        </div>
+
+        <div style="font-size: 13px; color: var(--color-text-muted); background: var(--color-bg-subtle); padding: 12px 16px; border-radius: var(--radius-md); border-left: 3px solid var(--color-primary);">
+          <strong>Quy tắc Action Economy:</strong> Nút Primary (#10D9A3) chỉ dùng cho hành động chính duy nhất của trang (VD: Tạo phòng, Chốt điểm danh, Thanh toán). Các thao tác phụ dùng Secondary hoặc Outline.
+        </div>
+
+        <div class="section-nav-footer">
+          <button class="section-nav-btn" onclick="handleNavClick('badges')">← Mục trước: Trạng thái & Badges</button>
+          <button class="section-nav-btn" onclick="handleNavClick('inputs')">Mục tiếp theo: Biểu mẫu & Input →</button>
+        </div>
+      </section>
+
+      <!-- 6. Form Inputs (Newly added & fully polished) -->
+      <section id="inputs" class="section-card" data-od-id="section-inputs" data-title="6. Biểu mẫu & Input" data-category="Thành phần">
+        <div class="section-header">
+          <div>
+            <span class="section-badge-category">Thành phần</span>
+            <h2 class="section-title" style="margin-top: 4px;">6. Biểu mẫu & Trường nhập liệu (Forms & Inputs)</h2>
+            <p class="section-desc">Bộ thành phần nhập liệu hỗ trợ validation trực tiếp, định dạng tiền tệ căn thẳng cột (tabular-nums), và ô nhập xác thực hành động phá hủy.</p>
+          </div>
+          <span class="badge badge-present"><span class="badge-dot"></span> Live Validation</span>
+        </div>
+
+        <div class="grid-2" style="margin-bottom: 24px;">
+          <!-- Normal text field -->
+          <div class="form-group">
+            <label class="form-label" for="demoRoomName">Tên phòng họp</label>
+            <input type="text" id="demoRoomName" class="input-field" placeholder="VD: Design Sprint sáng thứ 2" value="Review Quỹ Quý 3" />
+            <span class="form-hint">Tên hiển thị công khai cho các thành viên trong nhóm.</span>
+          </div>
+
+          <!-- Currency Input -->
+          <div class="form-group">
+            <label class="form-label" for="demoMoneyInput">Mức đóng quỹ phạt trễ (VND)</label>
+            <div style="position: relative;">
+              <input type="text" id="demoMoneyInput" class="input-field tabular-numbers" value="50,000" style="padding-right: 50px;" oninput="formatCurrencyLive(this)" />
+              <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: var(--color-text-muted);">VND</span>
+            </div>
+            <span class="form-hint">Mức phạt chuẩn được áp dụng tự động cho mỗi ca vắng.</span>
+          </div>
+
+          <!-- Select dropdown -->
+          <div class="form-group">
+            <label class="form-label" for="demoRoomType">Quyền riêng tư phòng</label>
+            <select id="demoRoomType" class="select-field">
+              <option value="public">Công khai (Ai cũng có thể tự do tham gia)</option>
+              <option value="private" selected>Riêng tư (Cần chủ phòng duyệt Join Request)</option>
+            </select>
+            <span class="form-hint">Phòng riêng tư yêu cầu Owner duyệt trước khi xem dữ liệu.</span>
+          </div>
+
+          <!-- Error state demonstration -->
+          <div class="form-group">
+            <label class="form-label" for="demoErrorInput" style="color: #DC2626;">Lý do phạt (Trường bắt buộc)</label>
+            <input type="text" id="demoErrorInput" class="input-field input-error" placeholder="Bắt buộc nhập lý do nếu chọn 'Khác'..." value="" />
+            <span class="form-hint" style="color: #DC2626; font-weight: 500;">Vui lòng nhập chi tiết lý do đóng quỹ.</span>
+          </div>
+        </div>
+
+        <!-- Live interactive typed confirmation input -->
+        <div style="background: var(--color-bg-subtle); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--color-border-subtle);">
+          <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #DC2626;">Kiểm tra trực tiếp: Ô nhập gõ chữ xác nhận an toàn</div>
+          <p style="font-size: 12px; color: var(--color-text-muted); margin-bottom: 12px;">Hãy thử gõ cụm từ: <code>I agree to remove this user</code> để xem nút bên dưới tự động mở khóa.</p>
+          <div style="display: flex; gap: 10px; align-items: center; max-width: 500px;">
+            <input type="text" id="testTypedInput" class="input-field" placeholder="Gõ: I agree to remove this user" oninput="validateTestTypedInput(this.value)" />
+            <button class="btn btn-destructive btn-sm" id="testTypedBtn" disabled onclick="showToast('Đã xác thực hành động xóa thành công!')">Xác nhận</button>
+          </div>
+        </div>
+
+        <div class="section-nav-footer">
+          <button class="section-nav-btn" onclick="handleNavClick('buttons')">← Mục trước: Nút bấm (Buttons)</button>
+          <button class="section-nav-btn" onclick="handleNavClick('attendance-widget')">Mục tiếp theo: Widget Điểm danh →</button>
+        </div>
+      </section>
+
+      <!-- 7. Interactive Attendance Selector -->
+      <section id="attendance-widget" class="section-card" data-od-id="section-attendance" data-title="7. Widget Điểm danh" data-category="Thành phần">
+        <div class="section-header">
+          <div>
+            <span class="section-badge-category">Thành phần</span>
+            <h2 class="section-title" style="margin-top: 4px;">7. Widget Điểm danh cá nhân (Attendance Selector)</h2>
+            <p class="section-desc">Thành viên tự bấm chọn trạng thái trước giờ G. Hãy thử click để kiểm tra phản hồi tương tác (Interactive state).</p>
+          </div>
+          <span class="badge badge-present"><span class="badge-dot"></span> State Machine UI</span>
+        </div>
+
+        <!-- Countdown preview -->
+        <div style="margin-bottom: 20px;">
+          <div class="countdown-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Thời gian điểm danh còn lại: <strong class="tabular-numbers">09 phút 45 giây</strong> (Chốt lúc 10:00:00)</span>
+          </div>
+        </div>
+
+        <div class="attendance-selector" id="attendanceSelector" data-od-id="attendance-widget-options">
+          <div class="attendance-option selected-present" onclick="selectAttendance(this, 'present')" data-od-id="opt-present">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+            <div class="option-title">Có mặt</div>
+            <div class="option-desc">Tham gia họp đúng giờ</div>
+          </div>
+          <div class="attendance-option" onclick="selectAttendance(this, 'absent')" data-od-id="opt-absent">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <div class="option-title">Vắng mặt</div>
+            <div class="option-desc">Sẽ đóng quỹ theo quy định</div>
+          </div>
+          <div class="attendance-option" onclick="selectAttendance(this, 'leave')" data-od-id="opt-leave">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div class="option-title">Xin phép</div>
+            <div class="option-desc">Bận đột xuất đã báo trước</div>
+          </div>
+        </div>
+
+        <div id="attendanceNotice" style="margin-top: 14px; font-size: 13px; color: var(--color-status-present); font-weight: 500;">
+          ✓ Bạn đang xác nhận: Có mặt (Lưu vết lúc 09:50:15)
+        </div>
+
+        <div class="section-nav-footer">
+          <button class="section-nav-btn" onclick="handleNavClick('inputs')">← Mục trước: Biểu mẫu & Input</button>
+          <button class="section-nav-btn" onclick="handleNavClick('room-cards')">Mục tiếp theo: Thẻ phòng (Room Cards) →</button>
+        </div>
+      </section>
+
+      <!-- 8. Bento Room Cards -->
+      <section id="room-cards" class="section-card" data-od-id="section-room-cards" data-title="8. Thẻ phòng (Room Cards)" data-category="Thành phần">
+        <div class="section-header">
+          <div>
+            <span class="section-badge-category">Thành phần</span>
+            <h2 class="section-title" style="margin-top: 4px;">8. Thẻ phòng họp (Room Bento Cards)</h2>
+            <p class="section-desc">Minh họa các trạng thái: Phòng công khai, phòng riêng tư cần gửi yêu cầu, phòng đang chờ duyệt và phòng đã đóng lưu trữ.</p>
+          </div>
+          <span class="badge badge-present"><span class="badge-dot"></span> Bento 3 Cột</span>
+        </div>
+
+        <div class="grid-3">
+          <!-- Public Room -->
+          <div class="room-card" data-od-id="card-room-public">
+            <div class="room-card-header">
+              <div>
+                <div class="room-title">Design Sprint — Team UX</div>
+                <div class="room-owner">Chủ phòng: Hoàng Nguyễn</div>
+              </div>
+              <span class="badge badge-present"><span class="badge-dot"></span> Công khai</span>
+            </div>
+            <p style="font-size: 13px; color: var(--color-text-muted);">Phiên điểm danh định kỳ sáng thứ 2 hàng tuần lúc 09:30.</p>
+            <div class="room-meta">
+              <span>👥 18 Thành viên</span>
+              <span>💰 Phạt trễ: 50k</span>
+            </div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="showToast('Đã vào phòng Design Sprint')">Vào phòng →</button>
+          </div>
+
+          <!-- Private Room - Requesting -->
+          <div class="room-card" data-od-id="card-room-private">
+            <div class="room-card-header">
+              <div>
+                <div class="room-title">Core Backend Architecture</div>
+                <div class="room-owner">Chủ phòng: Trần Bảo</div>
+              </div>
+              <span class="badge badge-pending"><span class="badge-dot"></span> Phòng kín</span>
+            </div>
+            <p style="font-size: 13px; color: var(--color-text-muted);">Cuộc họp nội bộ team Core. Cần Owner phê duyệt để vào.</p>
+            <div class="room-meta">
+              <span>👥 8 Thành viên</span>
+              <span>🔒 Cần xét duyệt</span>
+            </div>
+            <button class="btn btn-secondary" style="width: 100%;" onclick="showToast('Đã gửi yêu cầu tham gia')">Gửi yêu cầu tham gia</button>
+          </div>
+
+          <!-- Archived Room -->
+          <div class="room-card" style="opacity: 0.9; background: #FAFBFB;" data-od-id="card-room-archived">
+            <div class="room-card-header">
+              <div>
+                <div class="room-title">Hackathon 2025 (Cũ)</div>
+                <div class="room-owner">Chủ phòng: Lê Minh</div>
+              </div>
+              <span class="badge badge-archived">Đã lưu trữ</span>
+            </div>
+            <p style="font-size: 13px; color: var(--color-text-muted);">Phòng đã đóng. Bạn còn 1 khoản quỹ 50,000 VND cần thanh toán.</p>
+            <div class="room-meta">
+              <span>💰 Nợ còn tồn tại</span>
+            </div>
+            <button class="btn btn-outline" style="width: 100%;" onclick="openQrModal()">Xem thông tin thanh toán</button>
+          </div>
+        </div>
+
+        <div class="section-nav-footer">
+          <button class="section-nav-btn" onclick="handleNavClick('attendance-widget')">← Mục trước: Widget Điểm danh</button>
+          <button class="section-nav-btn" onclick="handleNavClick('tables')">Mục tiếp theo: Bảng thành viên & Quỹ →</button>
+        </div>
+      </section>
+
+      <!-- 9. Data Table & Member List -->
+      <section id="tables" class="section-card" data-od-id="section-tables" data-title="9. Bảng thành viên & Quỹ" data-category="Thành phần">
+        <div class="section-header">
+          <div>
+            <span class="section-badge-category">Thành phần</span>
+            <h2 class="section-title" style="margin-top: 4px;">9. Bảng thành viên & Quỹ đóng góp (Data Tables)</h2>
+            <p class="section-desc">Mô phỏng danh sách thành viên phiên họp với các tính năng: Ghi đè (Override), Cảnh báo ứng viên đóng quỹ (Fund Candidate).</p>
+          </div>
+          <span class="badge badge-present"><span class="badge-dot"></span> Tabular Numbers</span>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Thành viên</th>
+                <th>Vai trò</th>
+                <th>Trạng thái</th>
+                <th>Khoản quỹ</th>
+                <th style="text-align: right;">Hành động (Owner/Admin)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #E2E8F0; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px;">HN</div>
+                    <div>
+                      <div style="font-weight: 600;">Hoàng Nguyễn</div>
+                      <div style="font-size: 11px; color: var(--color-text-muted);">hoang@example.com</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge badge-role-owner">Chủ phòng</span></td>
+                <td><span class="badge badge-present"><span class="badge-dot"></span> Có mặt</span></td>
+                <td><span style="color: var(--color-text-muted); font-size: 12px;">—</span></td>
+                <td style="text-align: right;">
+                  <button class="btn btn-sm btn-ghost" onclick="showToast('Sửa trạng thái Hoàng Nguyễn')">Sửa</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #FEE2E2; color: #DC2626; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px;">VT</div>
+                    <div>
+                      <div style="font-weight: 600;">Vũ Tuấn</div>
+                      <div style="font-size: 11px; color: var(--color-text-muted);">tuan.vu@example.com</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span style="font-size: 12px; color: var(--color-text-muted);">Thành viên</span></td>
+                <td><span class="badge badge-absent"><span class="badge-dot"></span> Vắng mặt</span></td>
+                <td>
+                  <span class="tabular-numbers" style="font-weight: 700; color: #DC2626;">50,000 VND</span>
+                  <div style="font-size: 11px; color: var(--color-text-muted);">Đi trễ 15p</div>
+                </td>
+                <td style="text-align: right;">
+                  <button class="btn btn-sm btn-secondary" onclick="showToast('Đã xác nhận thanh toán 50k cho Vũ Tuấn')">Xác nhận thu tiền</button>
+                  <button class="btn btn-sm btn-ghost" onclick="openDestructiveModal('Vũ Tuấn')">Xóa</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section-nav-footer">
+          <button class="section-nav-btn" onclick="handleNavClick('room-cards')">← Mục trước: Thẻ phòng (Room Cards)</button>
+          <button class="section-nav-btn" onclick="handleNavClick('modals')">Mục tiếp theo: Modal xác nhận an toàn →</button>
+        </div>
+      </section>
+
+      <!-- 10. Destructive Modal Component -->
+      <section id="modals" class="section-card" data-od-id="section-modals" data-title="10. Modal xác nhận an toàn" data-category="Thành phần">
+        <div class="section-header">
+          <div>
+            <span class="section-badge-category">Thành phần</span>
+            <h2 class="section-title" style="margin-top: 4px;">10. Modal xác nhận an toàn (Typed Confirmation)</h2>
+            <p class="section-desc">Theo tài liệu nghiệp vụ, các hành động phá hủy (xóa thành viên còn nợ quỹ hoặc soft-delete user sở hữu phòng) bắt buộc người dùng gõ chính xác chuỗi ký tự quy định.</p>
+          </div>
+          <span class="badge badge-absent"><span class="badge-dot"></span> Destructive Guard</span>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button class="btn btn-destructive" onclick="openDestructiveModal('Nguyễn Văn A')">Thử nghiệm Modal: Xóa thành viên còn nợ</button>
+          <button class="btn btn-outline" onclick="openAdminArchiveModal('Trần Văn Chủ Phòng')">Thử nghiệm Modal: Admin Lưu trữ User</button>
+        </div>
+
+        <div class="section-nav-footer">
+          <button class="section-nav-btn" onclick="handleNavClick('tables')">← Mục trước: Bảng thành viên & Quỹ</button>
+          <button class="section-nav-btn" onclick="handleNavClick('qr-payments')">Mục tiếp theo: Thanh toán VietQR →</button>
+        </div>
+      </section>
+
+      <!-- 11. QR Code Payment -->
+      <section id="qr-payments" class="section-card" data-od-id="section-qr" data-title="11. Thanh toán VietQR" data-category="Thành phần">
+        <div class="section-header">
+          <div>
+            <span class="section-badge-category">Thành phần</span>
+            <h2 class="section-title" style="margin-top: 4px;">11. Gallery mã VietQR & Thanh toán chuyển khoản</h2>
+            <p class="section-desc">Khung hiển thị ảnh QR đảm bảo tỷ lệ khung hình với thuộc tính <code>object-fit: contain</code>, tích hợp nút sao chép số tài khoản nhanh.</p>
+          </div>
+          <span class="badge badge-present"><span class="badge-dot"></span> VietQR Direct</span>
+        </div>
+
+        <div style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap;">
+          <div class="qr-frame">
+            <svg width="130" height="130" viewBox="0 0 24 24" fill="none" stroke="#0B1F1A" stroke-width="1.8">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+              <rect x="7" y="7" width="1" height="1"></rect>
+              <rect x="18" y="7" width="1" height="1"></rect>
+              <rect x="7" y="18" width="1" height="1"></rect>
+              <path d="M14 14h3v3h-3zM14 20h6M20 14v3"></path>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size: 15px; font-weight: 700;">Quỹ Phạt Kỹ Thuật (VietinBank)</div>
+            <div class="tabular-numbers" style="font-size: 18px; font-weight: 700; color: #05966B; margin: 4px 0;">1028 7349 9999</div>
+            <div style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 12px;">Chủ tài khoản: NGUYEN VAN HOANG</div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-sm btn-secondary" onclick="copyToken('STK', '102873499999')">📋 Sao chép STK</button>
+              <button class="btn btn-sm btn-outline" onclick="openQrModal()">Mở Modal Thanh toán</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-nav-footer">
+          <button class="section-nav-btn" onclick="handleNavClick('modals')">← Mục trước: Modal xác nhận an toàn</button>
+          <button class="section-nav-btn" onclick="handleNavClick('colors')">Về đầu trang: Bảng màu & Token ↺</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Destructive Typed Modal -->
+  <div class="modal-backdrop" id="destructiveModal" data-od-id="modal-destructive">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: #DC2626;">Cảnh báo: Xóa thành viên còn nợ</h3>
+        <button class="modal-close" onclick="closeDestructiveModal()">&times;</button>
+      </div>
+      <p style="font-size: 14px; color: var(--color-text-main);">
+        Thành viên <strong id="modalUserName">Người dùng</strong> hiện vẫn còn nghĩa vụ đóng góp quỹ chưa hoàn thành.
+        Hành động này sẽ hủy bỏ quyền truy cập và đóng băng khoản nợ.
+      </p>
+      <div class="form-group">
+        <label class="form-label" for="confirmInput">Để xác nhận, vui lòng gõ chính xác: <code>I agree to remove this user</code></label>
+        <input type="text" id="confirmInput" class="input-field" placeholder="Gõ đúng dòng chữ trên..." oninput="checkTypedConfirmation()" />
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+        <button class="btn btn-outline" onclick="closeDestructiveModal()">Hủy</button>
+        <button class="btn btn-destructive" id="confirmDeleteBtn" disabled onclick="executeDelete()">Xác nhận xóa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Modal for Archived Rooms -->
+  <div class="modal-backdrop" id="qrModal" data-od-id="modal-qr">
+    <div class="modal-content" style="text-align: center; align-items: center;">
+      <div class="modal-header" style="width: 100%;">
+        <h3 class="modal-title">Thông tin đóng quỹ phòng lưu trữ</h3>
+        <button class="modal-close" onclick="closeQrModal()">&times;</button>
+      </div>
+      <div class="qr-frame" style="width: 200px; height: 200px;">
+        <svg width="140" height="140" viewBox="0 0 24 24" fill="none" stroke="#0B1F1A" stroke-width="1.8">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+          <rect x="7" y="7" width="1" height="1"></rect>
+          <rect x="18" y="7" width="1" height="1"></rect>
+          <rect x="7" y="18" width="1" height="1"></rect>
+          <path d="M14 14h3v3h-3zM14 20h6M20 14v3"></path>
+        </svg>
+      </div>
+      <div class="tabular-numbers" style="font-size: 20px; font-weight: 700; color: #DC2626;">50,000 VND</div>
+      <p style="font-size: 13px; color: var(--color-text-muted);">Phòng: Hackathon 2025 | Chủ phòng: Lê Minh (0901234567)</p>
+      <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="closeQrModal(); showToast('Đã ghi nhận yêu cầu kiểm tra thanh toán')">Tôi đã chuyển khoản xong</button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // State
+    let currentActiveSectionId = 'colors';
+
+    // Navigation & View Mode Handler
+    function handleNavClick(targetId) {
+      currentActiveSectionId = targetId;
+      
+      // Update sidebar active classes
+      document.querySelectorAll('.nav-item').forEach(item => {
+        if (item.getAttribute('data-target') === targetId) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+
+      const targetSection = document.getElementById(targetId);
+      if (!targetSection) return;
+
+      const viewMode = document.body.getAttribute('data-view-mode') || 'focused';
+
+      // Update breadcrumb
+      const category = targetSection.getAttribute('data-category') || 'Nền tảng';
+      const title = targetSection.getAttribute('data-title') || targetId;
+      document.getElementById('breadcrumbTrail').innerHTML = `
+        <span>DiemDanhCMDN</span>
+        <span>/</span>
+        <span>${category}</span>
+        <span>/</span>
+        <strong id="breadcrumbCurrent">${title}</strong>
+      `;
+
+      if (viewMode === 'focused') {
+        // Single item view: hide others, show target
+        document.querySelectorAll('.section-card').forEach(sec => {
+          sec.style.display = 'none';
+        });
+        targetSection.style.display = 'block';
+        
+        // Scroll content container to top safely without scrollIntoView
+        const contentArea = document.getElementById('contentArea');
+        if (contentArea) contentArea.scrollTop = 0;
+        window.scrollTo(0, 0);
+      } else {
+        // All items view: ensure all are displayed, scroll smoothly to target
+        document.querySelectorAll('.section-card').forEach(sec => {
+          sec.style.display = 'block';
+        });
+        
+        // Calculate safe top position without breaking embedded preview
+        const contentArea = document.getElementById('contentArea');
+        if (contentArea && contentArea.scrollHeight > contentArea.clientHeight) {
+          const targetOffset = targetSection.offsetTop - 20;
+          contentArea.scrollTo({ top: targetOffset, behavior: 'smooth' });
+        } else {
+          const rect = targetSection.getBoundingClientRect();
+          const targetOffset = rect.top + window.scrollY - 80;
+          window.scrollTo({ top: targetOffset, behavior: 'smooth' });
+        }
+
+        // Highlight pulse animation
+        targetSection.classList.remove('section-highlight');
+        void targetSection.offsetWidth;
+        targetSection.classList.add('section-highlight');
+      }
+    }
+
+    // Switch between Focused mode and All sections mode
+    function setViewMode(mode) {
+      document.body.setAttribute('data-view-mode', mode);
+      document.getElementById('btnModeFocused').classList.toggle('active', mode === 'focused');
+      document.getElementById('btnModeAll').classList.toggle('active', mode === 'all');
+
+      if (mode === 'focused') {
+        showToast('Chế độ xem: Tập trung từng mục (Focused)');
+        handleNavClick(currentActiveSectionId);
+      } else {
+        showToast('Chế độ xem: Hiển thị tất cả (Full View)');
+        document.querySelectorAll('.section-card').forEach(sec => {
+          sec.style.display = 'block';
+        });
+        handleNavClick(currentActiveSectionId);
+      }
+    }
+
+    // Sidebar search filter
+    function filterSidebar(query) {
+      const q = query.toLowerCase().trim();
+      const items = document.querySelectorAll('.nav-item');
+      let firstVisible = null;
+
+      items.forEach(item => {
+        const text = item.innerText.toLowerCase();
+        const matches = text.includes(q);
+        item.style.display = matches ? 'flex' : 'none';
+        if (matches && !firstVisible) firstVisible = item;
+      });
+    }
+
+    // Format currency live
+    function formatCurrencyLive(input) {
+      let raw = input.value.replace(/\D/g, '');
+      if (!raw) raw = '0';
+      input.value = Number(raw).toLocaleString('en-US');
+    }
+
+    // Typed Confirmation test
+    function validateTestTypedInput(val) {
+      const btn = document.getElementById('testTypedBtn');
+      btn.disabled = (val !== "I agree to remove this user");
+    }
+
+    // Copy token helper
+    function copyToken(name, val) {
+      navigator.clipboard.writeText(val).then(() => {
+        showToast(`Đã sao chép ${name}: ${val}`);
+      }).catch(() => {
+        showToast(`Giá trị: ${val}`);
+      });
+    }
+
+    // Toast notification
+    function showToast(msg) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast-pill';
+      toast.innerHTML = `<span>✓</span><span>${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 2500);
+    }
+
+    // Role switcher simulation
+    function switchRole(role, btn) {
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      showToast(`Đang giả lập vai trò: ${role.toUpperCase()}`);
+    }
+
+    // Attendance selector interaction
+    function selectAttendance(el, status) {
+      document.querySelectorAll('.attendance-option').forEach(opt => {
+        opt.className = 'attendance-option';
+      });
+      el.classList.add(`selected-${status}`);
+      const labels = {
+        present: 'Có mặt (Đúng giờ)',
+        absent: 'Vắng mặt (Ứng viên quỹ)',
+        leave: 'Xin phép vắng'
+      };
+      const now = new Date().toLocaleTimeString('vi-VN');
+      document.getElementById('attendanceNotice').innerText = `✓ Bạn đang chọn: ${labels[status]} (Lưu vết lúc ${now})`;
+      showToast(`Đã ghi nhận: ${labels[status]}`);
+    }
+
+    // Destructive Typed Modal logic
+    function openDestructiveModal(name) {
+      document.getElementById('modalUserName').innerText = name;
+      document.getElementById('confirmInput').value = '';
+      document.getElementById('confirmDeleteBtn').disabled = true;
+      document.getElementById('destructiveModal').classList.add('active');
+    }
+
+    function closeDestructiveModal() {
+      document.getElementById('destructiveModal').classList.remove('active');
+    }
+
+    function checkTypedConfirmation() {
+      const val = document.getElementById('confirmInput').value;
+      const target = "I agree to remove this user";
+      document.getElementById('confirmDeleteBtn').disabled = (val !== target);
+    }
+
+    function executeDelete() {
+      closeDestructiveModal();
+      showToast('Đã xóa thành viên và đóng băng khoản nợ thành công');
+    }
+
+    function openAdminArchiveModal(name) {
+      openDestructiveModal(name);
+    }
+
+    // QR Modal logic
+    function openQrModal() {
+      document.getElementById('qrModal').classList.add('active');
+    }
+
+    function closeQrModal() {
+      document.getElementById('qrModal').classList.remove('active');
+    }
+
+    // Initialize view on load
+    window.addEventListener('DOMContentLoaded', () => {
+      // Default to focused mode with colors
+      handleNavClick('colors');
+    });
+  </script>
+</body>
+</html>
