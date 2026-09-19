@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useMemo } from "react";
 import type { User } from "@/types/domain";
 import { users } from "@/mocks/fixtures";
 
@@ -19,26 +19,21 @@ const AuthMockContext = createContext<AuthMockContextType | undefined>(undefined
 export function AuthMockProvider({ children }: { children: React.ReactNode }) {
   // Default to admin for convenient initial testing as specified in Auth0 setup
   const [currentRole, setCurrentRole] = useState<MockRole>("admin");
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  useEffect(() => {
+  const currentUser = useMemo<User | null>(() => {
     switch (currentRole) {
       case "admin":
         // Global admin: nvhoang2012002@gmail.com
-        setCurrentUser(users.find((u) => u.id === "user-admin-primary") ?? users[0]);
-        break;
+        return users.find((u) => u.id === "user-admin-primary") ?? users[0];
       case "owner":
         // Room owner: lan.nguyen@example.com
-        setCurrentUser(users.find((u) => u.id === "user-owner-lan") ?? users[2]);
-        break;
+        return users.find((u) => u.id === "user-owner-lan") ?? users[2];
       case "user":
         // Regular member: minh.tran@example.com
-        setCurrentUser(users.find((u) => u.id === "user-member-minh") ?? users[3]);
-        break;
+        return users.find((u) => u.id === "user-member-minh") ?? users[3];
       case "guest":
       default:
-        setCurrentUser(null);
-        break;
+        return null;
     }
   }, [currentRole]);
 

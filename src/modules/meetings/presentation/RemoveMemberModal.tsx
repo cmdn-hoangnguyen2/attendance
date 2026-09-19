@@ -24,19 +24,20 @@ export function RemoveMemberModal({
 }: RemoveMemberModalProps) {
   const [typedPhrase, setTypedPhrase] = useState("");
 
-  useEffect(() => {
+  const handleClose = () => {
     setTypedPhrase("");
-  }, [isOpen]);
+    onClose();
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     };
     if (isOpen) {
       window.addEventListener("keydown", handleKeyDown);
     }
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen || !member) return null;
 
@@ -47,7 +48,7 @@ export function RemoveMemberModal({
   const handleConfirm = () => {
     if (isConfirmed) {
       onConfirmRemove(member.id);
-      onClose();
+      handleClose();
     }
   };
 

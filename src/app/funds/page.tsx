@@ -12,7 +12,6 @@ import {
   Coins01Icon,
   CheckmarkCircle01Icon,
   Clock01Icon,
-  InformationCircleIcon,
   Home01Icon,
   Login01Icon,
   CreditCardIcon,
@@ -28,7 +27,7 @@ export default function PersonalFundsPage() {
   const [statusFilter, setStatusFilter] = useState<FundStatusFilter>("all");
 
   // In-memory contributions của currentUser
-  const [contributions, setContributions] = useState<FundContribution[]>(() => {
+  const [contributions] = useState<FundContribution[]>(() => {
     if (!currentUser) return [];
     return [...mockRepository.listFundContributionsByUserId(currentUser.id)];
   });

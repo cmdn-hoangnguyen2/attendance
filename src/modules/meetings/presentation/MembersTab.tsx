@@ -6,7 +6,6 @@ import { RemoveMemberModal } from "./RemoveMemberModal";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Search01Icon,
-  UserIcon,
   CheckmarkCircle01Icon,
   Cancel01Icon,
   Delete02Icon,

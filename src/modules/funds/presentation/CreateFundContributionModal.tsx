@@ -28,35 +28,37 @@ export function CreateFundContributionModal({
   preselectedUserId,
   onCreateContribution,
 }: CreateFundContributionModalProps) {
-  const [selectedUserId, setSelectedUserId] = useState("");
-  const [amount, setAmount] = useState(10000);
-  const [reason, setReason] = useState<FundContributionReason>("Đi trễ");
+  const [selectedUserId, setSelectedUserId] = useState(() =>
+    candidate
+      ? candidate.userId
+      : preselectedUserId
+      ? preselectedUserId
+      : roomMembers.length > 0
+      ? roomMembers[0].id
+      : "",
+  );
+  const [amount, setAmount] = useState(() => candidate?.suggestedAmount || 10000);
+  const [reason, setReason] = useState<FundContributionReason>(() =>
+    candidate?.attendanceStatus === "absent" ? "Bận nhưng chưa xin phép" : "Đi trễ",
+  );
   const [reasonDetails, setReasonDetails] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (candidate) {
-      setSelectedUserId(candidate.userId);
-      setAmount(candidate.suggestedAmount || 10000);
-      setReason(candidate.attendanceStatus === "absent" ? "Bận nhưng chưa xin phép" : "Đi trễ");
-    } else if (preselectedUserId) {
-      setSelectedUserId(preselectedUserId);
-    } else if (roomMembers.length > 0) {
-      setSelectedUserId(roomMembers[0].id);
-    }
-    setReasonDetails("");
+  const handleClose = () => {
     setError("");
-  }, [candidate, preselectedUserId, roomMembers, isOpen]);
+    setReasonDetails("");
+    onClose();
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     };
     if (isOpen) {
       window.addEventListener("keydown", handleKeyDown);
     }
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -81,7 +83,7 @@ export function CreateFundContributionModal({
       reason,
       reasonDetails: reason === "Khác" ? reasonDetails.trim() : undefined,
     });
-    onClose();
+    handleClose();
   };
 
   const presetAmounts = [5000, 10000, 20000, 50000];

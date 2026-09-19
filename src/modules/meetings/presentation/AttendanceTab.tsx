@@ -16,7 +16,6 @@ import {
   HelpCircleIcon,
   Coins01Icon,
   Clock01Icon,
-  UserIcon,
 } from "@hugeicons/core-free-icons";
 
 export interface AttendanceTabProps {

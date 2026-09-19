@@ -15,13 +15,12 @@ import {
   UserGroupIcon,
   Folder01Icon,
   Home01Icon,
-  Login01Icon,
 } from "@hugeicons/core-free-icons";
 
 type SettingsTab = "users" | "rooms";
 
 export default function SettingsPage() {
-  const { currentUser, isAuthenticated, setRole } = useAuthMock();
+  const { currentUser, setRole } = useAuthMock();
   const [activeTab, setActiveTab] = useState<SettingsTab>("users");
 
   // In-memory state cho users và rooms để phục vụ phản hồi UI tức thì

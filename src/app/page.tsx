@@ -14,7 +14,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
   PlusSignIcon,
   Search01Icon,
-  Folder01Icon,
 } from "@hugeicons/core-free-icons";
 
 export default function HomePage() {

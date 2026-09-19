@@ -11,7 +11,6 @@ import {
   UserRemove01Icon,
   ArrowReloadHorizontalIcon,
   SecurityCheckIcon,
-  Alert02Icon,
 } from "@hugeicons/core-free-icons";
 
 export interface UsersManagementTabProps {

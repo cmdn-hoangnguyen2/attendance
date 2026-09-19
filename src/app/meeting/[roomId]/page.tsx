@@ -10,6 +10,7 @@ import type {
   AttendanceStatus,
   FundCandidate,
   FundContribution,
+  FundContributionReason,
   JoinRequest,
   MeetingSession,
   Room,
@@ -273,7 +274,7 @@ export default function MeetingDetailPage() {
   const handleCreateContribution = (data: {
     contributorId: string;
     amount: number;
-    reason: any;
+    reason: FundContributionReason;
     reasonDetails?: string;
   }) => {
     if (!room) return;

@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import type { FundContribution, Room, User } from "@/types/domain";
+import type { FundContribution, FundContributionReason, Room, User } from "@/types/domain";
 import { formatVND } from "@/lib/utils";
 import { CreateFundContributionModal } from "@/modules/funds/presentation/CreateFundContributionModal";
 import { PaymentInfoModal } from "@/modules/funds/presentation/PaymentInfoModal";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Coins01Icon,
   PlusSignIcon,
   CheckmarkCircle01Icon,
   InformationCircleIcon,
@@ -24,7 +23,7 @@ export interface RoomFundsTabProps {
   onCreateContribution: (data: {
     contributorId: string;
     amount: number;
-    reason: any;
+    reason: FundContributionReason;
     reasonDetails?: string;
   }) => void;
   onConfirmPayment: (contributionId: string) => void;
@@ -180,7 +179,7 @@ export function RoomFundsTab({
                         <span className="font-semibold text-[#0B1F1A]">{item.reason}</span>
                         {item.reasonDetails ? (
                           <span className="block text-[11px] text-neutral-500 italic mt-0.5">
-                            "{item.reasonDetails}"
+                            &ldquo;{item.reasonDetails}&rdquo;
                           </span>
                         ) : null}
                       </td>

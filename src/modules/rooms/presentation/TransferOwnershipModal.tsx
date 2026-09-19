@@ -28,25 +28,25 @@ export function TransferOwnershipModal({
   eligibleMembers,
   onConfirmTransfer,
 }: TransferOwnershipModalProps) {
-  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+  const [selectedMemberId, setSelectedMemberId] = useState<string>(() =>
+    eligibleMembers.length > 0 ? eligibleMembers[0].id : "",
+  );
   const [error, setError] = useState<string>("");
 
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedMemberId(eligibleMembers.length > 0 ? eligibleMembers[0].id : "");
-      setError("");
-    }
-  }, [isOpen, eligibleMembers]);
+  const handleClose = () => {
+    setError("");
+    onClose();
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     };
     if (isOpen) {
       window.addEventListener("keydown", handleKeyDown);
     }
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -57,7 +57,7 @@ export function TransferOwnershipModal({
       return;
     }
     onConfirmTransfer(selectedMemberId);
-    onClose();
+    handleClose();
   };
 
   const selectedMember = eligibleMembers.find((m) => m.id === selectedMemberId);

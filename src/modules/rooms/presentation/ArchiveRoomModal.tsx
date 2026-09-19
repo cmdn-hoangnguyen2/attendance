@@ -29,24 +29,22 @@ export function ArchiveRoomModal({
   const [typedPhrase, setTypedPhrase] = useState("");
   const [error, setError] = useState("");
 
-  // Reset state on open/close
-  useEffect(() => {
-    if (isOpen) {
-      setTypedPhrase("");
-      setError("");
-    }
-  }, [isOpen]);
+  const handleClose = () => {
+    setTypedPhrase("");
+    setError("");
+    onClose();
+  };
 
   // Handle Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     };
     if (isOpen) {
       window.addEventListener("keydown", handleKeyDown);
     }
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -59,7 +57,7 @@ export function ArchiveRoomModal({
       return;
     }
     onConfirmArchive(room.id);
-    onClose();
+    handleClose();
   };
 
   return (
