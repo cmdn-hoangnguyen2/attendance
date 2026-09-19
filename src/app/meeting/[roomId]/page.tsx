@@ -12,6 +12,7 @@ import type {
   FundContribution,
   JoinRequest,
   MeetingSession,
+  Room,
   RoomMembership,
   User,
 } from "@/types/domain";
@@ -23,6 +24,8 @@ import {
 import { MembersTab } from "@/modules/meetings/presentation/MembersTab";
 import { AttendanceTab } from "@/modules/meetings/presentation/AttendanceTab";
 import { RoomFundsTab } from "@/modules/meetings/presentation/RoomFundsTab";
+import { ArchiveRoomModal } from "@/modules/rooms/presentation/ArchiveRoomModal";
+import { TransferOwnershipModal } from "@/modules/rooms/presentation/TransferOwnershipModal";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
@@ -38,11 +41,15 @@ export default function MeetingDetailPage() {
 
   const { currentUser } = useAuthMock();
 
-  // 1. Lấy thông tin Room cơ bản từ repository
-  const room = useMemo(() => {
+  // 1. Lấy thông tin Room cơ bản từ repository & quản lý state
+  const [room, setRoom] = useState<Room | undefined>(() => {
     if (!roomId) return undefined;
     return mockRepository.findRoomById(roomId);
-  }, [roomId]);
+  });
+
+  // State cho các modal Archive và Transfer Ownership
+  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
   // 2. Tra cứu chủ phòng (owner)
   const owner = useMemo(() => {
@@ -296,6 +303,22 @@ export default function MeetingDetailPage() {
     );
   };
 
+  // Handler: Lưu trữ phòng họp
+  const handleArchiveRoom = () => {
+    if (!room) return;
+    setRoom((prev: Room | undefined) =>
+      prev ? { ...prev, status: "archived", updatedAt: new Date().toISOString() } : prev,
+    );
+  };
+
+  // Handler: Chuyển giao quyền chủ phòng
+  const handleTransferOwnership = (newOwnerId: string) => {
+    if (!room) return;
+    setRoom((prev: Room | undefined) =>
+      prev ? { ...prev, ownerId: newOwnerId, updatedAt: new Date().toISOString() } : prev,
+    );
+  };
+
   // Handler: Gửi yêu cầu xin vào phòng
   const handleRequestJoinRoom = () => {
     if (!currentUser || !room) return;
@@ -396,6 +419,8 @@ export default function MeetingDetailPage() {
         membersCount={activeMembers.length}
         fundsCount={contributions.length}
         isOwnerOrAdmin={isOwnerOrAdmin}
+        onOpenArchiveModal={() => setIsArchiveModalOpen(true)}
+        onOpenTransferModal={() => setIsTransferModalOpen(true)}
       />
 
       {/* Tab 1: Thành viên & Duyệt tham gia */}
@@ -439,6 +464,28 @@ export default function MeetingDetailPage() {
           isOwnerOrAdmin={isOwnerOrAdmin}
           onCreateContribution={handleCreateContribution}
           onConfirmPayment={handleConfirmPayment}
+        />
+      )}
+
+      {/* Modal Lưu Trữ Phòng Họp */}
+      {room && (
+        <ArchiveRoomModal
+          isOpen={isArchiveModalOpen}
+          onClose={() => setIsArchiveModalOpen(false)}
+          room={room}
+          onConfirmArchive={handleArchiveRoom}
+        />
+      )}
+
+      {/* Modal Chuyển Giao Quyền Chủ Phòng */}
+      {room && (
+        <TransferOwnershipModal
+          isOpen={isTransferModalOpen}
+          onClose={() => setIsTransferModalOpen(false)}
+          room={room}
+          currentOwner={owner}
+          eligibleMembers={activeMembers.filter((m) => m.id !== room.ownerId)}
+          onConfirmTransfer={handleTransferOwnership}
         />
       )}
     </main>

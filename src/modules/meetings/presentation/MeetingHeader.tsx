@@ -23,6 +23,8 @@ export interface MeetingHeaderProps {
   membersCount: number;
   fundsCount: number;
   isOwnerOrAdmin: boolean;
+  onOpenArchiveModal?: () => void;
+  onOpenTransferModal?: () => void;
 }
 
 export function MeetingHeader({
@@ -33,6 +35,8 @@ export function MeetingHeader({
   membersCount,
   fundsCount,
   isOwnerOrAdmin,
+  onOpenArchiveModal,
+  onOpenTransferModal,
 }: MeetingHeaderProps) {
   const isPublic = room.visibility === "public";
   const isArchived = room.status === "archived";
@@ -96,6 +100,31 @@ export function MeetingHeader({
             ) : null}
           </div>
         </div>
+
+        {/* Action Buttons for Owner / Admin */}
+        {isOwnerOrAdmin && !isArchived && (
+          <div className="flex flex-wrap items-center gap-2.5">
+            {onOpenTransferModal && (
+              <button
+                type="button"
+                onClick={onOpenTransferModal}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3.5 py-2 text-xs font-semibold text-[#0B1F1A] hover:bg-neutral-50 shadow-2xs transition-colors"
+              >
+                <span>Chuyển quyền chủ phòng</span>
+              </button>
+            )}
+
+            {onOpenArchiveModal && (
+              <button
+                type="button"
+                onClick={onOpenArchiveModal}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/50 px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100/70 transition-colors"
+              >
+                <span>Lưu trữ phòng</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tab Navigation Row: Margin top 16px (mt-4, space-3) */}
