@@ -39,6 +39,13 @@ export interface RoomPaymentImageRepository {
     fileSize: number;
     uploadedBy: string;
   }): Promise<RoomPaymentImage>;
+  uploadAndLinkImage(
+    roomId: string,
+    file: File | Blob,
+    mimeType: string,
+    fileSizeBytes: number,
+    actorId: string
+  ): Promise<{ storagePath: string; signedUrl: string }>;
   remove(roomId: string, actorId: string): Promise<void>;
   getSignedUrl(storagePath: string): Promise<string>;
 }

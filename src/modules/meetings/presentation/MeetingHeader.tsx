@@ -11,6 +11,7 @@ import {
   UserGroupIcon,
   Calendar01Icon,
   Coins01Icon,
+  QrCode01Icon,
 } from "@hugeicons/core-free-icons";
 
 export type MeetingTab = "members" | "attendance" | "funds";
@@ -25,6 +26,7 @@ export interface MeetingHeaderProps {
   isOwnerOrAdmin: boolean;
   onOpenArchiveModal?: () => void;
   onOpenTransferModal?: () => void;
+  onOpenPaymentQrModal?: () => void;
 }
 
 export function MeetingHeader({
@@ -37,6 +39,7 @@ export function MeetingHeader({
   isOwnerOrAdmin,
   onOpenArchiveModal,
   onOpenTransferModal,
+  onOpenPaymentQrModal,
 }: MeetingHeaderProps) {
   const isPublic = room.visibility === "public";
   const isArchived = room.status === "archived";
@@ -104,6 +107,17 @@ export function MeetingHeader({
         {/* Action Buttons for Owner / Admin */}
         {isOwnerOrAdmin && !isArchived && (
           <div className="flex flex-wrap items-center gap-2.5">
+            {onOpenPaymentQrModal && (
+              <button
+                type="button"
+                onClick={onOpenPaymentQrModal}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[#C9F2E3] bg-[#E8FBF4] px-3.5 py-2 text-xs font-semibold text-[#05966B] hover:bg-[#C9F2E3]/50 shadow-2xs transition-colors"
+              >
+                <HugeiconsIcon icon={QrCode01Icon} size={14} />
+                <span>Mã QR thanh toán</span>
+              </button>
+            )}
+
             {onOpenTransferModal && (
               <button
                 type="button"

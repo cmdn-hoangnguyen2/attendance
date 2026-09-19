@@ -253,8 +253,74 @@ export class SupabaseRoomPaymentImageRepository implements RoomPaymentImageRepos
     return this.mapImage(image);
   }
 
+  async uploadAndLinkImage(
+    roomId: string,
+    file: File | Blob,
+    mimeType: string,
+    fileSizeBytes: number,
+    actorId: string
+  ): Promise<{ storagePath: string; signedUrl: string }> {
+    const allowedMimes: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+    };
+
+    const ext = allowedMimes[mimeType];
+    if (!ext) {
+      throw new Error(`Định dạng tệp không được hỗ trợ (${mimeType}). Chỉ chấp nhận JPEG, PNG, WebP.`);
+    }
+
+    if (fileSizeBytes > 5242880) {
+      throw new Error("Dung lượng tệp vượt quá giới hạn 5 MB.");
+    }
+
+    const storagePath = `${roomId}/qr-${Date.now()}.${ext}`;
+
+    // Upload to private bucket
+    const { error: uploadError } = await this.client.storage
+      .from("payment-images")
+      .upload(storagePath, file, {
+        contentType: mimeType,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      throw new Error(`Tải tệp lên Supabase Storage thất bại: ${uploadError.message}`);
+    }
+
+    // Generate signed URL (valid for 1 hour)
+    const signedUrl = await this.getSignedUrl(storagePath);
+
+    // Persist to room_payment_images metadata table
+    await this.createOrReplace({
+      roomId,
+      storagePath,
+      mimeType: mimeType as "image/jpeg" | "image/png" | "image/webp",
+      fileSize: fileSizeBytes,
+      uploadedBy: actorId,
+    });
+
+    // Audit log
+    await this.client.from("audit_logs").insert({
+      actor_id: actorId,
+      action: "room_payment_image.uploaded",
+      target_type: "room",
+      target_id: roomId,
+      metadata: { storagePath, mimeType, fileSizeBytes },
+    });
+
+    return { storagePath, signedUrl };
+  }
+
   async remove(roomId: string, actorId: string): Promise<void> {
+    const existing = await this.findByRoomId(roomId);
+    if (existing?.storagePath) {
+      await this.client.storage.from("payment-images").remove([existing.storagePath]);
+    }
+
     await this.client.from("room_payment_images").delete().eq("room_id", roomId);
+
     await this.client.from("audit_logs").insert({
       actor_id: actorId,
       action: "room_payment_image.removed",

@@ -9,6 +9,7 @@ import { PaymentInfoModal } from "@/modules/funds/presentation/PaymentInfoModal"
 import {
   fundContributionRepository,
   paymentRepository,
+  roomPaymentImageRepository,
   roomRepository,
   userRepository,
 } from "@/lib/repository";
@@ -22,6 +23,8 @@ import {
   CreditCardIcon,
   Building01Icon,
 } from "@hugeicons/core-free-icons";
+
+import { useUserRealtime } from "@/lib/realtime/useUserRealtime";
 
 type FundStatusFilter = "all" | "outstanding" | "paid";
 
@@ -40,6 +43,16 @@ export default function PersonalFundsPage() {
   // Modal xem thông tin chuyển khoản (QR code)
   const [selectedContribution, setSelectedContribution] =
     useState<FundContribution | null>(null);
+
+  // Refresh trigger
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Realtime subscription for personal fund updates
+  useUserRealtime({
+    userId: currentUser?.id ?? "",
+    onDataChange: () => setRefreshKey((k) => k + 1),
+    enabled: Boolean(currentUser),
+  });
 
   // Load data from Supabase
   useEffect(() => {
@@ -90,7 +103,7 @@ export default function PersonalFundsPage() {
     return () => {
       isMounted = false;
     };
-  }, [currentUser]);
+  }, [currentUser, refreshKey]);
 
   // Tổng hợp thống kê cá nhân
   const stats = useMemo(() => {
@@ -129,10 +142,35 @@ export default function PersonalFundsPage() {
 
   const activeOwner = activeRoom ? usersMap.get(activeRoom.ownerId) : undefined;
 
-  const activePaymentImage = useMemo(() => {
-    if (!activeRoom) return null;
-    return activeRoom.paymentImageUrl ?? null;
-  }, [activeRoom]);
+  const [modalPaymentImageUrl, setModalPaymentImageUrl] = useState<string | null>(null);
+
+  // Dynamically resolve signed QR URL when a contribution is selected
+  useEffect(() => {
+    let isMounted = true;
+    async function loadQrUrl() {
+      if (!selectedContribution) {
+        if (isMounted) setModalPaymentImageUrl(null);
+        return;
+      }
+      try {
+        const img = await roomPaymentImageRepository.findByRoomId(selectedContribution.roomId);
+        if (img?.storagePath) {
+          const url = await roomPaymentImageRepository.getSignedUrl(img.storagePath);
+          if (isMounted) setModalPaymentImageUrl(url);
+        } else {
+          if (isMounted) setModalPaymentImageUrl(null);
+        }
+      } catch (err) {
+        console.error("Failed to load signed QR URL:", err);
+      }
+    }
+    loadQrUrl();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedContribution]);
+
+  const activePaymentImage = modalPaymentImageUrl || activeRoom?.paymentImageUrl || null;
 
   // Nếu người dùng chưa đăng nhập (guest)
   if (!isAuthenticated || !currentUser) {

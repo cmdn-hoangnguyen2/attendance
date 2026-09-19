@@ -26,6 +26,8 @@ import { AttendanceTab } from "@/modules/meetings/presentation/AttendanceTab";
 import { RoomFundsTab } from "@/modules/meetings/presentation/RoomFundsTab";
 import { ArchiveRoomModal } from "@/modules/rooms/presentation/ArchiveRoomModal";
 import { TransferOwnershipModal } from "@/modules/rooms/presentation/TransferOwnershipModal";
+import { UploadPaymentQrModal } from "@/modules/funds/presentation/UploadPaymentQrModal";
+import { useRoomRealtime } from "@/lib/realtime/useRoomRealtime";
 import {
   attendanceRepository,
   fundContributionRepository,
@@ -33,6 +35,7 @@ import {
   meetingSessionRepository,
   membershipRepository,
   paymentRepository,
+  roomPaymentImageRepository,
   roomRepository,
   userRepository,
 } from "@/lib/repository";
@@ -61,9 +64,10 @@ export default function MeetingDetailPage() {
   const [fundCandidates, setFundCandidates] = useState<FundCandidate[]>([]);
   const [contributions, setContributions] = useState<FundContribution[]>([]);
 
-  // State cho các modal Archive và Transfer Ownership
+  // State cho các modal Archive, Transfer Ownership và QR Code
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [isPaymentQrModalOpen, setIsPaymentQrModalOpen] = useState(false);
 
   // Tab điều hướng hiện tại
   const [activeTab, setActiveTab] = useState<MeetingTab>("members");
@@ -74,6 +78,14 @@ export default function MeetingDetailPage() {
   // Refresh trigger
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Realtime subscription for room events
+  useRoomRealtime({
+    roomId,
+    sessionId: meetingSession?.id,
+    onDataChange: () => setRefreshKey((k) => k + 1),
+    enabled: Boolean(room && !isLoading),
+  });
+
   // Load live data from Supabase
   useEffect(() => {
     if (!roomId) return;
@@ -81,7 +93,7 @@ export default function MeetingDetailPage() {
 
     async function fetchData() {
       try {
-        const [fetchedRoom, fetchedUsers, fetchedMembers, fetchedRequests, fetchedSessions, fetchedFunds] =
+        const [fetchedRoom, fetchedUsers, fetchedMembers, fetchedRequests, fetchedSessions, fetchedFunds, fetchedImage] =
           await Promise.all([
             roomRepository.findById(roomId),
             userRepository.listAll({ includeArchived: true }),
@@ -89,11 +101,21 @@ export default function MeetingDetailPage() {
             joinRequestRepository.findByRoomId(roomId),
             meetingSessionRepository.findByRoomId(roomId),
             fundContributionRepository.findByRoomId(roomId),
+            roomPaymentImageRepository.findByRoomId(roomId),
           ]);
 
         if (!isMounted) return;
 
-        setRoom(fetchedRoom ?? undefined);
+        let signedPaymentUrl: string | null = null;
+        if (fetchedImage?.storagePath) {
+          signedPaymentUrl = await roomPaymentImageRepository.getSignedUrl(fetchedImage.storagePath);
+        }
+
+        const resolvedRoom = fetchedRoom
+          ? { ...fetchedRoom, paymentImageUrl: signedPaymentUrl }
+          : undefined;
+
+        setRoom(resolvedRoom);
 
         const uMap = new Map<string, User>();
         fetchedUsers.forEach((u) => uMap.set(u.id, u));
@@ -481,6 +503,7 @@ export default function MeetingDetailPage() {
         isOwnerOrAdmin={isOwnerOrAdmin}
         onOpenArchiveModal={() => setIsArchiveModalOpen(true)}
         onOpenTransferModal={() => setIsTransferModalOpen(true)}
+        onOpenPaymentQrModal={() => setIsPaymentQrModalOpen(true)}
       />
 
       {/* Tab 1: Thành viên & Duyệt tham gia */}
@@ -546,6 +569,39 @@ export default function MeetingDetailPage() {
           currentOwner={owner}
           eligibleMembers={activeMembers.filter((m) => m.id !== room.ownerId)}
           onConfirmTransfer={handleTransferOwnership}
+        />
+      )}
+
+      {/* Modal Cập Nhật Mã QR Thanh Toán */}
+      {room && (
+        <UploadPaymentQrModal
+          isOpen={isPaymentQrModalOpen}
+          onClose={() => setIsPaymentQrModalOpen(false)}
+          roomId={room.id}
+          roomName={room.name}
+          currentImageUrl={room.paymentImageUrl}
+          onUploadSuccess={(newUrl) => {
+            setRoom((prev) => (prev ? { ...prev, paymentImageUrl: newUrl } : prev));
+            setRefreshKey((k) => k + 1);
+          }}
+          onDeleteSuccess={() => {
+            setRoom((prev) => (prev ? { ...prev, paymentImageUrl: null } : prev));
+            setRefreshKey((k) => k + 1);
+          }}
+          uploadHandler={async (file: File) => {
+            if (!currentUser) throw new Error("Vui lòng đăng nhập để thực hiện.");
+            return roomPaymentImageRepository.uploadAndLinkImage(
+              roomId,
+              file,
+              file.type,
+              file.size,
+              currentUser.id
+            );
+          }}
+          deleteHandler={async () => {
+            if (!currentUser) throw new Error("Vui lòng đăng nhập để thực hiện.");
+            await roomPaymentImageRepository.remove(roomId, currentUser.id);
+          }}
         />
       )}
     </main>
