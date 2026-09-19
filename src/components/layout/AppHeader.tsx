@@ -1,0 +1,134 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuthMock } from "@/context/AuthMockContext";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Home01Icon,
+  Folder01Icon,
+  Coins01Icon,
+  Settings01Icon,
+  Login01Icon,
+  Logout01Icon,
+} from "@hugeicons/core-free-icons";
+
+export function AppHeader() {
+  const pathname = usePathname();
+  const { currentUser, isAuthenticated, isAdmin, setRole } = useAuthMock();
+
+  const handleLogout = () => {
+    setRole("guest");
+  };
+
+  const handleLogin = () => {
+    setRole("user");
+  };
+
+  const navLinks = [
+    { href: "/", label: "Trang chủ", icon: Home01Icon, show: true },
+    { href: "/my-rooms", label: "Phòng của tôi", icon: Folder01Icon, show: isAuthenticated },
+    { href: "/funds", label: "Quỹ", icon: Coins01Icon, show: isAuthenticated },
+    { href: "/settings", label: "Cài đặt", icon: Settings01Icon, show: isAdmin },
+  ];
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-[#C9F2E3] bg-white/95 backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        {/* Brand Logo & Name */}
+        <div className="flex items-center gap-8">
+          <Link
+            href="/"
+            className="flex items-center gap-3 text-decoration-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
+          >
+            {/* Logo icon container: 40x40px (bội số của 8) */}
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#10D9A3] to-[#05966B] text-white shadow-xs">
+              <span className="font-extrabold text-base tracking-wider">CM</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-lg leading-tight text-[#0B1F1A]">
+                DiemDanhCMDN
+              </span>
+              <span className="text-[11px] font-medium text-[#4B665D]">
+                Điểm danh & Quản lý Quỹ
+              </span>
+            </div>
+          </Link>
+
+          {/* Navigation Links (Desktop) */}
+          <nav aria-label="Menu chính" className="hidden md:flex items-center gap-2">
+            {navLinks
+              .filter((item) => item.show)
+              .map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                      isActive
+                        ? "bg-[#E8FBF4] text-[#05966B]"
+                        : "text-[#4B665D] hover:bg-neutral-50 hover:text-[#0B1F1A]"
+                    }`}
+                  >
+                    <HugeiconsIcon icon={item.icon} size={18} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+          </nav>
+        </div>
+
+        {/* User Auth Section */}
+        <div className="flex items-center gap-4">
+          {isAuthenticated && currentUser ? (
+            <div className="flex items-center gap-3">
+              {/* User Avatar Circle: 32x32px (chuẩn 8pt) */}
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E8FBF4] font-bold text-xs text-[#05966B] border border-[#C9F2E3]">
+                {currentUser.displayName.charAt(0).toUpperCase()}
+              </div>
+
+              {/* User Information */}
+              <div className="hidden sm:flex flex-col text-left">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-sm leading-none text-[#0B1F1A]">
+                    {currentUser.displayName}
+                  </span>
+                  {isAdmin ? (
+                    <span className="rounded bg-[#E8FBF4] px-1.5 py-0.5 text-[10px] font-bold text-[#05966B] border border-[#C9F2E3]">
+                      Admin
+                    </span>
+                  ) : null}
+                </div>
+                <span className="text-xs text-[#4B665D] leading-none mt-1">
+                  {currentUser.email}
+                </span>
+              </div>
+
+              {/* Logout Button */}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 rounded-lg border border-[#C9F2E3] px-3 py-1.5 text-xs font-semibold text-[#4B665D] transition-colors hover:bg-neutral-50 hover:text-[#0B1F1A]"
+                title="Đăng xuất khỏi phiên giả lập"
+              >
+                <HugeiconsIcon icon={Logout01Icon} size={16} />
+                <span className="hidden sm:inline">Thoát</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleLogin}
+              className="flex items-center gap-2 rounded-lg bg-[#10D9A3] px-4 py-2 text-sm font-semibold text-[#0B1F1A] shadow-xs transition-colors hover:bg-[#05966B] hover:text-white"
+            >
+              <HugeiconsIcon icon={Login01Icon} size={18} />
+              <span>Đăng nhập</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
