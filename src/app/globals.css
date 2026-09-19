@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #10D9A3;
+  --color-primary-hover: #05966B;
+  --color-primary-dark: #05966B;
+  --color-neutral-white: #FFFFFF;
+  --color-neutral-surface: #E8FBF4;
+  --color-neutral-dark: #0B1F1A;
+  --color-neutral-muted: #4B665D;
+  --color-neutral-border: #C9F2E3;
+
+  /* 8-point grid: 4px is reserved for approved micro-adjustments. */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-4: 16px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+  --spacing-20: 80px;
+  --spacing-24: 96px;
+
+  /* Radius values follow the same 4px/8px grid. */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+:root {
+  --background: #FFFFFF;
+  --foreground: #0B1F1A;
+}
+
+/* 8-point grid base tokens */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Focus visible standard */
+:focus-visible {
+  outline: 2px solid #10D9A3;
+  outline-offset: 2px;
+}
