@@ -88,25 +88,25 @@ export function RoomFundsTab({
         </div>
 
         {/* Card 2: Đã thu */}
-        <div className="rounded-2xl border border-[#C9F2E3] bg-[#E8FBF4]/60 p-6 shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#05966B]">
+        <div className="rounded-2xl border border-neutral-border bg-neutral-surface/60 p-6 shadow-xs">
+          <span className="text-xs font-bold uppercase tracking-wider text-primary-dark">
             Đã thu thành công
           </span>
-          <div className="mt-2 text-2xl font-black text-[#05966B]">
+          <div className="mt-2 text-2xl font-black text-primary-dark">
             {formatVND(totalPaid)}
           </div>
-          <span className="text-xs text-[#4B665D] mt-1 block">
+          <span className="text-xs text-neutral-muted mt-1 block">
             {contributions.filter((c) => c.status === "paid").length} khoản đã xác nhận
           </span>
         </div>
 
         {/* Card 3: Nút tạo khoản quỹ nhanh & Nút xem QR phòng */}
-        <div className="flex flex-col justify-between rounded-2xl border border-[#C9F2E3] bg-white p-6 shadow-xs">
+        <div className="flex flex-col justify-between rounded-2xl border border-neutral-border bg-white p-6 shadow-xs">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#4B665D]">
+            <span className="text-xs font-bold uppercase tracking-wider text-neutral-muted">
               Hành động quỹ phòng
             </span>
-            <p className="text-xs text-[#4B665D] mt-1">
+            <p className="text-xs text-neutral-muted mt-1">
               Quét mã QR để chuyển khoản hoặc tạo khoản nghĩa vụ quỹ
             </p>
           </div>
@@ -116,7 +116,7 @@ export function RoomFundsTab({
             <button
               type="button"
               onClick={() => setIsQrModalOpen(true)}
-              className="flex items-center justify-center gap-2 rounded-xl border border-[#C9F2E3] bg-[#E8FBF4] px-4 py-2.5 text-xs font-bold text-[#05966B] hover:bg-[#C9F2E3]/60 transition-colors shadow-2xs"
+              className="flex items-center justify-center gap-2 rounded-xl border border-neutral-border bg-neutral-surface px-4 py-2.5 text-xs font-bold text-primary-dark hover:bg-neutral-border/60 transition-colors shadow-2xs"
             >
               <HugeiconsIcon icon={QrCode01Icon} size={16} />
               <span>Xem mã QR thanh toán</span>
@@ -126,7 +126,7 @@ export function RoomFundsTab({
               <button
                 type="button"
                 onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center justify-center gap-2 rounded-xl bg-[#10D9A3] px-4 py-2.5 text-xs font-bold text-[#0B1F1A] shadow-xs hover:bg-[#05966B] hover:text-white transition-colors"
+                className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-neutral-dark shadow-xs hover:bg-primary-hover hover:text-white transition-colors"
               >
                 <HugeiconsIcon icon={PlusSignIcon} size={16} />
                 <span>Tạo khoản đóng quỹ</span>
@@ -137,13 +137,13 @@ export function RoomFundsTab({
       </section>
 
       {/* SECTION 2: Bảng Danh Sách Khoản Đóng Quỹ */}
-      <section aria-labelledby="funds-list-title" className="rounded-2xl border border-[#C9F2E3] bg-white p-6 shadow-xs">
+      <section aria-labelledby="funds-list-title" className="rounded-2xl border border-neutral-border bg-white p-6 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-100 pb-4 mb-6">
           <div>
-            <h2 id="funds-list-title" className="text-lg font-bold text-[#0B1F1A]">
+            <h2 id="funds-list-title" className="text-lg font-bold text-neutral-dark">
               Sổ quỹ phòng họp ({contributions.length})
             </h2>
-            <p className="text-xs text-[#4B665D]">
+            <p className="text-xs text-neutral-muted">
               Theo dõi lịch sử và trạng thái đóng quỹ của các thành viên
             </p>
           </div>
@@ -152,7 +152,7 @@ export function RoomFundsTab({
         {contributions.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-neutral-200 text-xs font-bold uppercase text-[#4B665D] bg-neutral-50/50">
+              <thead className="border-b border-neutral-200 text-xs font-bold uppercase text-neutral-muted bg-neutral-50/50">
                 <tr>
                   <th className="py-3 px-4">Thành viên</th>
                   <th className="py-3 px-4">Số tiền</th>
@@ -174,24 +174,24 @@ export function RoomFundsTab({
                     <tr key={item.id} className="hover:bg-neutral-50/50">
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E8FBF4] text-[#05966B] font-bold text-xs">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-surface text-primary-dark font-bold text-xs">
                             {contributor?.displayName?.charAt(0) ?? "?"}
                           </div>
                           <div>
-                            <span className="font-bold text-[#0B1F1A] block">
+                            <span className="font-bold text-neutral-dark block">
                               {contributor?.displayName ?? "Thành viên ẩn"}
                             </span>
-                            <span className="text-xs text-[#4B665D]">{contributor?.email}</span>
+                            <span className="text-xs text-neutral-muted">{contributor?.email}</span>
                           </div>
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4 font-extrabold text-[#0B1F1A]">
+                      <td className="py-3.5 px-4 font-extrabold text-neutral-dark">
                         {formatVND(item.amount)}
                       </td>
 
-                      <td className="py-3.5 px-4 text-xs text-[#4B665D]">
-                        <span className="font-semibold text-[#0B1F1A]">{item.reason}</span>
+                      <td className="py-3.5 px-4 text-xs text-neutral-muted">
+                        <span className="font-semibold text-neutral-dark">{item.reason}</span>
                         {item.reasonDetails ? (
                           <span className="block text-[11px] text-neutral-500 italic mt-0.5">
                             &ldquo;{item.reasonDetails}&rdquo;
@@ -201,7 +201,7 @@ export function RoomFundsTab({
 
                       <td className="py-3.5 px-4">
                         {isPaid ? (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-[#E8FBF4] px-2.5 py-1 text-xs font-bold text-[#05966B]">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-neutral-surface px-2.5 py-1 text-xs font-bold text-primary-dark">
                             <HugeiconsIcon icon={CheckmarkCircle01Icon} size={14} />
                             <span>Đã nộp</span>
                           </span>
@@ -213,7 +213,7 @@ export function RoomFundsTab({
                         )}
                       </td>
 
-                      <td className="py-3.5 px-4 text-xs text-[#4B665D]">
+                      <td className="py-3.5 px-4 text-xs text-neutral-muted">
                         {new Date(item.createdAt).toLocaleDateString("vi-VN")}
                       </td>
 
@@ -226,7 +226,7 @@ export function RoomFundsTab({
                               <button
                                 type="button"
                                 onClick={() => onConfirmPayment(item.id)}
-                                className="inline-flex items-center gap-1 rounded-lg bg-[#05966B] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#0B1F1A] transition-colors shadow-2xs"
+                                className="inline-flex items-center gap-1 rounded-lg bg-primary-dark px-3 py-1.5 text-xs font-bold text-white hover:bg-neutral-dark transition-colors shadow-2xs"
                                 title="Xác nhận thành viên đã nộp đủ tiền"
                               >
                                 <HugeiconsIcon icon={CheckmarkCircle01Icon} size={14} />
@@ -254,7 +254,7 @@ export function RoomFundsTab({
             </table>
           </div>
         ) : (
-          <div className="py-12 text-center text-xs text-[#4B665D]">
+          <div className="py-12 text-center text-xs text-neutral-muted">
             Chưa có khoản đóng quỹ nào được ghi nhận trong phòng này.
           </div>
         )}

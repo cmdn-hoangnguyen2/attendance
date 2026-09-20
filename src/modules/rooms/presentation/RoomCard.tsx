@@ -129,7 +129,7 @@ export function RoomCard({
         {canDirectlyEnter ? (
           <Link
             href={`/meeting/${room.id}`}
-            className="flex w-full items-center justify-center rounded-full bg-[#10D9A3] px-4 py-2 text-sm font-bold text-neutral-900 shadow-xs transition-colors hover:bg-[#05966B] hover:text-white"
+            className="flex w-full items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-bold text-neutral-900 shadow-xs transition-colors hover:bg-primary-hover hover:text-white"
           >
             Vào phòng họp
           </Link>
@@ -137,7 +137,7 @@ export function RoomCard({
           <button
             type="button"
             onClick={handleRequestClick}
-            className="w-full rounded-full bg-[#10D9A3] px-4 py-2 text-sm font-bold text-neutral-900 shadow-xs transition-colors hover:bg-[#05966B] hover:text-white"
+            className="w-full rounded-full bg-primary px-4 py-2 text-sm font-bold text-neutral-900 shadow-xs transition-colors hover:bg-primary-hover hover:text-white"
           >
             Tham gia ngay
           </button>

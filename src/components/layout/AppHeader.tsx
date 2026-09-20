@@ -46,23 +46,23 @@ export function AppHeader() {
   const isLoginPage = pathname === "/login";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#C9F2E3] bg-white/95 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-neutral-border bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         {/* Brand Logo & Name */}
         <div className="flex items-center gap-8">
           <Link
             href="/"
-            className="flex items-center gap-3 text-decoration-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
+            className="flex items-center gap-3 text-decoration-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             {/* Logo icon container: 40x40px (chuẩn 8pt) */}
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#10D9A3] to-[#05966B] text-white shadow-xs">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-primary-dark text-white shadow-xs">
               <span className="font-extrabold text-base tracking-wider">CM</span>
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-lg leading-tight text-[#0B1F1A]">
+              <span className="font-bold text-lg leading-tight text-neutral-dark">
                 DiemDanhCMDN
               </span>
-              <span className="text-[11px] font-medium text-[#4B665D]">
+              <span className="text-[11px] font-medium text-neutral-muted">
                 Điểm danh & Quản lý Quỹ
               </span>
             </div>
@@ -81,8 +81,8 @@ export function AppHeader() {
                       href={item.href}
                       className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
                         isActive
-                          ? "bg-[#E8FBF4] text-[#05966B]"
-                          : "text-[#4B665D] hover:bg-neutral-50 hover:text-[#0B1F1A]"
+                          ? "bg-neutral-surface text-primary-dark"
+                          : "text-neutral-muted hover:bg-neutral-50 hover:text-neutral-dark"
                       }`}
                     >
                       <HugeiconsIcon icon={item.icon} size={18} />
@@ -100,23 +100,23 @@ export function AppHeader() {
             {isAuthenticated && currentUser ? (
               <div className="flex items-center gap-3">
                 {/* User Avatar Circle: 32x32px (chuẩn 8pt) */}
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E8FBF4] font-bold text-xs text-[#05966B] border border-[#C9F2E3]">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-surface font-bold text-xs text-primary-dark border border-neutral-border">
                   {currentUser.displayName.charAt(0).toUpperCase()}
                 </div>
 
                 {/* User Information (Desktop only) */}
                 <div className="hidden sm:flex flex-col text-left">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm leading-none text-[#0B1F1A]">
+                    <span className="font-semibold text-sm leading-none text-neutral-dark">
                       {currentUser.displayName}
                     </span>
                     {isAdmin ? (
-                      <span className="rounded bg-[#E8FBF4] px-1.5 py-0.5 text-[10px] font-bold text-[#05966B] border border-[#C9F2E3]">
+                      <span className="rounded bg-neutral-surface px-1.5 py-0.5 text-[10px] font-bold text-primary-dark border border-neutral-border">
                         Admin
                       </span>
                     ) : null}
                   </div>
-                  <span className="text-xs text-[#4B665D] leading-none mt-1">
+                  <span className="text-xs text-neutral-muted leading-none mt-1">
                     {currentUser.email}
                   </span>
                 </div>
@@ -125,7 +125,7 @@ export function AppHeader() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="flex items-center gap-1.5 rounded-lg border border-[#C9F2E3] px-3 py-1.5 text-xs font-semibold text-[#4B665D] transition-colors hover:bg-neutral-50 hover:text-[#0B1F1A]"
+                  className="flex items-center gap-1.5 rounded-lg border border-neutral-border px-3 py-1.5 text-xs font-semibold text-neutral-muted transition-colors hover:bg-neutral-50 hover:text-neutral-dark"
                   title={isMockActive ? "Đăng xuất khỏi phiên giả lập" : "Đăng xuất"}
                 >
                   <HugeiconsIcon icon={Logout01Icon} size={16} />
@@ -136,7 +136,7 @@ export function AppHeader() {
               <button
                 type="button"
                 onClick={handleLogin}
-                className="flex items-center gap-2 rounded-lg bg-[#10D9A3] px-4 py-2 text-sm font-semibold text-[#0B1F1A] shadow-xs transition-colors hover:bg-[#05966B] hover:text-white"
+                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-neutral-dark shadow-xs transition-colors hover:bg-primary-hover hover:text-white"
               >
                 <HugeiconsIcon icon={Login01Icon} size={18} />
                 <span>Đăng nhập</span>
@@ -147,7 +147,7 @@ export function AppHeader() {
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex h-10 w-10 md:hidden items-center justify-center rounded-xl border border-[#C9F2E3] bg-[#E8FBF4] text-[#05966B] transition-colors hover:bg-[#C9F2E3]/60 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
+              className="flex h-10 w-10 md:hidden items-center justify-center rounded-xl border border-neutral-border bg-neutral-surface text-primary-dark transition-colors hover:bg-neutral-border/60 focus-visible:ring-2 focus-visible:ring-primary"
               aria-expanded={isMobileMenuOpen}
               aria-label="Mở menu điều hướng"
             >
@@ -161,7 +161,7 @@ export function AppHeader() {
       {!isLoginPage && isMobileMenuOpen && (
         <nav
           aria-label="Menu di động"
-          className="border-t border-[#C9F2E3] bg-white px-6 py-4 md:hidden shadow-lg animate-in slide-in-from-top-2"
+          className="border-t border-neutral-border bg-white px-6 py-4 md:hidden shadow-lg animate-in slide-in-from-top-2"
         >
           <div className="flex flex-col gap-1.5">
             {navLinks
@@ -175,8 +175,8 @@ export function AppHeader() {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
                       isActive
-                        ? "bg-[#E8FBF4] text-[#05966B]"
-                        : "text-[#4B665D] hover:bg-neutral-50 hover:text-[#0B1F1A]"
+                        ? "bg-neutral-surface text-primary-dark"
+                        : "text-neutral-muted hover:bg-neutral-50 hover:text-neutral-dark"
                     }`}
                   >
                     <HugeiconsIcon icon={item.icon} size={20} />

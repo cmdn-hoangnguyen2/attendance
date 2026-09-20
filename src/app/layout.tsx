@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" className={`${inter.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-neutral-white font-sans text-[#0B1F1A]">
+      <body className="flex min-h-full flex-col bg-neutral-white font-sans text-neutral-dark">
         <AuthMockProvider>
           <RoleSwitcherBanner />
           <AppHeader />

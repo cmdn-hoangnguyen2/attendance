@@ -36,7 +36,7 @@ export default function LoginPage() {
           className="w-full max-w-sm rounded-3xl border border-neutral-200 bg-white p-8 sm:p-10 shadow-xs flex flex-col items-center text-center"
         >
           {/* Brand Logo: 56x56px (8-point grid: 8x7=56) */}
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#10D9A3] to-[#05966B] text-white shadow-xs mb-5">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-primary-dark text-white shadow-xs mb-5">
             <span className="font-extrabold text-xl tracking-wider">CM</span>
           </div>
 
@@ -53,7 +53,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={handleAuth0Login}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#10D9A3] px-6 py-3.5 text-sm font-bold text-neutral-900 shadow-xs transition-all hover:bg-[#05966B] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#10D9A3] active:scale-[0.99]"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-bold text-neutral-900 shadow-xs transition-all hover:bg-primary-hover hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.99]"
             >
               <HugeiconsIcon icon={Login01Icon} size={18} />
               <span>Tiếp tục với Google</span>

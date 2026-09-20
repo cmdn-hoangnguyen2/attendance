@@ -85,14 +85,14 @@ export function RoomsManagementTab({
     <div className="space-y-6">
       {/* 3 Thẻ thống kê phòng họp (Summary Cards) */}
       <section aria-label="Thống kê phòng họp" className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="rounded-2xl border border-[#C9F2E3] bg-white p-6 shadow-xs">
-          <p className="text-xs font-semibold text-[#4B665D]">Tổng số phòng họp</p>
-          <p className="text-2xl font-black text-[#0B1F1A] mt-1">{rooms.length}</p>
+        <div className="rounded-2xl border border-neutral-border bg-white p-6 shadow-xs">
+          <p className="text-xs font-semibold text-neutral-muted">Tổng số phòng họp</p>
+          <p className="text-2xl font-black text-neutral-dark mt-1">{rooms.length}</p>
         </div>
 
-        <div className="rounded-2xl border border-[#C9F2E3] bg-[#E8FBF4]/50 p-6 shadow-xs">
-          <p className="text-xs font-semibold text-[#05966B]">Đang hoạt động</p>
-          <p className="text-2xl font-black text-[#0B1F1A] mt-1">{activeRoomsCount}</p>
+        <div className="rounded-2xl border border-neutral-border bg-neutral-surface/50 p-6 shadow-xs">
+          <p className="text-xs font-semibold text-primary-dark">Đang hoạt động</p>
+          <p className="text-2xl font-black text-neutral-dark mt-1">{activeRoomsCount}</p>
         </div>
 
         <div className="rounded-2xl border border-neutral-300 bg-neutral-100/60 p-6 shadow-xs">
@@ -102,17 +102,17 @@ export function RoomsManagementTab({
       </section>
 
       {/* Tiện ích Quét & Đóng phiên họp quá hạn (Scheduled Close Cron) */}
-      <section aria-label="Scheduled Close Sessions Cron" className="rounded-2xl border border-[#C9F2E3] bg-gradient-to-r from-white via-[#E8FBF4]/30 to-white p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <section aria-label="Scheduled Close Sessions Cron" className="rounded-2xl border border-neutral-border bg-linear-to-r from-white via-neutral-surface/30 to-white p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#05966B]">
+          <div className="flex items-center gap-2 text-xs font-bold text-primary-dark">
             <HugeiconsIcon icon={Clock01Icon} size={16} />
             <span>Tự động đóng phiên họp (Scheduled Close Session)</span>
           </div>
-          <p className="text-xs text-[#4B665D]">
+          <p className="text-xs text-neutral-muted">
             Các phiên họp quá hạn <code className="font-mono bg-neutral-100 px-1 py-0.5 rounded text-[11px]">closesAt</code> (nửa đêm sau giờ họp) sẽ tự động đóng. Bạn có thể kích hoạt quét dọn dẹp thủ công ngay lập tức.
           </p>
           {closeFeedback && (
-            <p className={`text-xs font-semibold pt-1 ${closeFeedback.success ? "text-[#05966B]" : "text-rose-600"}`}>
+            <p className={`text-xs font-semibold pt-1 ${closeFeedback.success ? "text-primary-dark" : "text-rose-600"}`}>
               {closeFeedback.message}
             </p>
           )}
@@ -122,19 +122,19 @@ export function RoomsManagementTab({
           type="button"
           onClick={handleManualCloseSessions}
           disabled={isClosingSessions}
-          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white border border-[#C9F2E3] px-4 py-2.5 text-xs font-semibold text-[#0B1F1A] shadow-xs hover:bg-[#E8FBF4] hover:text-[#05966B] hover:border-[#10D9A3] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white border border-neutral-border px-4 py-2.5 text-xs font-semibold text-neutral-dark shadow-xs hover:bg-neutral-surface hover:text-primary-dark hover:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <HugeiconsIcon
             icon={ArrowReloadHorizontalIcon}
             size={16}
-            className={isClosingSessions ? "animate-spin text-[#05966B]" : ""}
+            className={isClosingSessions ? "animate-spin text-primary-dark" : ""}
           />
           <span>{isClosingSessions ? "Đang quét..." : "Quét & Đóng phiên quá hạn"}</span>
         </button>
       </section>
 
       {/* Thanh bộ lọc & Tìm kiếm */}
-      <section aria-label="Bộ lọc phòng họp" className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-[#C9F2E3] pb-4">
+      <section aria-label="Bộ lọc phòng họp" className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-neutral-border pb-4">
         {/* Sub-tabs trạng thái */}
         <div className="flex items-center gap-2">
           <button
@@ -142,8 +142,8 @@ export function RoomsManagementTab({
             onClick={() => setStatusFilter("all")}
             className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
               statusFilter === "all"
-                ? "bg-[#05966B] text-white shadow-xs"
-                : "bg-white text-[#4B665D] border border-neutral-200 hover:bg-neutral-50"
+                ? "bg-primary-dark text-white shadow-xs"
+                : "bg-white text-neutral-muted border border-neutral-200 hover:bg-neutral-50"
             }`}
           >
             <span>Tất cả</span>
@@ -157,12 +157,12 @@ export function RoomsManagementTab({
             onClick={() => setStatusFilter("active")}
             className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
               statusFilter === "active"
-                ? "bg-[#05966B] text-white shadow-xs"
-                : "bg-white text-[#05966B] border border-[#C9F2E3] hover:bg-[#E8FBF4]/50"
+                ? "bg-primary-dark text-white shadow-xs"
+                : "bg-white text-primary-dark border border-neutral-border hover:bg-neutral-surface/50"
             }`}
           >
             <span>Đang hoạt động</span>
-            <span className="rounded-full bg-[#C9F2E3]/60 px-1.5 py-0.2 text-[10px] text-[#05966B]">
+            <span className="rounded-full bg-neutral-border/60 px-1.5 py-0.2 text-[10px] text-primary-dark">
               {activeRoomsCount}
             </span>
           </button>
@@ -185,7 +185,7 @@ export function RoomsManagementTab({
 
         {/* Ô tìm kiếm */}
         <div className="relative w-full sm:w-72">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[#4B665D]">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-muted">
             <HugeiconsIcon icon={Search01Icon} size={16} />
           </div>
           <input
@@ -193,16 +193,16 @@ export function RoomsManagementTab({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Tìm theo tên hoặc mã phòng..."
-            className="w-full rounded-xl border border-[#C9F2E3] bg-white py-2 pl-9 pr-4 text-xs font-medium text-[#0B1F1A] placeholder:text-neutral-400 focus:border-[#10D9A3] focus:outline-none focus:ring-2 focus:ring-[#10D9A3]/20"
+            className="w-full rounded-xl border border-neutral-border bg-white py-2 pl-9 pr-4 text-xs font-medium text-neutral-dark placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
       </section>
 
       {/* Bảng danh sách Phòng họp */}
-      <section aria-label="Bảng danh sách phòng họp" className="overflow-hidden rounded-2xl border border-[#C9F2E3] bg-white shadow-xs">
+      <section aria-label="Bảng danh sách phòng họp" className="overflow-hidden rounded-2xl border border-neutral-border bg-white shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-[#0B1F1A]">
-            <thead className="bg-[#E8FBF4]/60 border-b border-[#C9F2E3] text-[11px] font-bold text-[#05966B] uppercase tracking-wider">
+          <table className="w-full text-left text-xs text-neutral-dark">
+            <thead className="bg-neutral-surface/60 border-b border-neutral-border text-[11px] font-bold text-primary-dark uppercase tracking-wider">
               <tr>
                 <th scope="col" className="px-6 py-3.5">
                   Tên phòng họp
@@ -233,17 +233,17 @@ export function RoomsManagementTab({
                   <tr key={room.id} className="hover:bg-neutral-50/70 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-100 text-[#0B1F1A]">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-100 text-neutral-dark">
                           <HugeiconsIcon icon={Folder01Icon} size={18} />
                         </span>
                         <div>
                           <Link
                             href={`/meeting/${room.id}`}
-                            className="font-bold text-[#0B1F1A] hover:text-[#05966B] transition-colors"
+                            className="font-bold text-neutral-dark hover:text-primary-dark transition-colors"
                           >
                             {room.name}
                           </Link>
-                          <p className="text-[11px] text-[#4B665D]">
+                          <p className="text-[11px] text-neutral-muted">
                             ID: {room.id}
                           </p>
                         </div>
@@ -252,7 +252,7 @@ export function RoomsManagementTab({
 
                     <td className="px-6 py-4">
                       {room.visibility === "public" ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-[#E8FBF4] px-2.5 py-1 text-[11px] font-bold text-[#05966B]">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-neutral-surface px-2.5 py-1 text-[11px] font-bold text-primary-dark">
                           <HugeiconsIcon icon={Globe02Icon} size={12} />
                           <span>Công khai</span>
                         </span>
@@ -265,15 +265,15 @@ export function RoomsManagementTab({
                     </td>
 
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-1.5 text-xs text-[#0B1F1A]">
-                        <HugeiconsIcon icon={UserIcon} size={13} className="text-[#4B665D]" />
+                      <div className="flex items-center gap-1.5 text-xs text-neutral-dark">
+                        <HugeiconsIcon icon={UserIcon} size={13} className="text-neutral-muted" />
                         <span>{owner?.displayName ?? "Chưa xác định"}</span>
                       </div>
                     </td>
 
                     <td className="px-6 py-4">
                       {isActive ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-[#E8FBF4] px-2.5 py-1 text-[11px] font-bold text-[#05966B]">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-neutral-surface px-2.5 py-1 text-[11px] font-bold text-primary-dark">
                           <HugeiconsIcon icon={CheckmarkCircle01Icon} size={12} />
                           <span>Hoạt động</span>
                         </span>
@@ -285,7 +285,7 @@ export function RoomsManagementTab({
                       )}
                     </td>
 
-                    <td className="px-6 py-4 text-[11px] text-[#4B665D]">
+                    <td className="px-6 py-4 text-[11px] text-neutral-muted">
                       {new Date(room.createdAt).toLocaleDateString("vi-VN")}
                     </td>
 
@@ -303,7 +303,7 @@ export function RoomsManagementTab({
                         <button
                           type="button"
                           onClick={() => onRestoreRoom(room.id)}
-                          className="inline-flex items-center gap-1 rounded-lg bg-[#05966B] px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#05966B]/90 transition-colors"
+                          className="inline-flex items-center gap-1 rounded-lg bg-primary-dark px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-dark/90 transition-colors"
                         >
                           <HugeiconsIcon icon={ArrowReloadHorizontalIcon} size={14} />
                           <span>Khôi phục</span>

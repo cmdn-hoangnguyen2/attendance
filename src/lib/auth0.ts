@@ -9,6 +9,21 @@ import { SupabaseUserRepository } from "@/modules/admin/infrastructure/supabase-
  * - Synchronizes active user into Supabase users table via beforeSessionSaved hook.
  * - Admin role is determined by the custom claim https://diemdanh.cmdn/role emitted by Auth0 RBAC.
  */
+function resolveAppBaseUrl(): string {
+  const customUrl = process.env.APP_BASE_URL;
+  if (customUrl && !customUrl.includes("localhost")) {
+    return customUrl;
+  }
+  // Automatically fallback to Vercel production domain if running on Vercel
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return customUrl || "http://localhost:3000";
+}
+
 export const auth0 = new Auth0Client({
   domain: process.env.AUTH0_DOMAIN || "dummy.auth0.com",
   clientId: process.env.AUTH0_CLIENT_ID || "dummy-client-id",
@@ -16,7 +31,7 @@ export const auth0 = new Auth0Client({
   secret:
     process.env.AUTH0_SECRET ||
     "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-  appBaseUrl: process.env.APP_BASE_URL || "http://localhost:3000",
+  appBaseUrl: resolveAppBaseUrl(),
   authorizationParameters: {
     prompt: "select_account",
     connection: process.env.AUTH0_CONNECTION || "google-oauth2",

@@ -247,7 +247,7 @@ export default function HomePage() {
                   }
                   setIsCreateModalOpen(true);
                 }}
-                className="flex items-center gap-2 rounded-full bg-[#10D9A3] px-6 py-3 text-sm font-bold text-neutral-900 shadow-xs transition-all hover:bg-[#05966B] hover:text-white hover:shadow-md active:scale-[0.99]"
+                className="flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-neutral-900 shadow-xs transition-all hover:bg-primary-hover hover:text-white hover:shadow-md active:scale-[0.99]"
               >
                 <HugeiconsIcon icon={PlusSignIcon} size={18} />
                 <span>Tạo phòng mới</span>

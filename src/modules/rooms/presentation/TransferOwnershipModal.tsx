@@ -73,23 +73,23 @@ export function TransferOwnershipModal({
     >
       {/* Container: Bo góc 24px (rounded-3xl), padding 32px (p-8, space-5) */}
       <div
-        className="w-full max-w-lg rounded-3xl border border-[#C9F2E3] bg-white p-8 shadow-2xl space-y-6"
+        className="w-full max-w-lg rounded-3xl border border-neutral-border bg-white p-8 shadow-2xl space-y-6"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Modal */}
         <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#05966B]">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-surface text-primary-dark">
               <HugeiconsIcon icon={UserSwitchIcon} size={20} />
             </span>
             <div>
               <h2
                 id="transfer-ownership-modal-title"
-                className="text-base font-bold text-[#0B1F1A]"
+                className="text-base font-bold text-neutral-dark"
               >
                 Chuyển giao quyền chủ phòng
               </h2>
-              <p className="text-xs text-[#4B665D]">
+              <p className="text-xs text-neutral-muted">
                 Trao quyền quản trị phòng họp cho thành viên khác
               </p>
             </div>
@@ -105,14 +105,14 @@ export function TransferOwnershipModal({
         </div>
 
         {/* Thông báo quy định chuyển giao */}
-        <div className="rounded-2xl bg-neutral-50 p-4 border border-neutral-200 text-xs text-[#4B665D] space-y-2">
-          <div className="flex items-center gap-2 font-semibold text-[#0B1F1A]">
+        <div className="rounded-2xl bg-neutral-50 p-4 border border-neutral-200 text-xs text-neutral-muted space-y-2">
+          <div className="flex items-center gap-2 font-semibold text-neutral-dark">
             <HugeiconsIcon icon={CrownIcon} size={16} />
             <span>Phòng họp: {room.name}</span>
           </div>
           <p>
             Chủ phòng hiện tại:{" "}
-            <strong className="text-[#0B1F1A]">
+            <strong className="text-neutral-dark">
               {currentOwner?.displayName ?? "Chưa xác định"}
             </strong>
           </p>
@@ -126,7 +126,7 @@ export function TransferOwnershipModal({
           <div className="space-y-2">
             <label
               htmlFor="new-owner-select"
-              className="block text-xs font-semibold text-[#0B1F1A]"
+              className="block text-xs font-semibold text-neutral-dark"
             >
               Chọn thành viên tiếp nhận quyền chủ phòng:
             </label>
@@ -157,15 +157,15 @@ export function TransferOwnershipModal({
 
           {/* Xem trước thành viên được chọn */}
           {selectedMember && (
-            <div className="rounded-xl border border-[#C9F2E3] bg-[#E8FBF4]/40 p-3 flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#10D9A3]/30 text-[#05966B]">
+            <div className="rounded-xl border border-neutral-border bg-neutral-surface/40 p-3 flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/30 text-primary-dark">
                 <HugeiconsIcon icon={UserIcon} size={18} />
               </span>
               <div>
-                <p className="text-xs font-bold text-[#0B1F1A]">
+                <p className="text-xs font-bold text-neutral-dark">
                   {selectedMember.displayName}
                 </p>
-                <p className="text-[11px] text-[#4B665D]">
+                <p className="text-[11px] text-neutral-muted">
                   Sẽ trở thành Chủ phòng mới của &ldquo;{room.name}&rdquo;
                 </p>
               </div>
@@ -185,7 +185,7 @@ export function TransferOwnershipModal({
             <button
               type="submit"
               disabled={eligibleMembers.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#05966B] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#05966B]/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary-dark px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-primary-dark/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} />
               <span>Xác nhận chuyển quyền</span>

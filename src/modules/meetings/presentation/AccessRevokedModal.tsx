@@ -45,18 +45,18 @@ export function AccessRevokedModal({
         {/* Tiêu đề & Thông báo */}
         <h2
           id="access-revoked-title"
-          className="text-xl font-bold text-[#0B1F1A] mb-2"
+          className="text-xl font-bold text-neutral-dark mb-2"
         >
           Hết hạn quyền vào phòng họp
         </h2>
 
         <p
           id="access-revoked-desc"
-          className="text-sm text-[#4B665D] leading-relaxed mb-6"
+          className="text-sm text-neutral-muted leading-relaxed mb-6"
         >
           Bạn đã bị chủ phòng hoặc quản trị viên xóa khỏi phòng họp{" "}
           {roomName ? (
-            <span className="font-semibold text-[#0B1F1A]">
+            <span className="font-semibold text-neutral-dark">
               &ldquo;{roomName}&rdquo;
             </span>
           ) : (
@@ -70,7 +70,7 @@ export function AccessRevokedModal({
           <Link
             href="/"
             onClick={onBackToHome}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs transition-all hover:bg-[#0B1F1A] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary-dark px-6 py-3 text-sm font-semibold text-white shadow-xs transition-all hover:bg-neutral-dark focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
           >
             <HugeiconsIcon icon={Home01Icon} size={18} />
             <span>Quay về trang chủ</span>

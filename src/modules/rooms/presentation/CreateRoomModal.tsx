@@ -61,7 +61,7 @@ export function CreateRoomModal({
     >
       {/* Modal Box: Padding 32px (p-8, space-5), Bo góc 16px (rounded-2xl) */}
       <div
-        className="w-full max-w-lg rounded-2xl border border-[#C9F2E3] bg-white p-8 shadow-2xl"
+        className="w-full max-w-lg rounded-2xl border border-neutral-border bg-white p-8 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Modal */}
@@ -69,11 +69,11 @@ export function CreateRoomModal({
           <div className="flex flex-col gap-1">
             <h2
               id="create-room-title"
-              className="text-xl font-bold text-[#0B1F1A]"
+              className="text-xl font-bold text-neutral-dark"
             >
               Tạo phòng họp mới
             </h2>
-            <p className="text-xs text-[#4B665D]">
+            <p className="text-xs text-neutral-muted">
               Khởi tạo không gian điểm danh và quản lý quỹ cho nhóm của bạn
             </p>
           </div>
@@ -81,7 +81,7 @@ export function CreateRoomModal({
             type="button"
             onClick={onClose}
             aria-label="Đóng cửa sổ"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4B665D] hover:bg-neutral-100 hover:text-[#0B1F1A]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-muted hover:bg-neutral-100 hover:text-neutral-dark"
           >
             <HugeiconsIcon icon={Cancel01Icon} size={20} />
           </button>
@@ -94,7 +94,7 @@ export function CreateRoomModal({
           <div className="flex flex-col gap-2">
             <label
               htmlFor="room-name"
-              className="text-sm font-semibold text-[#0B1F1A]"
+              className="text-sm font-semibold text-neutral-dark"
             >
               Tên phòng họp <span className="text-rose-500">*</span>
             </label>
@@ -107,10 +107,10 @@ export function CreateRoomModal({
                 if (error) setError("");
               }}
               placeholder="VD: Daily Standup Frontend Team"
-              className={`w-full rounded-lg border px-4 py-2 text-sm text-[#0B1F1A] placeholder:text-[#4B665D]/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#10D9A3] ${
+              className={`w-full rounded-lg border px-4 py-2 text-sm text-neutral-dark placeholder:text-neutral-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                 error
                   ? "border-rose-400 bg-rose-50/30"
-                  : "border-[#C9F2E3] bg-neutral-50/50 focus:bg-white"
+                  : "border-neutral-border bg-neutral-50/50 focus:bg-white"
               }`}
             />
             {error ? (
@@ -120,7 +120,7 @@ export function CreateRoomModal({
 
           {/* Field 2: Quyền riêng tư (Visibility) */}
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-semibold text-[#0B1F1A]">
+            <span className="text-sm font-semibold text-neutral-dark">
               Quyền truy cập phòng
             </span>
             <div className="grid grid-cols-2 gap-3">
@@ -130,7 +130,7 @@ export function CreateRoomModal({
                 onClick={() => setVisibility("public")}
                 className={`flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all ${
                   visibility === "public"
-                    ? "border-[#10D9A3] bg-[#E8FBF4]/50 shadow-xs"
+                    ? "border-primary bg-neutral-surface/50 shadow-xs"
                     : "border-neutral-200 bg-white hover:bg-neutral-50"
                 }`}
               >
@@ -140,15 +140,15 @@ export function CreateRoomModal({
                     size={18}
                     className={
                       visibility === "public"
-                        ? "text-[#05966B]"
-                        : "text-[#4B665D]"
+                        ? "text-primary-dark"
+                        : "text-neutral-muted"
                     }
                   />
-                  <span className="text-sm font-bold text-[#0B1F1A]">
+                  <span className="text-sm font-bold text-neutral-dark">
                     Công khai
                   </span>
                 </div>
-                <p className="text-xs text-[#4B665D]">
+                <p className="text-xs text-neutral-muted">
                   Mọi thành viên đều có thể tham gia ngay mà không cần duyệt.
                 </p>
               </button>
@@ -159,7 +159,7 @@ export function CreateRoomModal({
                 onClick={() => setVisibility("private")}
                 className={`flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all ${
                   visibility === "private"
-                    ? "border-[#10D9A3] bg-[#E8FBF4]/50 shadow-xs"
+                    ? "border-primary bg-neutral-surface/50 shadow-xs"
                     : "border-neutral-200 bg-white hover:bg-neutral-50"
                 }`}
               >
@@ -169,15 +169,15 @@ export function CreateRoomModal({
                     size={18}
                     className={
                       visibility === "private"
-                        ? "text-[#05966B]"
-                        : "text-[#4B665D]"
+                        ? "text-primary-dark"
+                        : "text-neutral-muted"
                     }
                   />
-                  <span className="text-sm font-bold text-[#0B1F1A]">
+                  <span className="text-sm font-bold text-neutral-dark">
                     Riêng tư
                   </span>
                 </div>
-                <p className="text-xs text-[#4B665D]">
+                <p className="text-xs text-neutral-muted">
                   Cần gửi yêu cầu và được Chủ phòng hoặc Admin phê duyệt.
                 </p>
               </button>
@@ -189,13 +189,13 @@ export function CreateRoomModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-[#4B665D] hover:bg-neutral-50"
+              className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-muted hover:bg-neutral-50"
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-[#10D9A3] px-5 py-2 text-sm font-semibold text-[#0B1F1A] shadow-xs transition-colors hover:bg-[#05966B] hover:text-white"
+              className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-neutral-dark shadow-xs transition-colors hover:bg-primary-hover hover:text-white"
             >
               Tạo phòng
             </button>

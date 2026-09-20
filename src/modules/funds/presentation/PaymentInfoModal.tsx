@@ -48,27 +48,27 @@ export function PaymentInfoModal({
     >
       {/* Modal Container: Padding 32px (p-8, space-5), bo góc 16px (rounded-2xl) */}
       <div
-        className="w-full max-w-md rounded-2xl border border-[#C9F2E3] bg-white p-8 shadow-2xl"
+        className="w-full max-w-md rounded-2xl border border-neutral-border bg-white p-8 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Modal */}
         <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E8FBF4] text-[#05966B]">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-surface text-primary-dark">
               <HugeiconsIcon icon={Coins01Icon} size={20} />
             </span>
             <div>
-              <h2 id="payment-info-title" className="text-lg font-bold text-[#0B1F1A]">
+              <h2 id="payment-info-title" className="text-lg font-bold text-neutral-dark">
                 {amount && amount > 0 ? "Thông tin nộp quỹ" : "Mã QR thanh toán phòng"}
               </h2>
-              <p className="text-xs text-[#4B665D]">{roomName}</p>
+              <p className="text-xs text-neutral-muted">{roomName}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Đóng cửa sổ"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4B665D] hover:bg-neutral-100 hover:text-[#0B1F1A]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-muted hover:bg-neutral-100 hover:text-neutral-dark"
           >
             <HugeiconsIcon icon={Cancel01Icon} size={20} />
           </button>
@@ -91,15 +91,15 @@ export function PaymentInfoModal({
 
           {/* Chi tiết khoản quỹ nếu có */}
           {amount && amount > 0 ? (
-            <div className="rounded-xl border border-[#C9F2E3] bg-[#E8FBF4]/40 p-4">
+            <div className="rounded-xl border border-neutral-border bg-neutral-surface/40 p-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-[#4B665D]">Số tiền cần nộp:</span>
-                <span className="text-xl font-black text-[#05966B]">{formatVND(amount)}</span>
+                <span className="text-xs text-neutral-muted">Số tiền cần nộp:</span>
+                <span className="text-xl font-black text-primary-dark">{formatVND(amount)}</span>
               </div>
               {reason ? (
-                <div className="mt-2 flex items-center justify-between border-t border-[#C9F2E3]/60 pt-2 text-xs">
-                  <span className="text-[#4B665D]">Lý do:</span>
-                  <span className="font-semibold text-[#0B1F1A]">{reason}</span>
+                <div className="mt-2 flex items-center justify-between border-t border-neutral-border/60 pt-2 text-xs">
+                  <span className="text-neutral-muted">Lý do:</span>
+                  <span className="font-semibold text-neutral-dark">{reason}</span>
                 </div>
               ) : null}
             </div>
@@ -109,7 +109,7 @@ export function PaymentInfoModal({
           <div className="flex flex-col items-center justify-center">
             {paymentImageUrl ? (
               <div className="flex flex-col items-center gap-2">
-                <div className="flex h-56 w-56 items-center justify-center rounded-xl border border-[#C9F2E3] bg-white p-2 shadow-xs">
+                <div className="flex h-56 w-56 items-center justify-center rounded-xl border border-neutral-border bg-white p-2 shadow-xs">
                   {/* Ảnh QR: object-contain theo đúng quy chuẩn 06-ui-mock-phase.md */}
                   <img
                     src={paymentImageUrl}
@@ -117,19 +117,19 @@ export function PaymentInfoModal({
                     className="h-full w-full object-contain"
                   />
                 </div>
-                <span className="text-xs text-[#4B665D]">Quét mã QR để chuyển khoản trực tiếp</span>
+                <span className="text-xs text-neutral-muted">Quét mã QR để chuyển khoản trực tiếp</span>
               </div>
             ) : (
               /* Fallback khi phòng chưa có ảnh QR: Hiển thị đúng text quy định trong 03-domain-and-states.md */
-              <div className="flex w-full flex-col items-center gap-3 rounded-xl border border-dashed border-[#C9F2E3] bg-white p-6 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E8FBF4] text-[#05966B]">
+              <div className="flex w-full flex-col items-center gap-3 rounded-xl border border-dashed border-neutral-border bg-white p-6 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-surface text-primary-dark">
                   <HugeiconsIcon icon={UserIcon} size={24} />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className="text-sm font-bold text-[#0B1F1A]">
+                  <span className="text-sm font-bold text-neutral-dark">
                     Liên hệ chủ room: {ownerName}
                   </span>
-                  <p className="text-xs text-[#4B665D]">
+                  <p className="text-xs text-neutral-muted">
                     Phòng họp chưa đăng tải ảnh QR thanh toán. Vui lòng liên hệ trực tiếp chủ phòng để nộp quỹ.
                   </p>
                 </div>
@@ -142,7 +142,7 @@ export function PaymentInfoModal({
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-lg bg-[#10D9A3] px-4 py-2 text-sm font-semibold text-[#0B1F1A] transition-colors hover:bg-[#05966B] hover:text-white"
+              className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-neutral-dark transition-colors hover:bg-primary-hover hover:text-white"
             >
               Đã hiểu
             </button>

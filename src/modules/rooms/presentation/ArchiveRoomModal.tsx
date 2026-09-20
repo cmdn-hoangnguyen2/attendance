@@ -82,11 +82,11 @@ export function ArchiveRoomModal({
             <div>
               <h2
                 id="archive-room-modal-title"
-                className="text-base font-bold text-[#0B1F1A]"
+                className="text-base font-bold text-neutral-dark"
               >
                 Lưu trữ phòng họp
               </h2>
-              <p className="text-xs text-[#4B665D]">
+              <p className="text-xs text-neutral-muted">
                 Hành động này sẽ đóng phòng và hạn chế quyền truy cập
               </p>
             </div>
@@ -103,11 +103,11 @@ export function ArchiveRoomModal({
 
         {/* Thông tin phòng họp */}
         <div className="rounded-2xl bg-neutral-50 p-4 border border-neutral-200 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#0B1F1A]">
+          <div className="flex items-center gap-2 text-xs font-bold text-neutral-dark">
             <HugeiconsIcon icon={Folder01Icon} size={16} />
             <span>Phòng họp: {room.name}</span>
           </div>
-          <p className="text-[11px] text-[#4B665D]">
+          <p className="text-[11px] text-neutral-muted">
             Mã định danh (ID): {room.id}
           </p>
         </div>
@@ -134,7 +134,7 @@ export function ArchiveRoomModal({
           <div className="space-y-2">
             <label
               htmlFor="archive-confirmation-phrase"
-              className="block text-xs font-medium text-[#0B1F1A]"
+              className="block text-xs font-medium text-neutral-dark"
             >
               Để xác nhận, vui lòng gõ chính xác cụm từ:{" "}
               <span className="font-bold text-rose-700 select-all font-mono">
@@ -151,7 +151,7 @@ export function ArchiveRoomModal({
               }}
               placeholder={REQUIRED_CONFIRMATION_PHRASE}
               autoComplete="off"
-              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-xs font-mono text-[#0B1F1A] placeholder:text-neutral-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-xs font-mono text-neutral-dark placeholder:text-neutral-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
             />
             {error && (
               <p className="text-[11px] font-medium text-rose-600">{error}</p>

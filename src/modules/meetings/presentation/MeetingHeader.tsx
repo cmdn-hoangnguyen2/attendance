@@ -100,7 +100,7 @@ export function MeetingHeader({
             {isOwnerOrAdmin ? (
               <>
                 <span>•</span>
-                <span className="font-semibold text-[#05966B]">Quản trị viên phòng</span>
+                <span className="font-semibold text-primary-dark">Quản trị viên phòng</span>
               </>
             ) : null}
           </div>

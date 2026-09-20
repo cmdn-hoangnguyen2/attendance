@@ -72,10 +72,10 @@ export function RemoveMemberModal({
               <HugeiconsIcon icon={Alert02Icon} size={22} />
             </span>
             <div>
-              <h2 id="remove-member-title" className="text-lg font-bold text-[#0B1F1A]">
+              <h2 id="remove-member-title" className="text-lg font-bold text-neutral-dark">
                 Xác nhận xóa thành viên
               </h2>
-              <p className="text-xs text-[#4B665D]">
+              <p className="text-xs text-neutral-muted">
                 Thao tác quản trị phòng họp
               </p>
             </div>
@@ -84,7 +84,7 @@ export function RemoveMemberModal({
             type="button"
             onClick={onClose}
             aria-label="Đóng cửa sổ"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4B665D] hover:bg-neutral-100"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-muted hover:bg-neutral-100"
           >
             <HugeiconsIcon icon={Cancel01Icon} size={20} />
           </button>
@@ -92,7 +92,7 @@ export function RemoveMemberModal({
 
         {/* Content Body: Gap 24px (space-y-6, space-4) */}
         <div className="mt-6 space-y-6">
-          <p className="text-sm text-[#0B1F1A]">
+          <p className="text-sm text-neutral-dark">
             Bạn đang yêu cầu xóa thành viên{" "}
             <strong className="font-bold text-rose-600">{member.displayName}</strong> (
             {member.email}) ra khỏi phòng họp này.
@@ -130,7 +130,7 @@ export function RemoveMemberModal({
                 value={typedPhrase}
                 onChange={(e) => setTypedPhrase(e.target.value)}
                 placeholder="Nhập cụm từ tiếng Anh ở trên..."
-                className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm text-[#0B1F1A] focus:border-rose-500 focus:outline-none"
+                className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm text-neutral-dark focus:border-rose-500 focus:outline-none"
               />
             </div>
           ) : null}
@@ -140,7 +140,7 @@ export function RemoveMemberModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-[#4B665D] hover:bg-neutral-50"
+              className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-muted hover:bg-neutral-50"
             >
               Hủy bỏ
             </button>

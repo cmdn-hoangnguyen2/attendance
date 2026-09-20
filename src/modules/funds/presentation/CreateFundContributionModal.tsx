@@ -99,27 +99,27 @@ export function CreateFundContributionModal({
     >
       {/* Modal Container: Padding 32px (p-8, space-5), bo góc 16px (rounded-2xl) */}
       <div
-        className="w-full max-w-md rounded-2xl border border-[#C9F2E3] bg-white p-8 shadow-2xl"
+        className="w-full max-w-md rounded-2xl border border-neutral-border bg-white p-8 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Modal */}
         <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E8FBF4] text-[#05966B]">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-surface text-primary-dark">
               <HugeiconsIcon icon={Coins01Icon} size={20} />
             </span>
             <div>
-              <h2 id="create-fund-title" className="text-lg font-bold text-[#0B1F1A]">
+              <h2 id="create-fund-title" className="text-lg font-bold text-neutral-dark">
                 Tạo khoản đóng quỹ
               </h2>
-              <p className="text-xs text-[#4B665D]">Ghi nhận nghĩa vụ quỹ phòng họp</p>
+              <p className="text-xs text-neutral-muted">Ghi nhận nghĩa vụ quỹ phòng họp</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Đóng cửa sổ"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4B665D] hover:bg-neutral-100 hover:text-[#0B1F1A]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-muted hover:bg-neutral-100 hover:text-neutral-dark"
           >
             <HugeiconsIcon icon={Cancel01Icon} size={20} />
           </button>
@@ -129,7 +129,7 @@ export function CreateFundContributionModal({
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
           {/* Field 1: Chọn thành viên */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="contributor-select" className="text-sm font-semibold text-[#0B1F1A]">
+            <label htmlFor="contributor-select" className="text-sm font-semibold text-neutral-dark">
               Thành viên đóng quỹ <span className="text-rose-500">*</span>
             </label>
             <SelectDropdown
@@ -147,10 +147,10 @@ export function CreateFundContributionModal({
           {/* Field 2: Số tiền (integer VND) */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label htmlFor="fund-amount" className="text-sm font-semibold text-[#0B1F1A]">
+              <label htmlFor="fund-amount" className="text-sm font-semibold text-neutral-dark">
                 Số tiền (VND) <span className="text-rose-500">*</span>
               </label>
-              <span className="text-xs font-bold text-[#05966B]">{formatVND(amount)}</span>
+              <span className="text-xs font-bold text-primary-dark">{formatVND(amount)}</span>
             </div>
             <input
               id="fund-amount"
@@ -159,7 +159,7 @@ export function CreateFundContributionModal({
               min="1000"
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
-              className="w-full rounded-lg border border-[#C9F2E3] bg-neutral-50/50 px-4 py-2 text-sm text-[#0B1F1A] focus:border-[#10D9A3] focus:bg-white focus:outline-none"
+              className="w-full rounded-lg border border-neutral-border bg-neutral-50/50 px-4 py-2 text-sm text-neutral-dark focus:border-primary focus:bg-white focus:outline-none"
             />
             {/* Quick preset buttons: gap 8px (gap-2) */}
             <div className="flex items-center gap-2 pt-1">
@@ -170,8 +170,8 @@ export function CreateFundContributionModal({
                   onClick={() => setAmount(preset)}
                   className={`rounded px-2.5 py-1 text-xs font-medium border transition-colors ${
                     amount === preset
-                      ? "border-[#10D9A3] bg-[#E8FBF4] text-[#05966B] font-bold"
-                      : "border-neutral-200 text-[#4B665D] hover:bg-neutral-50"
+                      ? "border-primary bg-neutral-surface text-primary-dark font-bold"
+                      : "border-neutral-200 text-neutral-muted hover:bg-neutral-50"
                   }`}
                 >
                   +{preset / 1000}k
@@ -182,7 +182,7 @@ export function CreateFundContributionModal({
 
           {/* Field 3: Lý do (Reason) */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="fund-reason" className="text-sm font-semibold text-[#0B1F1A]">
+            <label htmlFor="fund-reason" className="text-sm font-semibold text-neutral-dark">
               Lý do đóng quỹ <span className="text-rose-500">*</span>
             </label>
             <SelectDropdown
@@ -200,7 +200,7 @@ export function CreateFundContributionModal({
           {/* Field 4 (Conditional): Chi tiết lý do nếu chọn 'Khác' */}
           {reason === "Khác" ? (
             <div className="flex flex-col gap-2 animate-in fade-in">
-              <label htmlFor="reason-details" className="text-sm font-semibold text-[#0B1F1A]">
+              <label htmlFor="reason-details" className="text-sm font-semibold text-neutral-dark">
                 Chi tiết lý do <span className="text-rose-500">*</span>
               </label>
               <textarea
@@ -209,7 +209,7 @@ export function CreateFundContributionModal({
                 value={reasonDetails}
                 onChange={(e) => setReasonDetails(e.target.value)}
                 placeholder="VD: Không chuẩn bị tài liệu họp tuần theo cam kết..."
-                className="w-full rounded-lg border border-[#C9F2E3] bg-neutral-50/50 px-4 py-2 text-sm text-[#0B1F1A] placeholder:text-neutral-400 focus:border-[#10D9A3] focus:bg-white focus:outline-none"
+                className="w-full rounded-lg border border-neutral-border bg-neutral-50/50 px-4 py-2 text-sm text-neutral-dark placeholder:text-neutral-400 focus:border-primary focus:bg-white focus:outline-none"
               />
             </div>
           ) : null}
@@ -221,13 +221,13 @@ export function CreateFundContributionModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-[#4B665D] hover:bg-neutral-50"
+              className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-muted hover:bg-neutral-50"
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-[#10D9A3] px-5 py-2 text-sm font-semibold text-[#0B1F1A] shadow-xs transition-colors hover:bg-[#05966B] hover:text-white"
+              className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-neutral-dark shadow-xs transition-colors hover:bg-primary-hover hover:text-white"
             >
               Xác nhận tạo
             </button>

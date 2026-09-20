@@ -506,15 +506,15 @@ export default function MeetingDetailPage() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-red-600 mb-6">
           <HugeiconsIcon icon={ShieldAlertIcon} size={32} />
         </div>
-        <h1 className="text-2xl font-bold text-[#0B1F1A] mb-2">
+        <h1 className="text-2xl font-bold text-neutral-dark mb-2">
           Không tìm thấy phòng họp
         </h1>
-        <p className="text-sm text-[#4B665D] mb-8">
+        <p className="text-sm text-neutral-muted mb-8">
           Phòng họp bạn đang truy cập không tồn tại hoặc đã bị xóa khỏi hệ thống.
         </p>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#05966B]/90"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary-dark px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-primary-dark/90"
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
           <span>Về trang chủ</span>
@@ -540,16 +540,16 @@ export default function MeetingDetailPage() {
     return (
       <main className="mx-auto max-w-xl px-6 py-16 text-center">
         {/* Container: Bo góc 24px (rounded-3xl), padding 32px (p-8) */}
-        <div className="rounded-3xl border border-[#C9F2E3] bg-white p-8 shadow-md">
+        <div className="rounded-3xl border border-neutral-border bg-white p-8 shadow-md">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 text-amber-800 mb-6">
             <HugeiconsIcon icon={LockIcon} size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-[#0B1F1A] mb-2">
+          <h1 className="text-2xl font-bold text-neutral-dark mb-2">
             Phòng kín — Yêu cầu quyền truy cập
           </h1>
-          <p className="text-sm text-[#4B665D] mb-6">
+          <p className="text-sm text-neutral-muted mb-6">
             Bạn hiện chưa là thành viên chính thức của phòng{" "}
-            <span className="font-semibold text-[#0B1F1A]">
+            <span className="font-semibold text-neutral-dark">
               &ldquo;{room.name}&rdquo;
             </span>
             . Vui lòng gửi yêu cầu để chủ phòng duyệt quyền tham gia.
@@ -573,7 +573,7 @@ export default function MeetingDetailPage() {
               <button
                 type="button"
                 onClick={handleRequestJoinRoom}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#05966B]/90 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-primary-dark px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-primary-dark/90 focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <HugeiconsIcon icon={UserAdd01Icon} size={18} />
                 <span>Xin tham gia phòng</span>

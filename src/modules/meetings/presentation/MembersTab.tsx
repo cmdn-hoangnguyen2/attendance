@@ -60,10 +60,10 @@ export function MembersTab({
                 <HugeiconsIcon icon={UserAdd01Icon} size={18} />
               </span>
               <div>
-                <h2 id="join-requests-title" className="text-base font-bold text-[#0B1F1A]">
+                <h2 id="join-requests-title" className="text-base font-bold text-neutral-dark">
                   Yêu cầu tham gia phòng ({pendingRequests.length})
                 </h2>
-                <p className="text-xs text-[#4B665D]">
+                <p className="text-xs text-neutral-muted">
                   Duyệt hoặc từ chối thành viên xin vào phòng riêng tư
                 </p>
               </div>
@@ -83,10 +83,10 @@ export function MembersTab({
                       {requester?.displayName?.charAt(0) ?? "?"}
                     </div>
                     <div>
-                      <h3 className="font-bold text-sm text-[#0B1F1A]">
+                      <h3 className="font-bold text-sm text-neutral-dark">
                         {requester?.displayName ?? "Người dùng ẩn"}
                       </h3>
-                      <p className="text-xs text-[#4B665D]">{requester?.email}</p>
+                      <p className="text-xs text-neutral-muted">{requester?.email}</p>
                     </div>
                   </div>
 
@@ -94,7 +94,7 @@ export function MembersTab({
                     <button
                       type="button"
                       onClick={() => onApproveRequest(req.id)}
-                      className="flex items-center gap-1 rounded-lg bg-[#10D9A3] px-3 py-1.5 text-xs font-bold text-[#0B1F1A] hover:bg-[#05966B] hover:text-white transition-colors"
+                      className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-neutral-dark hover:bg-primary-hover hover:text-white transition-colors"
                     >
                       <HugeiconsIcon icon={CheckmarkCircle01Icon} size={14} />
                       <span>Duyệt</span>
@@ -102,7 +102,7 @@ export function MembersTab({
                     <button
                       type="button"
                       onClick={() => onRejectRequest(req.id)}
-                      className="flex items-center gap-1 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-[#4B665D] hover:bg-neutral-100 transition-colors"
+                      className="flex items-center gap-1 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-muted hover:bg-neutral-100 transition-colors"
                     >
                       <HugeiconsIcon icon={Cancel01Icon} size={14} />
                       <span>Từ chối</span>
@@ -116,18 +116,18 @@ export function MembersTab({
       ) : null}
 
       {/* SECTION 2: Danh sách thành viên chính thức */}
-      <section aria-labelledby="members-list-title" className="rounded-2xl border border-[#C9F2E3] bg-white p-6 shadow-xs">
+      <section aria-labelledby="members-list-title" className="rounded-2xl border border-neutral-border bg-white p-6 shadow-xs">
         {/* Header & Search */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-100 pb-4 mb-6">
           <div>
-            <h2 id="members-list-title" className="text-lg font-bold text-[#0B1F1A]">
+            <h2 id="members-list-title" className="text-lg font-bold text-neutral-dark">
               Danh sách thành viên ({members.length})
             </h2>
-            <p className="text-xs text-[#4B665D]">Tất cả thành viên đang hoạt động trong phòng</p>
+            <p className="text-xs text-neutral-muted">Tất cả thành viên đang hoạt động trong phòng</p>
           </div>
 
           <div className="relative w-full sm:w-72">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#4B665D]">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-muted">
               <HugeiconsIcon icon={Search01Icon} size={16} />
             </span>
             <input
@@ -135,7 +135,7 @@ export function MembersTab({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm theo tên hoặc email..."
-              className="w-full rounded-lg border border-[#C9F2E3] bg-neutral-50/50 py-1.5 pr-3 pl-9 text-xs text-[#0B1F1A] focus:border-[#10D9A3] focus:bg-white focus:outline-none"
+              className="w-full rounded-lg border border-neutral-border bg-neutral-50/50 py-1.5 pr-3 pl-9 text-xs text-neutral-dark focus:border-primary focus:bg-white focus:outline-none"
             />
           </div>
         </div>
@@ -149,19 +149,19 @@ export function MembersTab({
             return (
               <div
                 key={member.id}
-                className="flex flex-col justify-between rounded-xl border border-neutral-200 bg-neutral-50/40 p-5 shadow-xs transition-all hover:border-[#10D9A3] hover:bg-white"
+                className="flex flex-col justify-between rounded-xl border border-neutral-200 bg-neutral-50/40 p-5 shadow-xs transition-all hover:border-primary hover:bg-white"
               >
                 <div className="flex items-start gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E8FBF4] font-extrabold text-sm text-[#05966B] border border-[#C9F2E3]">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-neutral-surface font-extrabold text-sm text-primary-dark border border-neutral-border">
                     {member.displayName.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-bold text-sm text-[#0B1F1A] truncate">
+                      <span className="font-bold text-sm text-neutral-dark truncate">
                         {member.displayName}
                       </span>
                       {isOwner ? (
-                        <span className="rounded bg-[#05966B] px-1.5 py-0.5 text-[10px] font-bold text-white">
+                        <span className="rounded bg-primary-dark px-1.5 py-0.5 text-[10px] font-bold text-white">
                           Chủ phòng
                         </span>
                       ) : (
@@ -170,7 +170,7 @@ export function MembersTab({
                         </span>
                       )}
                     </div>
-                    <span className="text-xs text-[#4B665D] truncate mt-0.5">{member.email}</span>
+                    <span className="text-xs text-neutral-muted truncate mt-0.5">{member.email}</span>
                   </div>
                 </div>
 
@@ -182,7 +182,7 @@ export function MembersTab({
                         Còn nghĩa vụ quỹ
                       </span>
                     ) : (
-                      <span className="text-[11px] text-[#4B665D]">Không nợ quỹ</span>
+                      <span className="text-[11px] text-neutral-muted">Không nợ quỹ</span>
                     )}
 
                     <button

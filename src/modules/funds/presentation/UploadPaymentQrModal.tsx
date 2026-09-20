@@ -149,18 +149,18 @@ export function UploadPaymentQrModal({
       aria-labelledby="upload-qr-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6 backdrop-blur-xs"
     >
-      <div className="relative w-full max-w-lg rounded-3xl border border-[#C9F2E3] bg-white p-6 sm:p-8 shadow-2xl">
+      <div className="relative w-full max-w-lg rounded-3xl border border-neutral-border bg-white p-6 sm:p-8 shadow-2xl">
         {/* Header (24px padding internal) */}
         <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#05966B]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-surface text-primary-dark">
               <HugeiconsIcon icon={QrCode01Icon} size={20} />
             </div>
             <div>
-              <h2 id="upload-qr-title" className="text-base font-bold text-[#0B1F1A]">
+              <h2 id="upload-qr-title" className="text-base font-bold text-neutral-dark">
                 Mã QR Thanh Toán Phòng
               </h2>
-              <p className="text-xs text-[#4B665D] line-clamp-1">{roomName}</p>
+              <p className="text-xs text-neutral-muted line-clamp-1">{roomName}</p>
             </div>
           </div>
 
@@ -196,14 +196,14 @@ export function UploadPaymentQrModal({
                   unoptimized
                 />
               </div>
-              <p className="mt-2 text-xs font-semibold text-[#4B665D]">
+              <p className="mt-2 text-xs font-semibold text-neutral-muted">
                 {previewUrl ? "Ảnh chuẩn bị tải lên" : "Mã QR hiện tại của phòng"}
               </p>
             </div>
           ) : null}
 
           {/* Upload input button area */}
-          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#C9F2E3] bg-[#E8FBF4]/20 p-6 text-center">
+          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-border bg-neutral-surface/20 p-6 text-center">
             <input
               ref={fileInputRef}
               type="file"
@@ -213,18 +213,18 @@ export function UploadPaymentQrModal({
               id="qr-file-upload-input"
             />
 
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E8FBF4] text-[#05966B] mb-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-surface text-primary-dark mb-2">
               <HugeiconsIcon icon={Upload01Icon} size={24} />
             </div>
 
             <label
               htmlFor="qr-file-upload-input"
-              className="cursor-pointer rounded-xl bg-[#05966B] px-4 py-2 text-xs font-bold text-white hover:bg-[#047a55] transition-colors shadow-2xs"
+              className="cursor-pointer rounded-xl bg-primary-dark px-4 py-2 text-xs font-bold text-white hover:bg-primary-hover transition-colors shadow-2xs"
             >
               {previewUrl || currentImageUrl ? "Chọn ảnh khác" : "Chọn ảnh QR từ máy"}
             </label>
 
-            <p className="mt-2 text-[11px] text-[#4B665D]">
+            <p className="mt-2 text-[11px] text-neutral-muted">
               Định dạng PNG, JPEG, WebP. Dung lượng tối đa 5 MB.
             </p>
           </div>
@@ -261,7 +261,7 @@ export function UploadPaymentQrModal({
                 type="button"
                 onClick={handleConfirmUpload}
                 disabled={isUploading || isDeleting}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#05966B] px-4 py-2 text-xs font-bold text-white hover:bg-[#047a55] transition-colors shadow-2xs disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary-dark px-4 py-2 text-xs font-bold text-white hover:bg-primary-hover transition-colors shadow-2xs disabled:opacity-50"
               >
                 <HugeiconsIcon icon={CheckmarkCircle01Icon} size={14} />
                 <span>{isUploading ? "Đang tải lên..." : "Lưu mã QR"}</span>

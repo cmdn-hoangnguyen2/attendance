@@ -360,7 +360,7 @@ export default function PersonalFundsPage() {
                         <button
                           type="button"
                           onClick={() => setSelectedContribution(contribution)}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-[#10D9A3] px-4 py-2 text-xs font-bold text-neutral-900 shadow-xs hover:bg-[#05966B] hover:text-white transition-all"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-bold text-neutral-900 shadow-xs hover:bg-primary-hover hover:text-white transition-all"
                         >
                           <HugeiconsIcon icon={CreditCardIcon} size={14} />
                           <span>Xem QR Thanh toán</span>

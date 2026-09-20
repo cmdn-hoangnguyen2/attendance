@@ -61,23 +61,23 @@ export function RoomSettingsModal({
     >
       {/* Modal Container: Bo góc 24px (rounded-3xl), padding 32px (p-8), max-w-lg */}
       <div
-        className="w-full max-w-lg rounded-3xl border border-[#C9F2E3] bg-white p-8 shadow-2xl space-y-6"
+        className="w-full max-w-lg rounded-3xl border border-neutral-border bg-white p-8 shadow-2xl space-y-6"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Modal */}
         <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#05966B]">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-surface text-primary-dark">
               <HugeiconsIcon icon={Settings01Icon} size={20} />
             </span>
             <div>
               <h2
                 id="room-settings-modal-title"
-                className="text-base font-bold text-[#0B1F1A]"
+                className="text-base font-bold text-neutral-dark"
               >
                 Cài đặt phòng họp
               </h2>
-              <p className="text-xs text-[#4B665D]">
+              <p className="text-xs text-neutral-muted">
                 Quản lý các thao tác hành chính cho phòng &ldquo;{roomName}&rdquo;
               </p>
             </div>
@@ -99,17 +99,17 @@ export function RoomSettingsModal({
             <button
               type="button"
               onClick={() => handleAction(onOpenPaymentQrModal)}
-              className="flex items-center justify-between rounded-2xl border border-[#C9F2E3] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#10D9A3] hover:bg-[#E8FBF4]/40"
+              className="flex items-center justify-between rounded-2xl border border-neutral-border bg-white p-4 text-left shadow-2xs transition-all hover:border-primary hover:bg-neutral-surface/40"
             >
               <div className="flex items-center gap-3.5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#05966B]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-surface text-primary-dark">
                   <HugeiconsIcon icon={QrCode01Icon} size={20} />
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold text-[#0B1F1A]">
+                  <h3 className="text-sm font-bold text-neutral-dark">
                     Mã QR thanh toán phòng
                   </h3>
-                  <p className="text-xs text-[#4B665D] mt-0.5">
+                  <p className="text-xs text-neutral-muted mt-0.5">
                     Tải lên hoặc cập nhật ảnh QR tài khoản ngân hàng nhận quỹ
                   </p>
                 </div>
@@ -117,7 +117,7 @@ export function RoomSettingsModal({
               <HugeiconsIcon
                 icon={ArrowRight01Icon}
                 size={18}
-                className="text-[#4B665D] shrink-0"
+                className="text-neutral-muted shrink-0"
               />
             </button>
           )}
@@ -134,10 +134,10 @@ export function RoomSettingsModal({
                   <HugeiconsIcon icon={CrownIcon} size={20} />
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold text-[#0B1F1A]">
+                  <h3 className="text-sm font-bold text-neutral-dark">
                     Chuyển quyền chủ phòng
                   </h3>
-                  <p className="text-xs text-[#4B665D] mt-0.5">
+                  <p className="text-xs text-neutral-muted mt-0.5">
                     Bàn giao quyền quản trị cao nhất cho một thành viên khác
                   </p>
                 </div>
@@ -145,7 +145,7 @@ export function RoomSettingsModal({
               <HugeiconsIcon
                 icon={ArrowRight01Icon}
                 size={18}
-                className="text-[#4B665D] shrink-0"
+                className="text-neutral-muted shrink-0"
               />
             </button>
           )}
@@ -162,10 +162,10 @@ export function RoomSettingsModal({
                   <HugeiconsIcon icon={Archive01Icon} size={20} />
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold text-[#0B1F1A]">
+                  <h3 className="text-sm font-bold text-neutral-dark">
                     Lưu trữ phòng họp
                   </h3>
-                  <p className="text-xs text-[#4B665D] mt-0.5">
+                  <p className="text-xs text-neutral-muted mt-0.5">
                     Đóng phòng họp và chuyển toàn bộ dữ liệu vào chế độ chỉ đọc
                   </p>
                 </div>
@@ -173,7 +173,7 @@ export function RoomSettingsModal({
               <HugeiconsIcon
                 icon={ArrowRight01Icon}
                 size={18}
-                className="text-[#4B665D] shrink-0"
+                className="text-neutral-muted shrink-0"
               />
             </button>
           )}

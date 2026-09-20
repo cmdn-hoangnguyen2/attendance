@@ -96,11 +96,11 @@ export function ArchiveUserModal({
             <div>
               <h2
                 id="archive-user-modal-title"
-                className="text-base font-bold text-[#0B1F1A]"
+                className="text-base font-bold text-neutral-dark"
               >
                 Xóa mềm người dùng (Soft-delete)
               </h2>
-              <p className="text-xs text-[#4B665D]">
+              <p className="text-xs text-neutral-muted">
                 Khóa quyền truy cập ứng dụng của tài khoản này
               </p>
             </div>
@@ -117,10 +117,10 @@ export function ArchiveUserModal({
 
         {/* Thông tin người dùng bị xóa mềm */}
         <div className="rounded-2xl bg-neutral-50 p-4 border border-neutral-200 space-y-1">
-          <p className="text-xs font-bold text-[#0B1F1A]">
+          <p className="text-xs font-bold text-neutral-dark">
             Người dùng: {user.displayName} ({user.email})
           </p>
-          <p className="text-[11px] text-[#4B665D]">
+          <p className="text-[11px] text-neutral-muted">
             Mã định danh (ID): {user.id}
           </p>
         </div>
@@ -178,7 +178,7 @@ export function ArchiveUserModal({
           <div className="space-y-2">
             <label
               htmlFor="archive-user-confirmation-phrase"
-              className="block text-xs font-medium text-[#0B1F1A]"
+              className="block text-xs font-medium text-neutral-dark"
             >
               Để xác nhận, vui lòng gõ chính xác cụm từ:{" "}
               <span className="font-bold text-rose-700 select-all font-mono">
@@ -195,7 +195,7 @@ export function ArchiveUserModal({
               }}
               placeholder={REQUIRED_CONFIRMATION_PHRASE}
               autoComplete="off"
-              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-xs font-mono text-[#0B1F1A] placeholder:text-neutral-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-xs font-mono text-neutral-dark placeholder:text-neutral-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
             />
             {error && (
               <p className="text-[11px] font-medium text-rose-600">{error}</p>

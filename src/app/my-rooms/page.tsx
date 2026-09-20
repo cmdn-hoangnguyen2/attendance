@@ -168,7 +168,7 @@ export default function MyRoomsPage() {
           <button
             type="button"
             onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#10D9A3] px-6 py-2.5 text-sm font-bold text-neutral-900 shadow-xs transition-all hover:bg-[#05966B] hover:text-white"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-neutral-900 shadow-xs transition-all hover:bg-primary-hover hover:text-white"
           >
             <HugeiconsIcon icon={PlusSignIcon} size={18} />
             <span>Tạo phòng mới</span>
@@ -190,7 +190,7 @@ export default function MyRoomsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm kiếm theo tên phòng..."
-              className="w-full rounded-full border border-neutral-200 bg-white py-2 pl-9 pr-4 text-xs text-neutral-900 placeholder-neutral-400 focus:border-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-neutral-200"
+              className="w-full rounded-full border border-neutral-200 bg-white py-2 pl-9 pr-4 text-xs text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-neutral-200"
             />
             <HugeiconsIcon
               icon={Search01Icon}
@@ -247,7 +247,7 @@ export default function MyRoomsPage() {
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#10D9A3] px-6 py-2.5 text-xs font-bold text-neutral-900 shadow-xs hover:bg-[#05966B] hover:text-white transition-all"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs font-bold text-neutral-900 shadow-xs hover:bg-primary-hover hover:text-white transition-all"
                 >
                   <HugeiconsIcon icon={PlusSignIcon} size={16} />
                   <span>Tạo phòng ngay</span>

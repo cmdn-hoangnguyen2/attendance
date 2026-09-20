@@ -175,7 +175,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => setRole("admin")}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#10D9A3] px-6 py-2.5 text-xs font-bold text-neutral-900 shadow-xs hover:bg-[#05966B] hover:text-white transition-all"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs font-bold text-neutral-900 shadow-xs hover:bg-primary-hover hover:text-white transition-all"
                 >
                   <HugeiconsIcon icon={SecurityCheckIcon} size={16} />
                   <span>Chuyển sang Admin</span>
@@ -184,7 +184,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={login}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#10D9A3] px-6 py-2.5 text-xs font-bold text-neutral-900 shadow-xs hover:bg-[#05966B] hover:text-white transition-all"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs font-bold text-neutral-900 shadow-xs hover:bg-primary-hover hover:text-white transition-all"
                 >
                   <HugeiconsIcon icon={SecurityCheckIcon} size={16} />
                   <span>Đăng nhập tài khoản Admin</span>

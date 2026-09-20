@@ -98,8 +98,8 @@ export function SelectDropdown<T extends string = string>({
         aria-expanded={isOpen}
         disabled={disabled}
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`flex w-full items-center justify-between gap-3 rounded-xl border border-[#C9F2E3] bg-white px-4 py-2 text-xs font-semibold text-[#0B1F1A] shadow-xs transition-all hover:border-[#10D9A3] focus:border-[#10D9A3] focus:outline-hidden focus:ring-2 focus:ring-[#10D9A3]/20 disabled:cursor-not-allowed disabled:opacity-50 ${
-          isOpen ? "border-[#10D9A3] ring-2 ring-[#10D9A3]/20" : ""
+        className={`flex w-full items-center justify-between gap-3 rounded-xl border border-neutral-border bg-white px-4 py-2 text-xs font-semibold text-neutral-dark shadow-xs transition-all hover:border-primary focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 ${
+          isOpen ? "border-primary ring-2 ring-primary/20" : ""
         }`}
       >
         <span className="truncate">
@@ -108,8 +108,8 @@ export function SelectDropdown<T extends string = string>({
         <HugeiconsIcon
           icon={ArrowDown01Icon}
           size={16}
-          className={`shrink-0 text-[#4B665D] transition-transform duration-200 ${
-            isOpen ? "rotate-180 text-[#05966B]" : ""
+          className={`shrink-0 text-neutral-muted transition-transform duration-200 ${
+            isOpen ? "rotate-180 text-primary-dark" : ""
           }`}
         />
       </button>
@@ -119,7 +119,7 @@ export function SelectDropdown<T extends string = string>({
         <div
           role="listbox"
           tabIndex={-1}
-          className="absolute z-50 mt-2 max-h-60 w-full min-w-[200px] overflow-auto rounded-2xl border border-[#C9F2E3] bg-white p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 focus:outline-hidden"
+          className="absolute z-50 mt-2 max-h-60 w-full min-w-[200px] overflow-auto rounded-2xl border border-neutral-border bg-white p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 focus:outline-hidden"
         >
           {options.map((option) => {
             const isSelected = option.value === value;
@@ -133,8 +133,8 @@ export function SelectDropdown<T extends string = string>({
                 onClick={() => handleSelect(option)}
                 className={`flex w-full items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-left text-xs transition-colors ${
                   isSelected
-                    ? "bg-[#E8FBF4] font-bold text-[#05966B]"
-                    : "text-[#0B1F1A] hover:bg-neutral-50"
+                    ? "bg-neutral-surface font-bold text-primary-dark"
+                    : "text-neutral-dark hover:bg-neutral-50"
                 } ${
                   option.disabled
                     ? "cursor-not-allowed opacity-40 hover:bg-transparent"
@@ -144,7 +144,7 @@ export function SelectDropdown<T extends string = string>({
                 <div className="flex flex-col gap-0.5 truncate">
                   <span className="truncate">{option.label}</span>
                   {option.description ? (
-                    <span className="text-[11px] font-normal text-[#4B665D]">
+                    <span className="text-[11px] font-normal text-neutral-muted">
                       {option.description}
                     </span>
                   ) : null}
@@ -153,7 +153,7 @@ export function SelectDropdown<T extends string = string>({
                   <HugeiconsIcon
                     icon={CheckmarkCircle01Icon}
                     size={16}
-                    className="shrink-0 text-[#05966B]"
+                    className="shrink-0 text-primary-dark"
                   />
                 ) : null}
               </button>
