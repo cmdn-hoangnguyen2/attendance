@@ -299,18 +299,19 @@ export default function PersonalFundsPage() {
           />
         </section>
 
-        {/* Danh sách khoản đóng góp: Grid 3 cột */}
+        {/* Danh sách khoản đóng góp: Grid 4 cột desktop */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
-            {[1, 2, 3].map((i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse">
+            {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-56 rounded-2xl bg-neutral-200" />
             ))}
           </div>
         ) : filteredContributions.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredContributions.map((contribution) => {
               const room = roomsMap.get(contribution.roomId);
               const isOutstanding = contribution.status === "outstanding";
+              const isRoomArchived = room?.status === "archived";
 
               return (
                 <article
@@ -319,15 +320,22 @@ export default function PersonalFundsPage() {
                 >
                   {/* Top content */}
                   <div>
-                    {/* Room Name & Date */}
+                    {/* Room Name, Date & Archived Badge */}
                     <div className="flex items-center justify-between gap-2 mb-3">
                       <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-800 truncate">
                         <HugeiconsIcon icon={Building01Icon} size={15} className="text-neutral-400 shrink-0" />
                         <span className="truncate">{room?.name ?? "Phòng họp"}</span>
                       </div>
-                      <span className="text-[11px] text-neutral-400 shrink-0">
-                        {new Date(contribution.createdAt).toLocaleDateString("vi-VN")}
-                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {isRoomArchived && (
+                          <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-bold text-neutral-600 border border-neutral-200">
+                            Phòng đã lưu trữ
+                          </span>
+                        )}
+                        <span className="text-[11px] text-neutral-400">
+                          {new Date(contribution.createdAt).toLocaleDateString("vi-VN")}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Amount */}
