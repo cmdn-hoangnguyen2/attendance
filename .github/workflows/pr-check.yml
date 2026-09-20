@@ -1,0 +1,32 @@
+name: PR Convention Check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-pr:
+    name: Validate PR Title Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR Title
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = context.payload.pull_request.title;
+            const titleRegex = /^\[(FEAT|FIX|ENHANCE|REFACTOR|CHORE)\]\s.+/;
+
+            if (!titleRegex.test(title)) {
+              core.setFailed(
+                `PR title "${title}" does not conform to git-pr-workflow skill.\n\n` +
+                `PR title must begin with one of the approved bracketed prefixes:\n` +
+                `- [FEAT]: New screen, component, or interactive feature\n` +
+                `- [FIX]: Bug fix, layout alignment, broken interaction\n` +
+                `- [ENHANCE]: Improving an existing UI screen, component, or pattern\n` +
+                `- [REFACTOR]: Code cleanup without altering visual behavior\n` +
+                `- [CHORE]: Config, documentation, skills, tooling updates\n\n` +
+                `Example: "[FEAT] Integrate Auth0 authentication"`
+              );
+            } else {
+              core.info(`PR title "${title}" conforms to git-pr-workflow!`);
+            }

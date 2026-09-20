@@ -1,0 +1,69 @@
+name: Pull Request
+description: Pull Request template adhering to git-pr-workflow conventions
+title: "[TYPE] Descriptive summary of changes"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## DiemDanhCMDN Pull Request Form
+        Please ensure your PR adheres to the conventions defined in `git-pr-workflow`, `zhon-conventions`, and `8pt-grid-spacing`.
+  - type: dropdown
+    id: pr-type
+    attributes:
+      label: Type of Change
+      description: Select the bracketed type prefix that best describes your changes.
+      options:
+        - "[FEAT]: New screen, component, or interactive feature"
+        - "[FIX]: Bug fix, layout alignment, broken interaction"
+        - "[ENHANCE]: Improving an existing UI screen, component, or pattern"
+        - "[REFACTOR]: Code cleanup without altering visual behavior"
+        - "[CHORE]: Config, documentation, skills, tooling updates"
+    validations:
+      required: true
+  - type: textarea
+    id: overview
+    attributes:
+      label: Overview
+      description: Brief 1-2 sentence summary of what this PR introduces and the problem it solves.
+      placeholder: "Brief 1-2 sentence summary of the feature, bug fix, or enhancement..."
+    validations:
+      required: true
+  - type: textarea
+    id: key-changes
+    attributes:
+      label: Key Changes
+      description: Details of the implementation grouped by responsibility.
+      value: |
+        - **Component / View**: Description of changes adhering to the component architecture.
+        - **State / Mocks / Repositories**: Details on data flow or repository updates.
+        - **Styling / Tokens**: Confirmation of 8-point grid spacing and Design Tokens usage.
+    validations:
+      required: true
+  - type: checkboxes
+    id: compliance
+    attributes:
+      label: Pattern & Architecture Compliance
+      description: Confirm compliance with core repository guardrails.
+      options:
+        - label: "Follows Pattern 1 (Table Dashboard) / Pattern 2 (Form Drawer) / Pattern 3 (Detail View)"
+          required: true
+        - label: "Uses semantic HTML and adheres 100% to 8-point grid spacing (multiples of 8)"
+          required: true
+        - label: "Adheres to Scope Lock (no unintended config or root file changes)"
+          required: true
+        - label: "Follows zhon-conventions (JSX logic separation, flat flow, BEM hooks)"
+          required: true
+  - type: textarea
+    id: verification-report
+    attributes:
+      label: Verification & Quality Report
+      description: Fill in the test results table from your local verification.
+      value: |
+        | Check | Result |
+        | :--- | :--- |
+        | `pnpm run lint` | Passed (0 errors) |
+        | `pnpm exec tsc --noEmit` | Passed (0 errors) |
+        | `pnpm test` | Passed (46/46 tests pass) |
+        | `pnpm run build` | Passed (0 errors) |
+    validations:
+      required: true
