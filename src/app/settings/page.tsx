@@ -18,6 +18,8 @@ import {
 } from "@hugeicons/core-free-icons";
 import { PageContainer } from "@/components/layout/PageContainer";
 
+import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
+
 type SettingsTab = "users" | "rooms";
 
 export default function SettingsPage() {
@@ -133,114 +135,94 @@ export default function SettingsPage() {
   // Nếu chưa đăng nhập hoặc đang tải phiên, hiển thị loader và chờ redirect về /login
   if (isAuthLoading || !isAuthenticated) {
     return (
-      <PageContainer as="main">
-        <div className="flex flex-col gap-6 py-8 animate-pulse">
-          <div className="h-12 w-64 rounded-xl bg-neutral-200" />
-          <div className="h-64 rounded-2xl bg-neutral-100" />
-        </div>
-      </PageContainer>
+      <div className="flex-1 bg-neutral-50/50">
+        <PageContainer as="main">
+          <div className="flex flex-col gap-6 py-8 animate-pulse">
+            <div className="h-12 w-64 rounded-xl bg-neutral-200" />
+            <div className="h-64 rounded-2xl bg-neutral-100" />
+          </div>
+        </PageContainer>
+      </div>
     );
   }
 
   // Trường hợp người dùng không có quyền Admin
   if (!isAdmin) {
     return (
-      <main className="mx-auto max-w-xl px-6 py-16 text-center">
-        <div className="rounded-3xl border border-red-200 bg-white p-8 shadow-md">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-red-600 mb-6">
-            <HugeiconsIcon icon={ShieldAlertIcon} size={32} />
-          </div>
-          <h1 className="text-2xl font-bold text-[#0B1F1A] mb-2">
-            Từ chối truy cập (403 Forbidden)
-          </h1>
-          <p className="text-sm text-[#4B665D] mb-6 leading-relaxed">
-            Khu vực Quản trị Hệ thống chỉ dành riêng cho tài khoản có vai trò{" "}
-            <span className="font-semibold text-red-600">Global Admin</span>.
-            Tài khoản hiện tại của bạn không có đủ thẩm quyền truy cập.
-          </p>
+      <div className="flex-1 bg-neutral-50/50">
+        <PageContainer as="main" className="flex items-center justify-center py-16">
+          <div className="w-full max-w-md rounded-3xl border border-neutral-200 bg-white p-8 shadow-xs text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-600 mb-5">
+              <HugeiconsIcon icon={ShieldAlertIcon} size={28} />
+            </div>
+            <h1 className="text-xl font-bold text-neutral-900 mb-2">
+              Từ chối truy cập
+            </h1>
+            <p className="text-xs text-neutral-500 mb-6 leading-relaxed">
+              Trang Quản trị chỉ dành riêng cho tài khoản có quyền Global Admin.
+            </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-            >
-              <HugeiconsIcon icon={Home01Icon} size={18} />
-              <span>Về trang chủ</span>
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-2.5 text-xs font-semibold text-neutral-700 hover:border-neutral-900 hover:bg-neutral-50 transition-colors"
+              >
+                <HugeiconsIcon icon={Home01Icon} size={16} />
+                <span>Trang chủ</span>
+              </Link>
 
-            {isMockActive ? (
-              <button
-                type="button"
-                onClick={() => setRole("admin")}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#05966B]/90 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
-              >
-                <HugeiconsIcon icon={SecurityCheckIcon} size={18} />
-                <span>Chuyển sang vai trò Admin (Mock)</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={login}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#05966B]/90 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
-              >
-                <HugeiconsIcon icon={SecurityCheckIcon} size={18} />
-                <span>Đăng nhập tài khoản Admin</span>
-              </button>
-            )}
+              {isMockActive ? (
+                <button
+                  type="button"
+                  onClick={() => setRole("admin")}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#10D9A3] px-6 py-2.5 text-xs font-bold text-neutral-900 shadow-xs hover:bg-[#05966B] hover:text-white transition-all"
+                >
+                  <HugeiconsIcon icon={SecurityCheckIcon} size={16} />
+                  <span>Chuyển sang Admin</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={login}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#10D9A3] px-6 py-2.5 text-xs font-bold text-neutral-900 shadow-xs hover:bg-[#05966B] hover:text-white transition-all"
+                >
+                  <HugeiconsIcon icon={SecurityCheckIcon} size={16} />
+                  <span>Đăng nhập tài khoản Admin</span>
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      </main>
+        </PageContainer>
+      </div>
     );
   }
 
+  const tabItems: PillTabItem<SettingsTab>[] = [
+    { key: "users", label: "Người dùng", icon: UserGroupIcon },
+    { key: "rooms", label: "Phòng họp", icon: Folder01Icon },
+  ];
+
   return (
-    <PageContainer as="main">
-      {/* Header Trang Settings */}
-      <section aria-labelledby="settings-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#C9F2E3] pb-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-3 py-0.5 text-xs font-bold text-red-700">
-              <HugeiconsIcon icon={SecurityCheckIcon} size={14} />
-              <span>Admin Console</span>
-            </span>
+    <div className="flex-1 bg-neutral-50/50">
+      <PageContainer as="main">
+        {/* Header Trang Settings */}
+        <section aria-labelledby="settings-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-neutral-200 pb-6">
+          <div>
+            <h1 id="settings-title" className="text-2xl font-extrabold tracking-tight text-neutral-900">
+              Quản trị hệ thống
+            </h1>
+            <p className="text-sm text-neutral-500 mt-1">
+              Quản lý tài khoản người dùng và giám sát phòng họp.
+            </p>
           </div>
-          <h1 id="settings-title" className="text-2xl lg:text-3xl font-bold tracking-tight text-[#0B1F1A]">
-            Quản trị hệ thống (Settings)
-          </h1>
-          <p className="text-sm text-[#4B665D] mt-1">
-            Quản lý vòng đời người dùng, giám sát phòng họp và dữ liệu lưu trữ trên Supabase.
-          </p>
-        </div>
 
-        {/* Tabs Điều hướng: Users vs Rooms */}
-        <div className="flex items-center gap-2 p-1 bg-neutral-100/80 rounded-xl border border-neutral-200/80 w-fit self-start md:self-auto">
-          <button
-            type="button"
-            onClick={() => setActiveTab("users")}
-            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
-              activeTab === "users"
-                ? "bg-white text-[#05966B] shadow-xs"
-                : "text-[#4B665D] hover:text-[#0B1F1A]"
-            }`}
-          >
-            <HugeiconsIcon icon={UserGroupIcon} size={16} />
-            <span>Người dùng ({usersList.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("rooms")}
-            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
-              activeTab === "rooms"
-                ? "bg-white text-[#05966B] shadow-xs"
-                : "text-[#4B665D] hover:text-[#0B1F1A]"
-            }`}
-          >
-            <HugeiconsIcon icon={Folder01Icon} size={16} />
-            <span>Phòng họp ({roomsList.length})</span>
-          </button>
-        </div>
-      </section>
+          {/* PillTabs: Users vs Rooms */}
+          <PillTabs
+            tabs={tabItems}
+            activeKey={activeTab}
+            onChange={setActiveTab}
+          />
+        </section>
 
       {isLoading ? (
         <div className="flex flex-col gap-6 animate-pulse">
@@ -265,6 +247,7 @@ export default function SettingsPage() {
           onRestoreRoom={handleRestoreRoom}
         />
       )}
-    </PageContainer>
+      </PageContainer>
+    </div>
   );
 }

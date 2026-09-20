@@ -19,6 +19,8 @@ import {
   Home01Icon,
 } from "@hugeicons/core-free-icons";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type MyRoomsTab = "owned" | "joined";
 
@@ -66,13 +68,13 @@ export default function MyRoomsPage() {
 
         if (!isMounted) return;
         setOwnedRooms(fetchedOwned);
-        setJoinedRooms(fetchedJoined.filter((r) => r.ownerId !== currentUser!.id));
+        setJoinedRooms(fetchedJoined);
 
         const uMap = new Map<string, User>();
         fetchedUsers.forEach((u) => uMap.set(u.id, u));
         setUsersMap(uMap);
       } catch (err) {
-        console.error("Failed to load my-rooms data:", err);
+        console.error("Failed to load user rooms from Supabase:", err);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -87,11 +89,10 @@ export default function MyRoomsPage() {
     };
   }, [currentUser, refreshKey]);
 
-  // Lọc phòng theo tab & search query
+  // Danh sách hiển thị theo tab và tìm kiếm
   const displayedRooms = useMemo(() => {
     const list = activeTab === "owned" ? ownedRooms : joinedRooms;
     if (!searchQuery.trim()) return list;
-
     const query = searchQuery.toLowerCase().trim();
     return list.filter((r) => r.name.toLowerCase().includes(query));
   }, [activeTab, ownedRooms, joinedRooms, searchQuery]);
@@ -106,11 +107,12 @@ export default function MyRoomsPage() {
   }) => {
     if (!currentUser) return;
     try {
-      await roomRepository.create({
+      const newRoom = await roomRepository.create({
         name,
         visibility,
         ownerId: currentUser.id,
       });
+      setOwnedRooms((prev) => [newRoom, ...prev]);
       setIsCreateModalOpen(false);
       setRefreshKey((k) => k + 1);
     } catch (err) {
@@ -121,183 +123,155 @@ export default function MyRoomsPage() {
   // Nếu người dùng chưa đăng nhập hoặc đang kiểm tra phiên
   if (isAuthLoading || !isAuthenticated || !currentUser) {
     return (
-      <PageContainer as="main">
-        <div className="flex flex-col gap-6 py-8 animate-pulse">
-          <div className="h-20 w-80 rounded-2xl bg-neutral-200" />
-          <div className="h-12 w-96 rounded-xl bg-neutral-200" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="h-48 rounded-2xl bg-neutral-100" />
-            <div className="h-48 rounded-2xl bg-neutral-100" />
-            <div className="h-48 rounded-2xl bg-neutral-100" />
+      <div className="flex-1 bg-neutral-50/50">
+        <PageContainer as="main">
+          <div className="flex flex-col gap-6 py-8 animate-pulse">
+            <div className="h-12 w-64 rounded-xl bg-neutral-200" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="h-48 rounded-2xl bg-neutral-100" />
+              <div className="h-48 rounded-2xl bg-neutral-100" />
+              <div className="h-48 rounded-2xl bg-neutral-100" />
+            </div>
           </div>
-        </div>
-      </PageContainer>
+        </PageContainer>
+      </div>
     );
   }
 
+  const tabItems: PillTabItem<MyRoomsTab>[] = [
+    {
+      key: "owned",
+      label: "Phòng tôi tạo",
+      icon: CrownIcon,
+    },
+    {
+      key: "joined",
+      label: "Phòng đã tham gia",
+      icon: UserGroupIcon,
+    },
+  ];
+
   return (
-    <PageContainer as="main">
-      {/* Header Trang: Tiêu đề & Quick action */}
-      <section aria-labelledby="my-rooms-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 id="my-rooms-title" className="text-2xl lg:text-3xl font-bold tracking-tight text-[#0B1F1A]">
-            Phòng của tôi
-          </h1>
-          <p className="text-sm text-[#4B665D] mt-1">
-            Quản lý và truy cập nhanh các phòng họp bạn làm chủ hoặc đang tham gia (Dữ liệu Live Supabase).
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setIsCreateModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition-all hover:bg-[#05966B]/90 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
-        >
-          <HugeiconsIcon icon={PlusSignIcon} size={18} />
-          <span>Tạo phòng mới</span>
-        </button>
-      </section>
-
-      {/* Thanh điều hướng Tabs & Bộ lọc tìm kiếm */}
-      <section aria-label="Bộ lọc phòng của tôi" className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-[#C9F2E3] pb-4">
-        {/* Tabs */}
-        <div className="flex max-w-full items-center gap-2 overflow-x-auto p-1 bg-neutral-100/80 rounded-xl border border-neutral-200/80 w-fit">
-          <button
-            type="button"
-            onClick={() => setActiveTab("owned")}
-            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
-              activeTab === "owned"
-                ? "bg-white text-[#05966B] shadow-xs"
-                : "text-[#4B665D] hover:text-[#0B1F1A]"
-            }`}
-          >
-            <HugeiconsIcon icon={CrownIcon} size={16} />
-            <span>Phòng tôi làm chủ</span>
-            <span
-              className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                activeTab === "owned"
-                  ? "bg-[#E8FBF4] text-[#05966B]"
-                  : "bg-neutral-200 text-neutral-600"
-              }`}
-            >
-              {ownedRooms.length}
-            </span>
-          </button>
+    <div className="flex-1 bg-neutral-50/50">
+      <PageContainer as="main">
+        {/* Header Trang: Tiêu đề & Action (Pill button) */}
+        <section aria-labelledby="my-rooms-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 id="my-rooms-title" className="text-2xl font-extrabold tracking-tight text-neutral-900">
+              Phòng của tôi
+            </h1>
+            <p className="text-sm text-neutral-500 mt-1">
+              Quản lý phòng họp bạn làm chủ hoặc đang tham gia.
+            </p>
+          </div>
 
           <button
             type="button"
-            onClick={() => setActiveTab("joined")}
-            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
-              activeTab === "joined"
-                ? "bg-white text-[#05966B] shadow-xs"
-                : "text-[#4B665D] hover:text-[#0B1F1A]"
-            }`}
+            onClick={() => setIsCreateModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#10D9A3] px-6 py-2.5 text-sm font-bold text-neutral-900 shadow-xs transition-all hover:bg-[#05966B] hover:text-white"
           >
-            <HugeiconsIcon icon={UserGroupIcon} size={16} />
-            <span>Phòng đã tham gia</span>
-            <span
-              className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                activeTab === "joined"
-                  ? "bg-[#E8FBF4] text-[#05966B]"
-                  : "bg-neutral-200 text-neutral-600"
-              }`}
-            >
-              {joinedRooms.length}
-            </span>
+            <HugeiconsIcon icon={PlusSignIcon} size={18} />
+            <span>Tạo phòng mới</span>
           </button>
-        </div>
+        </section>
 
-        {/* Input Tìm kiếm */}
-        <div className="relative w-full sm:w-72">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm kiếm theo tên phòng..."
-            className="w-full rounded-xl border border-neutral-200 bg-white py-2 pl-9 pr-4 text-xs text-[#0B1F1A] placeholder-neutral-400 focus:border-[#10D9A3] focus:outline-hidden focus:ring-2 focus:ring-[#10D9A3]/20"
+        {/* Thanh điều hướng PillTabs & Bộ lọc tìm kiếm */}
+        <section aria-label="Bộ lọc phòng của tôi" className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
+          <PillTabs
+            tabs={tabItems}
+            activeKey={activeTab}
+            onChange={setActiveTab}
           />
-          <HugeiconsIcon
-            icon={Search01Icon}
-            size={16}
-            className="absolute left-3 top-2.5 text-neutral-400"
-          />
-        </div>
-      </section>
 
-      {/* Danh sách phòng: Grid 4 cột chuẩn Desktop */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-48 rounded-2xl bg-neutral-200" />
-          ))}
-        </div>
-      ) : displayedRooms.length > 0 ? (
-        <section aria-label="Danh sách kết quả phòng">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {displayedRooms.map((room) => {
-              const owner = usersMap.get(room.ownerId);
-              return (
-                <RoomCard
-                  key={room.id}
-                  room={room}
-                  owner={owner}
-                  currentUser={currentUser}
-                  isOwner={currentUser.id === room.ownerId}
-                  isMember={true}
-                  joinRequestStatus="approved"
-                  onRequestJoin={() => {}}
-                  onCancelRequest={() => {}}
-                />
-              );
-            })}
+          {/* Input Tìm kiếm: Pill layout */}
+          <div className="relative w-full sm:w-72">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Tìm kiếm theo tên phòng..."
+              className="w-full rounded-full border border-neutral-200 bg-white py-2 pl-9 pr-4 text-xs text-neutral-900 placeholder-neutral-400 focus:border-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-neutral-200"
+            />
+            <HugeiconsIcon
+              icon={Search01Icon}
+              size={16}
+              className="absolute left-3 top-2.5 text-neutral-400"
+            />
           </div>
         </section>
-      ) : (
-        /* Empty State */
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#C9F2E3] bg-white p-12 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E8FBF4] text-[#05966B] mb-4">
-            <HugeiconsIcon icon={Folder01Icon} size={32} />
-          </div>
-          <h3 className="text-lg font-bold text-[#0B1F1A] mb-1">
-            {activeTab === "owned"
-              ? "Bạn chưa làm chủ phòng họp nào"
-              : "Bạn chưa tham gia phòng họp nào"}
-          </h3>
-          <p className="max-w-md text-sm text-[#4B665D] mb-6">
-            {activeTab === "owned"
-              ? "Hãy tạo phòng họp mới để bắt đầu quản lý phiên họp và điểm danh cho các thành viên trong nhóm."
-              : "Khám phá danh sách các phòng họp công khai trên Trang chủ để gửi yêu cầu tham gia."}
-          </p>
 
-          <div className="flex items-center gap-4">
-            {activeTab === "owned" ? (
-              <button
-                type="button"
-                onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#05966B] px-5 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-[#05966B]/90"
-              >
-                <HugeiconsIcon icon={PlusSignIcon} size={16} />
-                <span>Tạo phòng ngay</span>
-              </button>
-            ) : (
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#05966B] px-5 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-[#05966B]/90"
-              >
-                <HugeiconsIcon icon={Home01Icon} size={16} />
-                <span>Khám phá phòng họp</span>
-              </Link>
-            )}
+        {/* Danh sách phòng: Grid 4 cột chuẩn Desktop */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-48 rounded-2xl bg-neutral-200" />
+            ))}
           </div>
-        </div>
-      )}
+        ) : displayedRooms.length > 0 ? (
+          <section aria-label="Danh sách kết quả phòng">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {displayedRooms.map((room) => {
+                const owner = usersMap.get(room.ownerId);
+                return (
+                  <RoomCard
+                    key={room.id}
+                    room={room}
+                    owner={owner}
+                    currentUser={currentUser}
+                    isOwner={currentUser.id === room.ownerId}
+                    isMember={true}
+                    joinRequestStatus="approved"
+                    onRequestJoin={() => {}}
+                    onCancelRequest={() => {}}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        ) : (
+          /* Reusable Empty State Component */
+          <EmptyState
+            icon={Folder01Icon}
+            title={
+              activeTab === "owned"
+                ? "Bạn chưa làm chủ phòng họp nào"
+                : "Bạn chưa tham gia phòng họp nào"
+            }
+            description={
+              activeTab === "owned"
+                ? "Hãy tạo phòng họp mới để bắt đầu quản lý phiên họp và điểm danh cho các thành viên trong nhóm."
+                : "Khám phá danh sách các phòng họp công khai trên Trang chủ để gửi yêu cầu tham gia."
+            }
+            action={
+              activeTab === "owned" ? (
+                <button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#10D9A3] px-6 py-2.5 text-xs font-bold text-neutral-900 shadow-xs hover:bg-[#05966B] hover:text-white transition-all"
+                >
+                  <HugeiconsIcon icon={PlusSignIcon} size={16} />
+                  <span>Tạo phòng ngay</span>
+                </button>
+              ) : (
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-2.5 text-xs font-semibold text-neutral-800 shadow-xs hover:border-neutral-900 hover:bg-neutral-50 transition-colors"
+                >
+                  <HugeiconsIcon icon={Home01Icon} size={16} />
+                  <span>Khám phá phòng họp</span>
+                </Link>
+              )
+            }
+          />
+        )}
 
-      {/* Modal Tạo Phòng */}
-      <CreateRoomModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onCreateRoom={handleCreateRoom}
-      />
-    </PageContainer>
+        {/* Modal Tạo Phòng */}
+        <CreateRoomModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreateRoom={handleCreateRoom}
+        />
+      </PageContainer>
+    </div>
   );
 }

@@ -24,6 +24,7 @@ import {
   Search01Icon,
 } from "@hugeicons/core-free-icons";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function HomePage() {
   const router = useRouter();
@@ -223,23 +224,19 @@ export default function HomePage() {
   return (
     <div className="flex-1 bg-neutral-50/50">
       <PageContainer as="main">
-        {/* Hero Banner / Page Intro (Padding: 32px = p-8) */}
-        <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#C9F2E3] bg-gradient-to-r from-white via-[#E8FBF4]/40 to-white p-8 shadow-xs">
+        {/* Hero Banner (Padding: 32px = p-8, neutral border) */}
+        <section className="relative mb-8 overflow-hidden rounded-3xl border border-neutral-200 bg-white p-8 shadow-xs">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="max-w-2xl flex flex-col gap-2">
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#E8FBF4] px-3 py-1 text-xs font-semibold text-[#05966B] border border-[#C9F2E3]">
-                DiemDanhCMDN v1.0 • Supabase Live Database
-              </span>
-              <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-[#0B1F1A]">
-                Không gian Phòng họp & Quản lý Điểm danh
+            <div className="max-w-2xl flex flex-col gap-1.5">
+              <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-neutral-900">
+                Không gian Phòng họp
               </h1>
-              <p className="text-sm text-[#4B665D] leading-relaxed">
-                Tham gia phòng họp nhóm, tự điểm danh trước giờ bắt đầu và theo dõi
-                các khoản nghĩa vụ đóng góp quỹ một cách minh bạch, văn minh.
+              <p className="text-sm text-neutral-500 leading-relaxed">
+                Tham gia phòng họp, tự điểm danh trước giờ bắt đầu và theo dõi nghĩa vụ quỹ minh bạch.
               </p>
             </div>
 
-            {/* CTA Create Room Button: bo góc 12px */}
+            {/* CTA Create Room Button: Pill layout */}
             <div className="flex shrink-0">
               <button
                 type="button"
@@ -250,9 +247,9 @@ export default function HomePage() {
                   }
                   setIsCreateModalOpen(true);
                 }}
-                className="flex items-center gap-2 rounded-xl bg-[#10D9A3] px-5 py-3 text-sm font-bold text-[#0B1F1A] shadow-sm transition-all hover:bg-[#05966B] hover:text-white hover:shadow-md"
+                className="flex items-center gap-2 rounded-full bg-[#10D9A3] px-6 py-3 text-sm font-bold text-neutral-900 shadow-xs transition-all hover:bg-[#05966B] hover:text-white hover:shadow-md active:scale-[0.99]"
               >
-                <HugeiconsIcon icon={PlusSignIcon} size={20} />
+                <HugeiconsIcon icon={PlusSignIcon} size={18} />
                 <span>Tạo phòng mới</span>
               </button>
             </div>
@@ -266,8 +263,6 @@ export default function HomePage() {
             onSearchChange={setSearchQuery}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            totalRooms={roomsList.length}
-            filteredRoomsCount={filteredRooms.length}
           />
         </div>
 
@@ -301,32 +296,30 @@ export default function HomePage() {
             </div>
           </section>
         ) : (
-          /* Empty State */
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#C9F2E3] bg-white p-12 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E8FBF4] text-[#05966B] mb-4">
-              <HugeiconsIcon icon={Search01Icon} size={32} />
-            </div>
-            <h3 className="text-lg font-bold text-[#0B1F1A] mb-1">
-              Không tìm thấy phòng họp nào
-            </h3>
-            <p className="max-w-md text-sm text-[#4B665D] mb-6">
-              {searchQuery
+          /* Standardized Empty State Component */
+          <EmptyState
+            icon={Search01Icon}
+            title="Không tìm thấy phòng họp nào"
+            description={
+              searchQuery
                 ? `Không có kết quả nào khớp với từ khóa "${searchQuery}". Vui lòng thử tìm kiếm với tên khác.`
-                : "Hiện chưa có phòng họp nào trong danh mục đã chọn."}
-            </p>
-            {searchQuery || activeTab !== "all" ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery("");
-                  setActiveTab("all");
-                }}
-                className="rounded-lg border border-[#10D9A3] bg-white px-4 py-2 text-xs font-semibold text-[#05966B] hover:bg-[#E8FBF4]"
-              >
-                Xóa bộ lọc tìm kiếm
-              </button>
-            ) : null}
-          </div>
+                : "Hiện chưa có phòng họp nào trong danh mục đã chọn."
+            }
+            action={
+              searchQuery || activeTab !== "all" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setActiveTab("all");
+                  }}
+                  className="rounded-full border border-neutral-300 bg-white px-5 py-2 text-xs font-semibold text-neutral-700 hover:border-neutral-900 hover:bg-neutral-50 transition-colors"
+                >
+                  Xóa bộ lọc tìm kiếm
+                </button>
+              ) : null
+            }
+          />
         )}
       </PageContainer>
 

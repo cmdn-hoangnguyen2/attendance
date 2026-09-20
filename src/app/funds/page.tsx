@@ -23,6 +23,8 @@ import {
 } from "@hugeicons/core-free-icons";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useUserRealtime } from "@/lib/realtime/useUserRealtime";
+import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type FundStatusFilter = "all" | "outstanding" | "paid";
 
@@ -67,21 +69,22 @@ export default function PersonalFundsPage() {
 
     async function fetchData() {
       try {
-        const [fetchedContribs, fetchedRooms, fetchedUsers] = await Promise.all([
-          fundContributionRepository.findByContributorId(currentUser!.id),
-          roomRepository.findCatalog({ includeArchived: true }),
-          userRepository.listAll({ includeArchived: true }),
-        ]);
+        const [fetchedContribs, fetchedRooms, fetchedUsers] =
+          await Promise.all([
+            fundContributionRepository.findByContributorId(currentUser!.id),
+            roomRepository.findCatalog({ includeArchived: true }),
+            userRepository.listAll({ includeArchived: true }),
+          ]);
 
         if (!isMounted) return;
         setContributions(fetchedContribs);
 
         const rMap = new Map<string, Room>();
-        fetchedRooms.forEach((r) => rMap.set(r.id, r));
+        fetchedRooms.forEach((r: Room) => rMap.set(r.id, r));
         setRoomsMap(rMap);
 
         const uMap = new Map<string, User>();
-        fetchedUsers.forEach((u) => uMap.set(u.id, u));
+        fetchedUsers.forEach((u: User) => uMap.set(u.id, u));
         setUsersMap(uMap);
 
         // Fetch payments for paid contributions
@@ -96,7 +99,7 @@ export default function PersonalFundsPage() {
         if (!isMounted) return;
         setPaymentsMap(pMap);
       } catch (err) {
-        console.error("Failed to load personal funds data:", err);
+        console.error("Failed to load personal funds from Supabase:", err);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -111,26 +114,32 @@ export default function PersonalFundsPage() {
     };
   }, [currentUser, refreshKey]);
 
-  // Tổng hợp thống kê cá nhân
+  // Thống kê tổng hợp (KPI)
   const stats = useMemo(() => {
-    const outstanding = contributions.filter((c) => c.status === "outstanding");
-    const paid = contributions.filter((c) => c.status === "paid");
+    let outstandingCount = 0;
+    let totalOutstandingAmount = 0;
+    let paidCount = 0;
+    let totalPaidAmount = 0;
 
-    const totalOutstandingAmount = outstanding.reduce(
-      (sum, c) => sum + c.amount,
-      0,
-    );
-    const totalPaidAmount = paid.reduce((sum, c) => sum + c.amount, 0);
+    contributions.forEach((c) => {
+      if (c.status === "outstanding") {
+        outstandingCount += 1;
+        totalOutstandingAmount += c.amount;
+      } else if (c.status === "paid") {
+        paidCount += 1;
+        totalPaidAmount += c.amount;
+      }
+    });
 
     return {
-      outstandingCount: outstanding.length,
-      paidCount: paid.length,
+      outstandingCount,
       totalOutstandingAmount,
+      paidCount,
       totalPaidAmount,
     };
   }, [contributions]);
 
-  // Lọc theo tab
+  // Lọc danh sách theo tab
   const filteredContributions = useMemo(() => {
     if (statusFilter === "outstanding") {
       return contributions.filter((c) => c.status === "outstanding");
@@ -181,258 +190,231 @@ export default function PersonalFundsPage() {
   // Nếu người dùng chưa đăng nhập hoặc đang kiểm tra phiên
   if (isAuthLoading || !isAuthenticated || !currentUser) {
     return (
-      <PageContainer as="main">
-        <div className="flex flex-col gap-6 py-8 animate-pulse">
-          <div className="h-20 w-80 rounded-2xl bg-neutral-200" />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="h-32 rounded-2xl bg-neutral-100" />
-            <div className="h-32 rounded-2xl bg-neutral-100" />
-            <div className="h-32 rounded-2xl bg-neutral-100" />
+      <div className="flex-1 bg-neutral-50/50">
+        <PageContainer as="main">
+          <div className="flex flex-col gap-6 py-8 animate-pulse">
+            <div className="h-12 w-64 rounded-xl bg-neutral-200" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="h-32 rounded-2xl bg-neutral-100" />
+              <div className="h-32 rounded-2xl bg-neutral-100" />
+              <div className="h-32 rounded-2xl bg-neutral-100" />
+            </div>
+            <div className="h-64 rounded-2xl bg-neutral-100" />
           </div>
-          <div className="h-64 rounded-2xl bg-neutral-100" />
-        </div>
-      </PageContainer>
+        </PageContainer>
+      </div>
     );
   }
 
+  const tabItems: PillTabItem<FundStatusFilter>[] = [
+    { key: "all", label: "Tất cả" },
+    { key: "outstanding", label: "Cần thanh toán" },
+    { key: "paid", label: "Đã thanh toán" },
+  ];
+
   return (
-    <PageContainer as="main">
-      {/* Header Trang: Tiêu đề & Tổng quan */}
-      <section aria-labelledby="funds-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 id="funds-title" className="text-2xl lg:text-3xl font-bold tracking-tight text-[#0B1F1A]">
-            Quỹ cá nhân (Funds)
-          </h1>
-          <p className="text-sm text-[#4B665D] mt-1">
-            Theo dõi các khoản quỹ cần đóng và lịch sử thanh toán minh bạch trên Supabase.
-          </p>
-        </div>
-      </section>
-
-      {/* KPI Cards: Bento 3 cột chuẩn 8pt (Gap 24px = gap-6) */}
-      <section aria-label="Thống kê nghĩa vụ quỹ" className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        {/* Card 1: Tổng tiền cần thanh toán */}
-        <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-6 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-800">
-              Cần thanh toán
-            </span>
-            <span className="rounded-full bg-amber-100 p-2 text-amber-700">
-              <HugeiconsIcon icon={Clock01Icon} size={20} />
-            </span>
-          </div>
-          <div className="mt-4">
-            <div className="text-2xl lg:text-3xl font-extrabold text-amber-900">
-              {formatVND(stats.totalOutstandingAmount)}
-            </div>
-            <p className="text-xs text-amber-700 mt-1">
-              {stats.outstandingCount} khoản nghĩa vụ chưa nộp
+    <div className="flex-1 bg-neutral-50/50">
+      <PageContainer as="main">
+        {/* Header Trang: Tiêu đề súc tích */}
+        <section aria-labelledby="funds-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 id="funds-title" className="text-2xl font-extrabold tracking-tight text-neutral-900">
+              Quỹ cá nhân
+            </h1>
+            <p className="text-sm text-neutral-500 mt-1">
+              Theo dõi các khoản quỹ cần đóng và lịch sử thanh toán.
             </p>
           </div>
-        </div>
+        </section>
 
-        {/* Card 2: Đã hoàn thành */}
-        <div className="rounded-2xl border border-[#C9F2E3] bg-[#E8FBF4]/40 p-6 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#05966B]">
-              Đã thanh toán
-            </span>
-            <span className="rounded-full bg-[#E8FBF4] p-2 text-[#05966B]">
-              <HugeiconsIcon icon={CheckmarkCircle01Icon} size={20} />
-            </span>
-          </div>
-          <div className="mt-4">
-            <div className="text-2xl lg:text-3xl font-extrabold text-[#0B1F1A]">
-              {formatVND(stats.totalPaidAmount)}
+        {/* KPI Cards: Bento 3 cột (Neutral borders, amber only for outstanding state) */}
+        <section aria-label="Thống kê nghĩa vụ quỹ" className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {/* Card 1: Tổng tiền cần thanh toán (Status Amber) */}
+          <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-6 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-800">
+                Cần thanh toán
+              </span>
+              <span className="rounded-full bg-amber-100 p-2 text-amber-700">
+                <HugeiconsIcon icon={Clock01Icon} size={20} />
+              </span>
             </div>
-            <p className="text-xs text-[#4B665D] mt-1">
-              {stats.paidCount} khoản đã xác nhận đủ
-            </p>
-          </div>
-        </div>
-
-        {/* Card 3: Tổng số khoản ghi nhận */}
-        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-600">
-              Tổng phát sinh
-            </span>
-            <span className="rounded-full bg-neutral-100 p-2 text-neutral-700">
-              <HugeiconsIcon icon={Coins01Icon} size={20} />
-            </span>
-          </div>
-          <div className="mt-4">
-            <div className="text-2xl lg:text-3xl font-extrabold text-[#0B1F1A]">
-              {formatVND(stats.totalOutstandingAmount + stats.totalPaidAmount)}
+            <div className="mt-4">
+              <div className="text-2xl lg:text-3xl font-extrabold text-amber-900">
+                {formatVND(stats.totalOutstandingAmount)}
+              </div>
+              <p className="text-xs text-amber-700 mt-1">
+                {stats.outstandingCount} khoản nghĩa vụ chưa nộp
+              </p>
             </div>
-            <p className="text-xs text-[#4B665D] mt-1">
-              {contributions.length} lượt phát sinh nghĩa vụ
-            </p>
           </div>
-        </div>
-      </section>
 
-      {/* Filter Tabs */}
-      <section aria-label="Bộ lọc trạng thái quỹ" className="flex items-center justify-between border-b border-[#C9F2E3] pb-4">
-        <div className="flex max-w-full items-center gap-2 overflow-x-auto p-1 bg-neutral-100/80 rounded-xl border border-neutral-200/80">
-          <button
-            type="button"
-            onClick={() => setStatusFilter("all")}
-            className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
-              statusFilter === "all"
-                ? "bg-white text-[#05966B] shadow-xs"
-                : "text-[#4B665D] hover:text-[#0B1F1A]"
-            }`}
-          >
-            Tất cả ({contributions.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatusFilter("outstanding")}
-            className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+          {/* Card 2: Đã hoàn thành (Neutral Gray Border) */}
+          <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-neutral-600">
+                Đã thanh toán
+              </span>
+              <span className="rounded-full bg-neutral-100 p-2 text-neutral-700">
+                <HugeiconsIcon icon={CheckmarkCircle01Icon} size={20} />
+              </span>
+            </div>
+            <div className="mt-4">
+              <div className="text-2xl lg:text-3xl font-extrabold text-neutral-900">
+                {formatVND(stats.totalPaidAmount)}
+              </div>
+              <p className="text-xs text-neutral-500 mt-1">
+                {stats.paidCount} khoản đã hoàn thành
+              </p>
+            </div>
+          </div>
+
+          {/* Card 3: Tổng số khoản ghi nhận (Neutral Gray Border) */}
+          <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-neutral-600">
+                Tổng phát sinh
+              </span>
+              <span className="rounded-full bg-neutral-100 p-2 text-neutral-700">
+                <HugeiconsIcon icon={Coins01Icon} size={20} />
+              </span>
+            </div>
+            <div className="mt-4">
+              <div className="text-2xl lg:text-3xl font-extrabold text-neutral-900">
+                {formatVND(stats.totalOutstandingAmount + stats.totalPaidAmount)}
+              </div>
+              <p className="text-xs text-neutral-500 mt-1">
+                {contributions.length} lượt phát sinh nghĩa vụ
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Filter PillTabs */}
+        <section aria-label="Bộ lọc trạng thái quỹ" className="flex items-center justify-between border-b border-neutral-200 pb-4">
+          <PillTabs
+            tabs={tabItems}
+            activeKey={statusFilter}
+            onChange={setStatusFilter}
+          />
+        </section>
+
+        {/* Danh sách khoản đóng góp: Grid 3 cột */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-56 rounded-2xl bg-neutral-200" />
+            ))}
+          </div>
+        ) : filteredContributions.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredContributions.map((contribution) => {
+              const room = roomsMap.get(contribution.roomId);
+              const isOutstanding = contribution.status === "outstanding";
+
+              return (
+                <article
+                  key={contribution.id}
+                  className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs transition-all hover:border-neutral-400 flex flex-col justify-between"
+                >
+                  {/* Top content */}
+                  <div>
+                    {/* Room Name & Date */}
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-800 truncate">
+                        <HugeiconsIcon icon={Building01Icon} size={15} className="text-neutral-400 shrink-0" />
+                        <span className="truncate">{room?.name ?? "Phòng họp"}</span>
+                      </div>
+                      <span className="text-[11px] text-neutral-400 shrink-0">
+                        {new Date(contribution.createdAt).toLocaleDateString("vi-VN")}
+                      </span>
+                    </div>
+
+                    {/* Amount */}
+                    <div className="text-2xl font-extrabold text-neutral-900 mb-2">
+                      {formatVND(contribution.amount)}
+                    </div>
+
+                    {/* Reason */}
+                    <div className="space-y-1 mb-4">
+                      <span className="inline-block rounded-md bg-neutral-100 px-2.5 py-0.5 text-[11px] font-semibold text-neutral-700">
+                        {contribution.reason}
+                      </span>
+                      {contribution.reasonDetails && (
+                        <p className="text-xs text-neutral-500 line-clamp-2 italic">
+                          &ldquo;{contribution.reasonDetails}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Footer Action Card */}
+                  <div className="mt-4 pt-4 border-t border-neutral-100 flex items-center justify-between gap-2">
+                    {isOutstanding ? (
+                      <>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 border border-amber-200">
+                          <HugeiconsIcon icon={Clock01Icon} size={13} />
+                          <span>Chưa nộp</span>
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => setSelectedContribution(contribution)}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-[#10D9A3] px-4 py-2 text-xs font-bold text-neutral-900 shadow-xs hover:bg-[#05966B] hover:text-white transition-all"
+                        >
+                          <HugeiconsIcon icon={CreditCardIcon} size={14} />
+                          <span>Xem QR Thanh toán</span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200/60">
+                          <HugeiconsIcon icon={CheckmarkCircle01Icon} size={13} />
+                          <span>Đã hoàn thành</span>
+                        </span>
+
+                        <span className="text-[11px] text-neutral-400">
+                          {(() => {
+                            const payment = paymentsMap.get(contribution.id);
+                            return payment?.paidAt
+                              ? new Date(payment.paidAt).toLocaleDateString("vi-VN")
+                              : "Đã xác nhận";
+                          })()}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          /* Reusable Empty State Component */
+          <EmptyState
+            icon={Coins01Icon}
+            title="Không có khoản nghĩa vụ nào"
+            description={
               statusFilter === "outstanding"
-                ? "bg-white text-amber-700 shadow-xs"
-                : "text-[#4B665D] hover:text-[#0B1F1A]"
-            }`}
-          >
-            Chưa thanh toán ({stats.outstandingCount})
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatusFilter("paid")}
-            className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
-              statusFilter === "paid"
-                ? "bg-white text-[#05966B] shadow-xs"
-                : "text-[#4B665D] hover:text-[#0B1F1A]"
-            }`}
-          >
-            Đã thanh toán ({stats.paidCount})
-          </button>
-        </div>
-      </section>
+                ? "Tuyệt vời! Bạn không còn khoản nợ quỹ nào cần thanh toán."
+                : "Hiện chưa có khoản đóng góp quỹ nào trong danh mục đã chọn."
+            }
+          />
+        )}
 
-      {/* Danh sách các khoản đóng quỹ cá nhân: Grid 4 cột Desktop-first (gap 24px = gap-6) */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-48 rounded-2xl bg-neutral-200" />
-          ))}
-        </div>
-      ) : filteredContributions.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredContributions.map((contribution) => {
-            const room = roomsMap.get(contribution.roomId);
-            const isRoomArchived = room?.status === "archived";
-            const isOutstanding = contribution.status === "outstanding";
-
-            return (
-              <article
-                key={contribution.id}
-                className="flex flex-col justify-between rounded-2xl border border-[#C9F2E3] bg-white p-6 shadow-xs transition-all hover:shadow-md"
-              >
-                <div>
-                  {/* Badge Room Name & Archived Tag */}
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2 py-1 text-[11px] font-semibold text-[#0B1F1A] truncate max-w-[160px]">
-                      <HugeiconsIcon icon={Building01Icon} size={12} className="text-[#4B665D]" />
-                      <span className="truncate">{room?.name ?? "Phòng họp"}</span>
-                    </span>
-
-                    {isRoomArchived && (
-                      <span className="inline-flex items-center rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                        Room archived
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Số tiền cần đóng: Format VND integer */}
-                  <div className="text-xl font-extrabold text-[#0B1F1A] mb-1">
-                    {formatVND(contribution.amount)}
-                  </div>
-
-                  {/* Lý do & Chi tiết */}
-                  <div className="space-y-1 mb-4">
-                    <span className="inline-block rounded-md bg-[#E8FBF4] px-2 py-0.5 text-[11px] font-semibold text-[#05966B]">
-                      {contribution.reason}
-                    </span>
-                    {contribution.reasonDetails && (
-                      <p className="text-xs text-[#4B665D] line-clamp-2 italic">
-                        &ldquo;{contribution.reasonDetails}&rdquo;
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Footer Action Card */}
-                <div className="mt-4 pt-4 border-t border-neutral-100 flex items-center justify-between gap-2">
-                  {isOutstanding ? (
-                    <>
-                      <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                        <HugeiconsIcon icon={Clock01Icon} size={14} />
-                        <span>Chưa nộp</span>
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() => setSelectedContribution(contribution)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-[#05966B] px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#05966B]/90 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
-                      >
-                        <HugeiconsIcon icon={CreditCardIcon} size={14} />
-                        <span>Xem TT Chuyển Khoản</span>
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <span className="inline-flex items-center gap-1.5 rounded-md bg-[#E8FBF4] px-2.5 py-1 text-xs font-semibold text-[#05966B]">
-                        <HugeiconsIcon icon={CheckmarkCircle01Icon} size={14} />
-                        <span>Đã hoàn thành</span>
-                      </span>
-
-                      <span className="text-[11px] text-[#4B665D]">
-                        {(() => {
-                          const payment = paymentsMap.get(contribution.id);
-                          return payment?.paidAt
-                            ? new Date(payment.paidAt).toLocaleDateString("vi-VN")
-                            : "Đã xác nhận";
-                        })()}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      ) : (
-        /* Empty State */
-        <div className="rounded-3xl border border-dashed border-[#C9F2E3] bg-white/60 p-12 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E8FBF4] text-[#05966B] mb-4">
-            <HugeiconsIcon icon={Coins01Icon} size={28} />
-          </div>
-          <h2 className="text-base font-bold text-[#0B1F1A] mb-1">
-            Không có khoản nghĩa vụ nào
-          </h2>
-          <p className="max-w-md mx-auto text-xs text-[#4B665D]">
-            {statusFilter === "outstanding"
-              ? "Tuyệt vời! Bạn không còn khoản nợ quỹ nào chưa hoàn thành."
-              : "Hiện chưa có khoản đóng góp quỹ nào được ghi nhận cho tài khoản của bạn."}
-          </p>
-        </div>
-      )}
-
-      {/* Modal Thông tin Chuyển khoản / QR Code */}
-      {selectedContribution && (
-        <PaymentInfoModal
-          isOpen={Boolean(selectedContribution)}
-          onClose={() => setSelectedContribution(null)}
-          roomName={activeRoom?.name ?? "Phòng họp"}
-          ownerName={activeOwner?.displayName ?? "Chủ phòng"}
-          amount={selectedContribution.amount}
-          reason={selectedContribution.reason}
-          paymentImageUrl={activePaymentImage}
-          isRoomArchived={activeRoom?.status === "archived"}
-        />
-      )}
-    </PageContainer>
+        {/* Modal Thông tin Chuyển khoản / QR Code */}
+        {selectedContribution && (
+          <PaymentInfoModal
+            isOpen={Boolean(selectedContribution)}
+            onClose={() => setSelectedContribution(null)}
+            roomName={activeRoom?.name ?? "Phòng họp"}
+            ownerName={activeOwner?.displayName ?? "Chủ phòng"}
+            amount={selectedContribution.amount}
+            reason={selectedContribution.reason}
+            paymentImageUrl={activePaymentImage}
+            isRoomArchived={activeRoom?.status === "archived"}
+          />
+        )}
+      </PageContainer>
+    </div>
   );
 }
