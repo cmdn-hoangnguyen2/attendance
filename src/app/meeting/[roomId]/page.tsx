@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useAuthMock } from "@/context/AuthMockContext";
 import type {
   AttendanceRecord,
@@ -52,9 +52,17 @@ import {
 
 export default function MeetingDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const roomId = params?.roomId as string;
 
-  const { currentUser } = useAuthMock();
+  const { currentUser, isAuthenticated, isLoading: isAuthLoading } = useAuthMock();
+
+  // Redirect to /login if unauthenticated
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [room, setRoom] = useState<Room | undefined>(undefined);
@@ -479,7 +487,7 @@ export default function MeetingDetailPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isAuthLoading || !isAuthenticated) {
     return (
       <main className="mx-auto max-w-7xl px-6 py-12">
         <div className="flex flex-col gap-6 animate-pulse">

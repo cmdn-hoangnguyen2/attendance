@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuthMock } from "@/context/AuthMockContext";
 import type { FundContribution, Payment, Room, User } from "@/types/domain";
 import { formatVND } from "@/lib/utils";
@@ -18,8 +18,6 @@ import {
   Coins01Icon,
   CheckmarkCircle01Icon,
   Clock01Icon,
-  Home01Icon,
-  Login01Icon,
   CreditCardIcon,
   Building01Icon,
 } from "@hugeicons/core-free-icons";
@@ -29,7 +27,15 @@ import { useUserRealtime } from "@/lib/realtime/useUserRealtime";
 type FundStatusFilter = "all" | "outstanding" | "paid";
 
 export default function PersonalFundsPage() {
-  const { currentUser, isAuthenticated, login, isMockActive } = useAuthMock();
+  const router = useRouter();
+  const { currentUser, isAuthenticated, isLoading: isAuthLoading } = useAuthMock();
+
+  // Redirect to /login if unauthenticated
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
 
   // Filter tab: Tất cả vs Cần thanh toán vs Đã hoàn thành
   const [statusFilter, setStatusFilter] = useState<FundStatusFilter>("all");
@@ -172,39 +178,20 @@ export default function PersonalFundsPage() {
 
   const activePaymentImage = modalPaymentImageUrl || activeRoom?.paymentImageUrl || null;
 
-  // Nếu người dùng chưa đăng nhập (guest)
-  if (!isAuthenticated || !currentUser) {
+  // Nếu người dùng chưa đăng nhập hoặc đang kiểm tra phiên
+  if (isAuthLoading || !isAuthenticated || !currentUser) {
     return (
-      <main className="mx-auto max-w-xl px-6 py-16 text-center">
-        <div className="rounded-3xl border border-[#C9F2E3] bg-white p-8 shadow-md">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 mb-6">
-            <HugeiconsIcon icon={Login01Icon} size={32} />
+      <PageContainer as="main">
+        <div className="flex flex-col gap-6 py-8 animate-pulse">
+          <div className="h-20 w-80 rounded-2xl bg-neutral-200" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="h-32 rounded-2xl bg-neutral-100" />
+            <div className="h-32 rounded-2xl bg-neutral-100" />
+            <div className="h-32 rounded-2xl bg-neutral-100" />
           </div>
-          <h1 className="text-2xl font-bold text-[#0B1F1A] mb-2">
-            Vui lòng đăng nhập
-          </h1>
-          <p className="text-sm text-[#4B665D] mb-6">
-            Bạn cần đăng nhập để xem danh sách các khoản quỹ cần thanh toán và lịch sử đóng góp.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-            >
-              <HugeiconsIcon icon={Home01Icon} size={18} />
-              <span>Trang chủ</span>
-            </Link>
-            <button
-              type="button"
-              onClick={login}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#05966B]/90"
-            >
-              <HugeiconsIcon icon={Login01Icon} size={18} />
-              <span>{isMockActive ? "Đăng nhập nhanh (User)" : "Đăng nhập hệ thống"}</span>
-            </button>
-          </div>
+          <div className="h-64 rounded-2xl bg-neutral-100" />
         </div>
-      </main>
+      </PageContainer>
     );
   }
 

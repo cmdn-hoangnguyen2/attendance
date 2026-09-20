@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuthMock } from "@/context/AuthMockContext";
 import type { Room, User } from "@/types/domain";
 import { UsersManagementTab } from "@/modules/admin/presentation/UsersManagementTab";
@@ -20,7 +21,16 @@ import { PageContainer } from "@/components/layout/PageContainer";
 type SettingsTab = "users" | "rooms";
 
 export default function SettingsPage() {
-  const { currentUser, setRole, login, isMockActive } = useAuthMock();
+  const router = useRouter();
+  const { currentUser, isAuthenticated, isLoading: isAuthLoading, setRole, login, isMockActive } = useAuthMock();
+
+  // Redirect to /login if unauthenticated
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
+
   const [activeTab, setActiveTab] = useState<SettingsTab>("users");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -119,6 +129,18 @@ export default function SettingsPage() {
       console.error("Failed to restore room:", err);
     }
   };
+
+  // Nếu chưa đăng nhập hoặc đang tải phiên, hiển thị loader và chờ redirect về /login
+  if (isAuthLoading || !isAuthenticated) {
+    return (
+      <PageContainer as="main">
+        <div className="flex flex-col gap-6 py-8 animate-pulse">
+          <div className="h-12 w-64 rounded-xl bg-neutral-200" />
+          <div className="h-64 rounded-2xl bg-neutral-100" />
+        </div>
+      </PageContainer>
+    );
+  }
 
   // Trường hợp người dùng không có quyền Admin
   if (!isAdmin) {

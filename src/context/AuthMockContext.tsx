@@ -148,8 +148,16 @@ function RealAuthProviderInner({ children }: { children: React.ReactNode }) {
 
         // If not found yet (beforeSessionSaved delay), onboard user directly
         if (!existing && auth0User.email) {
-          const roleClaim = auth0User["https://diemdanh.cmdn/role"] as string | undefined;
-          const role: "admin" | "user" = roleClaim === "admin" ? "admin" : "user";
+          const customRole = auth0User["https://diemdanh.cmdn/role"] as string | undefined;
+          const rolesArray = (auth0User.roles || auth0User["https://diemdanh.cmdn/roles"]) as string[] | undefined;
+          const permissionsArray = (auth0User.permissions || auth0User["https://diemdanh.cmdn/permissions"]) as string[] | undefined;
+
+          const isAdmin =
+            customRole === "admin" ||
+            rolesArray?.includes("admin") ||
+            permissionsArray?.includes("admin");
+
+          const role: "admin" | "user" = isAdmin ? "admin" : "user";
           existing = await userRepository.createOrSync({
             auth0Subject: auth0User.sub,
             email: auth0User.email,
@@ -179,8 +187,15 @@ function RealAuthProviderInner({ children }: { children: React.ReactNode }) {
     };
   }, [auth0User]);
 
-  const roleClaim = (auth0User?.["https://diemdanh.cmdn/role"] as string | undefined) || dbUser?.role;
-  const isAdmin = roleClaim === "admin";
+  const customRole = auth0User?.["https://diemdanh.cmdn/role"] as string | undefined;
+  const rolesArray = (auth0User?.roles || auth0User?.["https://diemdanh.cmdn/roles"]) as string[] | undefined;
+  const permissionsArray = (auth0User?.permissions || auth0User?.["https://diemdanh.cmdn/permissions"]) as string[] | undefined;
+
+  const isAdmin =
+    customRole === "admin" ||
+    rolesArray?.includes("admin") ||
+    permissionsArray?.includes("admin") ||
+    dbUser?.role === "admin";
   const isAuthenticated = Boolean(auth0User && dbUser && dbUser.status !== "soft_deleted");
 
   const currentRole: MockRole = useMemo(() => {

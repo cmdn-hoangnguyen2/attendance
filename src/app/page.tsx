@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import type { Room, RoomVisibility, User } from "@/types/domain";
 import { useAuthMock } from "@/context/AuthMockContext";
 import { RoomCard } from "@/modules/rooms/presentation/RoomCard";
@@ -25,7 +26,15 @@ import {
 import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function HomePage() {
-  const { currentUser, isAuthenticated, login } = useAuthMock();
+  const router = useRouter();
+  const { currentUser, isAuthenticated, isLoading: isAuthLoading, login } = useAuthMock();
+
+  // Redirect to /login if unauthenticated
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [roomsList, setRoomsList] = useState<Room[]>([]);
@@ -48,11 +57,12 @@ export default function HomePage() {
   // Subscribe to real-time changes across rooms, memberships, and join requests
   useLobbyRealtime({
     onDataChange: () => setRefreshKey((k) => k + 1),
-    enabled: true,
+    enabled: isAuthenticated,
   });
 
   // Fetch initial data from Supabase
   useEffect(() => {
+    if (!isAuthenticated) return;
     let isMounted = true;
 
     async function fetchData() {
@@ -97,7 +107,7 @@ export default function HomePage() {
     return () => {
       isMounted = false;
     };
-  }, [currentUser, refreshKey]);
+  }, [currentUser, isAuthenticated, refreshKey]);
 
   // Filtered rooms logic
   const filteredRooms = useMemo(() => {
@@ -198,6 +208,17 @@ export default function HomePage() {
       console.error("Failed to cancel request:", err);
     }
   };
+
+  // Prevent unauthenticated flash: while checking or if not authenticated, show skeleton
+  if (isAuthLoading || !isAuthenticated) {
+    return (
+      <div className="flex-1 bg-neutral-50/50">
+        <PageContainer as="main" className="py-12">
+          <RoomSkeletonGrid />
+        </PageContainer>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 bg-neutral-50/50">

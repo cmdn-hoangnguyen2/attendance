@@ -43,6 +43,8 @@ export function AppHeader() {
     { href: "/settings", label: "Cài đặt", icon: Settings01Icon, show: isAdmin },
   ];
 
+  const isLoginPage = pathname === "/login";
+
   return (
     <header className="sticky top-0 z-40 border-b border-[#C9F2E3] bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
@@ -66,93 +68,97 @@ export function AppHeader() {
             </div>
           </Link>
 
-          {/* Navigation Links (Desktop) */}
-          <nav aria-label="Menu chính" className="hidden md:flex items-center gap-2">
-            {navLinks
-              .filter((item) => item.show)
-              .map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
-                      isActive
-                        ? "bg-[#E8FBF4] text-[#05966B]"
-                        : "text-[#4B665D] hover:bg-neutral-50 hover:text-[#0B1F1A]"
-                    }`}
-                  >
-                    <HugeiconsIcon icon={item.icon} size={18} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-          </nav>
+          {/* Navigation Links (Desktop) - hidden on /login */}
+          {!isLoginPage && (
+            <nav aria-label="Menu chính" className="hidden md:flex items-center gap-2">
+              {navLinks
+                .filter((item) => item.show)
+                .map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                        isActive
+                          ? "bg-[#E8FBF4] text-[#05966B]"
+                          : "text-[#4B665D] hover:bg-neutral-50 hover:text-[#0B1F1A]"
+                      }`}
+                    >
+                      <HugeiconsIcon icon={item.icon} size={18} />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+            </nav>
+          )}
         </div>
 
-        {/* User Auth Section & Mobile Menu Button */}
-        <div className="flex items-center gap-3">
-          {isAuthenticated && currentUser ? (
-            <div className="flex items-center gap-3">
-              {/* User Avatar Circle: 32x32px (chuẩn 8pt) */}
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E8FBF4] font-bold text-xs text-[#05966B] border border-[#C9F2E3]">
-                {currentUser.displayName.charAt(0).toUpperCase()}
-              </div>
-
-              {/* User Information (Desktop only) */}
-              <div className="hidden sm:flex flex-col text-left">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm leading-none text-[#0B1F1A]">
-                    {currentUser.displayName}
-                  </span>
-                  {isAdmin ? (
-                    <span className="rounded bg-[#E8FBF4] px-1.5 py-0.5 text-[10px] font-bold text-[#05966B] border border-[#C9F2E3]">
-                      Admin
-                    </span>
-                  ) : null}
+        {/* User Auth Section & Mobile Menu Button - hidden on /login */}
+        {!isLoginPage && (
+          <div className="flex items-center gap-3">
+            {isAuthenticated && currentUser ? (
+              <div className="flex items-center gap-3">
+                {/* User Avatar Circle: 32x32px (chuẩn 8pt) */}
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E8FBF4] font-bold text-xs text-[#05966B] border border-[#C9F2E3]">
+                  {currentUser.displayName.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-xs text-[#4B665D] leading-none mt-1">
-                  {currentUser.email}
-                </span>
-              </div>
 
-              {/* Logout Button */}
+                {/* User Information (Desktop only) */}
+                <div className="hidden sm:flex flex-col text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm leading-none text-[#0B1F1A]">
+                      {currentUser.displayName}
+                    </span>
+                    {isAdmin ? (
+                      <span className="rounded bg-[#E8FBF4] px-1.5 py-0.5 text-[10px] font-bold text-[#05966B] border border-[#C9F2E3]">
+                        Admin
+                      </span>
+                    ) : null}
+                  </div>
+                  <span className="text-xs text-[#4B665D] leading-none mt-1">
+                    {currentUser.email}
+                  </span>
+                </div>
+
+                {/* Logout Button */}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 rounded-lg border border-[#C9F2E3] px-3 py-1.5 text-xs font-semibold text-[#4B665D] transition-colors hover:bg-neutral-50 hover:text-[#0B1F1A]"
+                  title={isMockActive ? "Đăng xuất khỏi phiên giả lập" : "Đăng xuất"}
+                >
+                  <HugeiconsIcon icon={Logout01Icon} size={16} />
+                  <span className="hidden sm:inline">Thoát</span>
+                </button>
+              </div>
+            ) : (
               <button
                 type="button"
-                onClick={handleLogout}
-                className="flex items-center gap-1.5 rounded-lg border border-[#C9F2E3] px-3 py-1.5 text-xs font-semibold text-[#4B665D] transition-colors hover:bg-neutral-50 hover:text-[#0B1F1A]"
-                title={isMockActive ? "Đăng xuất khỏi phiên giả lập" : "Đăng xuất"}
+                onClick={handleLogin}
+                className="flex items-center gap-2 rounded-lg bg-[#10D9A3] px-4 py-2 text-sm font-semibold text-[#0B1F1A] shadow-xs transition-colors hover:bg-[#05966B] hover:text-white"
               >
-                <HugeiconsIcon icon={Logout01Icon} size={16} />
-                <span className="hidden sm:inline">Thoát</span>
+                <HugeiconsIcon icon={Login01Icon} size={18} />
+                <span>Đăng nhập</span>
               </button>
-            </div>
-          ) : (
+            )}
+
+            {/* Mobile Menu Toggle Button: 40x40px touch target (chuẩn 8pt) */}
             <button
               type="button"
-              onClick={handleLogin}
-              className="flex items-center gap-2 rounded-lg bg-[#10D9A3] px-4 py-2 text-sm font-semibold text-[#0B1F1A] shadow-xs transition-colors hover:bg-[#05966B] hover:text-white"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="flex h-10 w-10 md:hidden items-center justify-center rounded-xl border border-[#C9F2E3] bg-[#E8FBF4] text-[#05966B] transition-colors hover:bg-[#C9F2E3]/60 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
+              aria-expanded={isMobileMenuOpen}
+              aria-label="Mở menu điều hướng"
             >
-              <HugeiconsIcon icon={Login01Icon} size={18} />
-              <span>Đăng nhập</span>
+              <HugeiconsIcon icon={isMobileMenuOpen ? Cancel01Icon : Menu01Icon} size={20} />
             </button>
-          )}
-
-          {/* Mobile Menu Toggle Button: 40x40px touch target (chuẩn 8pt) */}
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="flex h-10 w-10 md:hidden items-center justify-center rounded-xl border border-[#C9F2E3] bg-[#E8FBF4] text-[#05966B] transition-colors hover:bg-[#C9F2E3]/60 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
-            aria-expanded={isMobileMenuOpen}
-            aria-label="Mở menu điều hướng"
-          >
-            <HugeiconsIcon icon={isMobileMenuOpen ? Cancel01Icon : Menu01Icon} size={20} />
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Mobile Navigation Dropdown Menu */}
-      {isMobileMenuOpen && (
+      {/* Mobile Navigation Dropdown Menu - hidden on /login */}
+      {!isLoginPage && isMobileMenuOpen && (
         <nav
           aria-label="Menu di động"
           className="border-t border-[#C9F2E3] bg-white px-6 py-4 md:hidden shadow-lg animate-in slide-in-from-top-2"

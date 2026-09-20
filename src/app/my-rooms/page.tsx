@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuthMock } from "@/context/AuthMockContext";
 import type { Room, RoomVisibility, User } from "@/types/domain";
 import { RoomCard } from "@/modules/rooms/presentation/RoomCard";
@@ -15,7 +16,6 @@ import {
   UserGroupIcon,
   Search01Icon,
   PlusSignIcon,
-  Login01Icon,
   Home01Icon,
 } from "@hugeicons/core-free-icons";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -23,7 +23,15 @@ import { PageContainer } from "@/components/layout/PageContainer";
 type MyRoomsTab = "owned" | "joined";
 
 export default function MyRoomsPage() {
-  const { currentUser, isAuthenticated, login, isMockActive } = useAuthMock();
+  const router = useRouter();
+  const { currentUser, isAuthenticated, isLoading: isAuthLoading } = useAuthMock();
+
+  // Redirect to /login if unauthenticated
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
 
   // Tab hiện tại: Phòng làm chủ vs Phòng tham gia
   const [activeTab, setActiveTab] = useState<MyRoomsTab>("owned");
@@ -110,39 +118,20 @@ export default function MyRoomsPage() {
     }
   };
 
-  // Nếu người dùng chưa đăng nhập (guest)
-  if (!isAuthenticated || !currentUser) {
+  // Nếu người dùng chưa đăng nhập hoặc đang kiểm tra phiên
+  if (isAuthLoading || !isAuthenticated || !currentUser) {
     return (
-      <main className="mx-auto max-w-xl px-6 py-16 text-center">
-        <div className="rounded-3xl border border-[#C9F2E3] bg-white p-8 shadow-md">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 mb-6">
-            <HugeiconsIcon icon={Login01Icon} size={32} />
-          </div>
-          <h1 className="text-2xl font-bold text-[#0B1F1A] mb-2">
-            Vui lòng đăng nhập
-          </h1>
-          <p className="text-sm text-[#4B665D] mb-6">
-            Bạn cần đăng nhập để xem danh sách phòng họp do bạn quản trị hoặc tham gia sinh hoạt.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-            >
-              <HugeiconsIcon icon={Home01Icon} size={18} />
-              <span>Trang chủ</span>
-            </Link>
-            <button
-              type="button"
-              onClick={login}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#05966B]/90"
-            >
-              <HugeiconsIcon icon={Login01Icon} size={18} />
-              <span>{isMockActive ? "Đăng nhập nhanh (User)" : "Đăng nhập hệ thống"}</span>
-            </button>
+      <PageContainer as="main">
+        <div className="flex flex-col gap-6 py-8 animate-pulse">
+          <div className="h-20 w-80 rounded-2xl bg-neutral-200" />
+          <div className="h-12 w-96 rounded-xl bg-neutral-200" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="h-48 rounded-2xl bg-neutral-100" />
+            <div className="h-48 rounded-2xl bg-neutral-100" />
+            <div className="h-48 rounded-2xl bg-neutral-100" />
           </div>
         </div>
-      </main>
+      </PageContainer>
     );
   }
 

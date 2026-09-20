@@ -17,12 +17,25 @@ export const auth0 = new Auth0Client({
     process.env.AUTH0_SECRET ||
     "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
   appBaseUrl: process.env.APP_BASE_URL || "http://localhost:3000",
+  authorizationParameters: {
+    prompt: "select_account",
+    connection: process.env.AUTH0_CONNECTION || "google-oauth2",
+    scope: "openid profile email",
+  },
   async beforeSessionSaved(session) {
     const auth0User = session.user;
     if (auth0User && auth0User.sub && auth0User.email) {
-      // Determine global role from Auth0 custom claim: https://diemdanh.cmdn/role
+      // Determine global role from Auth0 custom claim, roles array, or permissions/scope
       const roleClaim = auth0User["https://diemdanh.cmdn/role"] as string | undefined;
-      const role: "admin" | "user" = roleClaim === "admin" ? "admin" : "user";
+      const rolesArray = (auth0User.roles || auth0User["https://diemdanh.cmdn/roles"]) as string[] | undefined;
+      const permissionsArray = (auth0User.permissions || auth0User["https://diemdanh.cmdn/permissions"]) as string[] | undefined;
+
+      const isAdmin =
+        roleClaim === "admin" ||
+        rolesArray?.includes("admin") ||
+        permissionsArray?.includes("admin");
+
+      const role: "admin" | "user" = isAdmin ? "admin" : "user";
 
       try {
         const supabase = createServerSupabaseClient();
