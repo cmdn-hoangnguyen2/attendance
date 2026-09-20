@@ -19,7 +19,11 @@ const ROLES: RoleOption[] = [
 ];
 
 export function RoleSwitcherBanner() {
-  const { currentRole, setRole, currentUser } = useAuthMock();
+  const { currentRole, setRole, currentUser, isMockActive } = useAuthMock();
+
+  if (!isMockActive) {
+    return null;
+  }
 
   const handleRoleChange = (role: MockRole) => {
     setRole(role);

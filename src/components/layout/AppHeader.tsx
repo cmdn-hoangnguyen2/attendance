@@ -16,14 +16,14 @@ import {
 
 export function AppHeader() {
   const pathname = usePathname();
-  const { currentUser, isAuthenticated, isAdmin, setRole } = useAuthMock();
+  const { currentUser, isAuthenticated, isAdmin, login, logout, isMockActive } = useAuthMock();
 
   const handleLogout = () => {
-    setRole("guest");
+    logout();
   };
 
   const handleLogin = () => {
-    setRole("user");
+    login();
   };
 
   const navLinks = [
@@ -111,7 +111,7 @@ export function AppHeader() {
                 type="button"
                 onClick={handleLogout}
                 className="flex items-center gap-1.5 rounded-lg border border-[#C9F2E3] px-3 py-1.5 text-xs font-semibold text-[#4B665D] transition-colors hover:bg-neutral-50 hover:text-[#0B1F1A]"
-                title="Đăng xuất khỏi phiên giả lập"
+                title={isMockActive ? "Đăng xuất khỏi phiên giả lập" : "Đăng xuất"}
               >
                 <HugeiconsIcon icon={Logout01Icon} size={16} />
                 <span className="hidden sm:inline">Thoát</span>

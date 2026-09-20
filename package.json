@@ -11,6 +11,7 @@
     "test": "node --test 'tests/unit/**/*.test.mjs'"
   },
   "dependencies": {
+    "@auth0/nextjs-auth0": "^4.30.0",
     "@hugeicons/core-free-icons": "^4.3.3",
     "@hugeicons/react": "^1.1.10",
     "@supabase/supabase-js": "^2.116.0",
