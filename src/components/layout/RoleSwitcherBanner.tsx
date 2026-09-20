@@ -32,7 +32,7 @@ export function RoleSwitcherBanner() {
   return (
     <aside
       aria-label="Thanh chuyển đổi vai trò kiểm thử"
-      className="border-b border-[#C9F2E3] bg-[#E8FBF4] px-4 py-2 text-xs text-[#0B1F1A]"
+      className="border-b border-[#C9F2E3] bg-[#E8FBF4] px-6 py-2 text-xs text-[#0B1F1A]"
     >
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
         {/* Nhóm thông tin vai trò hiện tại */}

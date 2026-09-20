@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthMock } from "@/context/AuthMockContext";
@@ -12,11 +12,21 @@ import {
   Settings01Icon,
   Login01Icon,
   Logout01Icon,
+  Menu01Icon,
+  Cancel01Icon,
 } from "@hugeicons/core-free-icons";
 
 export function AppHeader() {
   const pathname = usePathname();
   const { currentUser, isAuthenticated, isAdmin, login, logout, isMockActive } = useAuthMock();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [prevPathname, setPrevPathname] = useState(pathname);
+
+  // Auto-close mobile menu during render when route changes
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setIsMobileMenuOpen(false);
+  }
 
   const handleLogout = () => {
     logout();
@@ -42,7 +52,7 @@ export function AppHeader() {
             href="/"
             className="flex items-center gap-3 text-decoration-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
           >
-            {/* Logo icon container: 40x40px (bội số của 8) */}
+            {/* Logo icon container: 40x40px (chuẩn 8pt) */}
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#10D9A3] to-[#05966B] text-white shadow-xs">
               <span className="font-extrabold text-base tracking-wider">CM</span>
             </div>
@@ -80,8 +90,8 @@ export function AppHeader() {
           </nav>
         </div>
 
-        {/* User Auth Section */}
-        <div className="flex items-center gap-4">
+        {/* User Auth Section & Mobile Menu Button */}
+        <div className="flex items-center gap-3">
           {isAuthenticated && currentUser ? (
             <div className="flex items-center gap-3">
               {/* User Avatar Circle: 32x32px (chuẩn 8pt) */}
@@ -89,7 +99,7 @@ export function AppHeader() {
                 {currentUser.displayName.charAt(0).toUpperCase()}
               </div>
 
-              {/* User Information */}
+              {/* User Information (Desktop only) */}
               <div className="hidden sm:flex flex-col text-left">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-sm leading-none text-[#0B1F1A]">
@@ -127,8 +137,50 @@ export function AppHeader() {
               <span>Đăng nhập</span>
             </button>
           )}
+
+          {/* Mobile Menu Toggle Button: 40x40px touch target (chuẩn 8pt) */}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="flex h-10 w-10 md:hidden items-center justify-center rounded-xl border border-[#C9F2E3] bg-[#E8FBF4] text-[#05966B] transition-colors hover:bg-[#C9F2E3]/60 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
+            aria-expanded={isMobileMenuOpen}
+            aria-label="Mở menu điều hướng"
+          >
+            <HugeiconsIcon icon={isMobileMenuOpen ? Cancel01Icon : Menu01Icon} size={20} />
+          </button>
         </div>
       </div>
+
+      {/* Mobile Navigation Dropdown Menu */}
+      {isMobileMenuOpen && (
+        <nav
+          aria-label="Menu di động"
+          className="border-t border-[#C9F2E3] bg-white px-6 py-4 md:hidden shadow-lg animate-in slide-in-from-top-2"
+        >
+          <div className="flex flex-col gap-1.5">
+            {navLinks
+              .filter((item) => item.show)
+              .map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                      isActive
+                        ? "bg-[#E8FBF4] text-[#05966B]"
+                        : "text-[#4B665D] hover:bg-neutral-50 hover:text-[#0B1F1A]"
+                    }`}
+                  >
+                    <HugeiconsIcon icon={item.icon} size={20} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+          </div>
+        </nav>
+      )}
     </header>
   );
 }

@@ -25,7 +25,7 @@ import {
 import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function HomePage() {
-  const { currentUser, isAuthenticated, setRole } = useAuthMock();
+  const { currentUser, isAuthenticated, login } = useAuthMock();
 
   const [isLoading, setIsLoading] = useState(true);
   const [roomsList, setRoomsList] = useState<Room[]>([]);
@@ -141,7 +141,8 @@ export default function HomePage() {
   // Handle request to join room
   const handleRequestJoin = async (roomId: string) => {
     if (!isAuthenticated) {
-      setRole("user");
+      login();
+      return;
     }
 
     const targetRoom = roomsList.find((r) => r.id === roomId);
@@ -199,8 +200,8 @@ export default function HomePage() {
   };
 
   return (
-    <main className="flex-1 bg-neutral-50/50">
-      <PageContainer>
+    <div className="flex-1 bg-neutral-50/50">
+      <PageContainer as="main">
         {/* Hero Banner / Page Intro (Padding: 32px = p-8) */}
         <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#C9F2E3] bg-gradient-to-r from-white via-[#E8FBF4]/40 to-white p-8 shadow-xs">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -223,7 +224,8 @@ export default function HomePage() {
                 type="button"
                 onClick={() => {
                   if (!isAuthenticated) {
-                    setRole("user");
+                    login();
+                    return;
                   }
                   setIsCreateModalOpen(true);
                 }}
@@ -313,6 +315,6 @@ export default function HomePage() {
         onClose={() => setIsCreateModalOpen(false)}
         onCreateRoom={handleCreateRoom}
       />
-    </main>
+    </div>
   );
 }

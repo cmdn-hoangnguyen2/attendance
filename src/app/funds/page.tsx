@@ -29,7 +29,7 @@ import { useUserRealtime } from "@/lib/realtime/useUserRealtime";
 type FundStatusFilter = "all" | "outstanding" | "paid";
 
 export default function PersonalFundsPage() {
-  const { currentUser, isAuthenticated, setRole } = useAuthMock();
+  const { currentUser, isAuthenticated, login, isMockActive } = useAuthMock();
 
   // Filter tab: Tất cả vs Cần thanh toán vs Đã hoàn thành
   const [statusFilter, setStatusFilter] = useState<FundStatusFilter>("all");
@@ -196,11 +196,11 @@ export default function PersonalFundsPage() {
             </Link>
             <button
               type="button"
-              onClick={() => setRole("user")}
+              onClick={login}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#05966B]/90"
             >
               <HugeiconsIcon icon={Login01Icon} size={18} />
-              <span>Đăng nhập nhanh (User)</span>
+              <span>{isMockActive ? "Đăng nhập nhanh (User)" : "Đăng nhập hệ thống"}</span>
             </button>
           </div>
         </div>
@@ -287,7 +287,7 @@ export default function PersonalFundsPage() {
 
       {/* Filter Tabs */}
       <section aria-label="Bộ lọc trạng thái quỹ" className="flex items-center justify-between border-b border-[#C9F2E3] pb-4">
-        <div className="flex items-center gap-2 p-1 bg-neutral-100/80 rounded-xl border border-neutral-200/80">
+        <div className="flex max-w-full items-center gap-2 overflow-x-auto p-1 bg-neutral-100/80 rounded-xl border border-neutral-200/80">
           <button
             type="button"
             onClick={() => setStatusFilter("all")}

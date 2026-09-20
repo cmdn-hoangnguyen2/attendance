@@ -23,7 +23,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 type MyRoomsTab = "owned" | "joined";
 
 export default function MyRoomsPage() {
-  const { currentUser, isAuthenticated, setRole } = useAuthMock();
+  const { currentUser, isAuthenticated, login, isMockActive } = useAuthMock();
 
   // Tab hiện tại: Phòng làm chủ vs Phòng tham gia
   const [activeTab, setActiveTab] = useState<MyRoomsTab>("owned");
@@ -134,11 +134,11 @@ export default function MyRoomsPage() {
             </Link>
             <button
               type="button"
-              onClick={() => setRole("user")}
+              onClick={login}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#05966B]/90"
             >
               <HugeiconsIcon icon={Login01Icon} size={18} />
-              <span>Đăng nhập nhanh (User)</span>
+              <span>{isMockActive ? "Đăng nhập nhanh (User)" : "Đăng nhập hệ thống"}</span>
             </button>
           </div>
         </div>
@@ -172,7 +172,7 @@ export default function MyRoomsPage() {
       {/* Thanh điều hướng Tabs & Bộ lọc tìm kiếm */}
       <section aria-label="Bộ lọc phòng của tôi" className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-[#C9F2E3] pb-4">
         {/* Tabs */}
-        <div className="flex items-center gap-2 p-1 bg-neutral-100/80 rounded-xl border border-neutral-200/80 w-fit">
+        <div className="flex max-w-full items-center gap-2 overflow-x-auto p-1 bg-neutral-100/80 rounded-xl border border-neutral-200/80 w-fit">
           <button
             type="button"
             onClick={() => setActiveTab("owned")}

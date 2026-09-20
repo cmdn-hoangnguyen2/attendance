@@ -20,7 +20,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 type SettingsTab = "users" | "rooms";
 
 export default function SettingsPage() {
-  const { currentUser, setRole } = useAuthMock();
+  const { currentUser, setRole, login, isMockActive } = useAuthMock();
   const [activeTab, setActiveTab] = useState<SettingsTab>("users");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -146,15 +146,25 @@ export default function SettingsPage() {
               <span>Về trang chủ</span>
             </Link>
 
-            {/* Helper chuyển role nhanh sang Admin cho việc kiểm thử UI */}
-            <button
-              type="button"
-              onClick={() => setRole("admin")}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#05966B]/90 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
-            >
-              <HugeiconsIcon icon={SecurityCheckIcon} size={18} />
-              <span>Chuyển sang vai trò Admin</span>
-            </button>
+            {isMockActive ? (
+              <button
+                type="button"
+                onClick={() => setRole("admin")}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#05966B]/90 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
+              >
+                <HugeiconsIcon icon={SecurityCheckIcon} size={18} />
+                <span>Chuyển sang vai trò Admin (Mock)</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={login}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#05966B] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#05966B]/90 focus-visible:ring-2 focus-visible:ring-[#10D9A3]"
+              >
+                <HugeiconsIcon icon={SecurityCheckIcon} size={18} />
+                <span>Đăng nhập tài khoản Admin</span>
+              </button>
+            )}
           </div>
         </div>
       </main>
