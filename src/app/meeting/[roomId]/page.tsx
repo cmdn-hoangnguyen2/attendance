@@ -28,6 +28,7 @@ import { ArchiveRoomModal } from "@/modules/rooms/presentation/ArchiveRoomModal"
 import { TransferOwnershipModal } from "@/modules/rooms/presentation/TransferOwnershipModal";
 import { UploadPaymentQrModal } from "@/modules/funds/presentation/UploadPaymentQrModal";
 import { AccessRevokedModal } from "@/modules/meetings/presentation/AccessRevokedModal";
+import { LeaveRoomModal } from "@/modules/meetings/presentation/LeaveRoomModal";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useRoomRealtime } from "@/lib/realtime/useRoomRealtime";
 import {
@@ -48,6 +49,8 @@ import {
   ShieldAlertIcon,
   UserAdd01Icon,
   Clock01Icon,
+  Archive01Icon,
+  Coins01Icon,
 } from "@hugeicons/core-free-icons";
 
 export default function MeetingDetailPage() {
@@ -74,10 +77,11 @@ export default function MeetingDetailPage() {
   const [fundCandidates, setFundCandidates] = useState<FundCandidate[]>([]);
   const [contributions, setContributions] = useState<FundContribution[]>([]);
 
-  // State cho các modal Archive, Transfer Ownership và QR Code
+  // State cho các modal Archive, Transfer Ownership, QR Code và Rời phòng
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isPaymentQrModalOpen, setIsPaymentQrModalOpen] = useState(false);
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
 
   // Tab điều hướng hiện tại
   const [activeTab, setActiveTab] = useState<MeetingTab>("members");
@@ -487,6 +491,18 @@ export default function MeetingDetailPage() {
     }
   };
 
+  // Handler: Thành viên tự rời phòng
+  const handleLeaveRoom = async () => {
+    if (!currentUser || !room) return;
+    try {
+      await membershipRepository.leave(room.id, currentUser.id);
+      setIsLeaveModalOpen(false);
+      router.replace("/");
+    } catch (err) {
+      console.error("Failed to leave room:", err);
+    }
+  };
+
   if (isLoading || isAuthLoading || !isAuthenticated) {
     return (
       <main className="mx-auto max-w-7xl px-6 py-12">
@@ -519,6 +535,41 @@ export default function MeetingDetailPage() {
           <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
           <span>Về trang chủ</span>
         </Link>
+      </main>
+    );
+  }
+
+  // Trường hợp 2A-0: Phòng đã lưu trữ (Archived) - Chỉ Owner/Admin được vào xem Quỹ, thành viên thường bị chặn
+  if (room.status === "archived" && !isOwnerOrAdmin) {
+    return (
+      <main className="mx-auto max-w-xl px-6 py-16 text-center">
+        <div className="rounded-3xl border border-neutral-border bg-white p-8 shadow-md">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-600 mb-6">
+            <HugeiconsIcon icon={Archive01Icon} size={32} />
+          </div>
+          <h1 className="text-2xl font-bold text-neutral-dark mb-2">
+            Phòng họp đã được lưu trữ
+          </h1>
+          <p className="text-sm text-neutral-muted mb-6">
+            Phòng họp <span className="font-semibold text-neutral-dark">&ldquo;{room.name}&rdquo;</span> đã được lưu trữ. Thành viên không thể truy cập vào chi tiết phòng này. Vui lòng kiểm tra các khoản nghĩa vụ quỹ tại trang Quỹ cá nhân.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+            >
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
+              <span>Về trang chủ</span>
+            </Link>
+            <Link
+              href="/funds"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-neutral-dark shadow-xs hover:bg-primary-hover hover:text-white"
+            >
+              <HugeiconsIcon icon={Coins01Icon} size={18} />
+              <span>Xem quỹ cá nhân</span>
+            </Link>
+          </div>
+        </div>
       </main>
     );
   }
@@ -592,18 +643,21 @@ export default function MeetingDetailPage() {
       <MeetingHeader
         room={room}
         owner={owner}
-        activeTab={activeTab}
+        activeTab={room.status === "archived" ? "funds" : activeTab}
         onTabChange={setActiveTab}
         membersCount={activeMembers.length}
         fundsCount={contributions.length}
         isOwnerOrAdmin={isOwnerOrAdmin}
+        isMember={isMember}
+        isOwner={isOwner}
         onOpenArchiveModal={() => setIsArchiveModalOpen(true)}
         onOpenTransferModal={() => setIsTransferModalOpen(true)}
         onOpenPaymentQrModal={() => setIsPaymentQrModalOpen(true)}
+        onOpenLeaveModal={() => setIsLeaveModalOpen(true)}
       />
 
-      {/* Tab 1: Thành viên & Duyệt tham gia */}
-      {activeTab === "members" && (
+      {/* Tab 1: Thành viên & Duyệt tham gia (Chỉ khả dụng khi phòng chưa archive) */}
+      {room.status !== "archived" && activeTab === "members" && (
         <MembersTab
           room={room}
           members={activeMembers}
@@ -617,8 +671,8 @@ export default function MeetingDetailPage() {
         />
       )}
 
-      {/* Tab 2: Điểm danh & Snapshot ứng viên quỹ */}
-      {activeTab === "attendance" && (
+      {/* Tab 2: Điểm danh & Snapshot ứng viên quỹ (Chỉ khả dụng khi phòng chưa archive) */}
+      {room.status !== "archived" && activeTab === "attendance" && (
         <AttendanceTab
           meetingSession={meetingSession}
           members={activeMembers}
@@ -632,8 +686,8 @@ export default function MeetingDetailPage() {
         />
       )}
 
-      {/* Tab 3: Quỹ phòng & Thanh toán */}
-      {activeTab === "funds" && (
+      {/* Tab 3: Quỹ phòng & Thanh toán (Luôn khả dụng hoặc là tab duy nhất khi archive) */}
+      {(room.status === "archived" || activeTab === "funds") && (
         <RoomFundsTab
           room={room}
           owner={owner}
@@ -723,6 +777,16 @@ export default function MeetingDetailPage() {
         isOpen={isCurrentUserRemoved}
         roomName={room?.name}
       />
+
+      {/* Modal xác nhận tự rời phòng họp (Leave Room) */}
+      {room && (
+        <LeaveRoomModal
+          isOpen={isLeaveModalOpen}
+          onClose={() => setIsLeaveModalOpen(false)}
+          room={room}
+          onConfirmLeave={handleLeaveRoom}
+        />
+      )}
     </PageContainer>
   );
 }

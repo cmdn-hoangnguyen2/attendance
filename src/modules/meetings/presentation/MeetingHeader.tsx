@@ -12,6 +12,7 @@ import {
   Calendar01Icon,
   Coins01Icon,
   Settings01Icon,
+  Logout01Icon,
 } from "@hugeicons/core-free-icons";
 import { RoomSettingsModal } from "@/modules/rooms/presentation/RoomSettingsModal";
 import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
@@ -26,9 +27,12 @@ export interface MeetingHeaderProps {
   membersCount: number;
   fundsCount: number;
   isOwnerOrAdmin: boolean;
+  isMember?: boolean;
+  isOwner?: boolean;
   onOpenArchiveModal?: () => void;
   onOpenTransferModal?: () => void;
   onOpenPaymentQrModal?: () => void;
+  onOpenLeaveModal?: () => void;
 }
 
 export function MeetingHeader({
@@ -38,19 +42,24 @@ export function MeetingHeader({
   onTabChange,
   membersCount,
   isOwnerOrAdmin,
+  isMember,
+  isOwner,
   onOpenArchiveModal,
   onOpenTransferModal,
   onOpenPaymentQrModal,
+  onOpenLeaveModal,
 }: MeetingHeaderProps) {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const isPublic = room.visibility === "public";
   const isArchived = room.status === "archived";
 
-  const tabs: PillTabItem<MeetingTab>[] = [
-    { key: "members", label: "Thành viên", icon: UserGroupIcon },
-    { key: "attendance", label: "Điểm danh", icon: Calendar01Icon },
-    { key: "funds", label: "Quỹ phòng", icon: Coins01Icon },
-  ];
+  const tabs: PillTabItem<MeetingTab>[] = isArchived
+    ? [{ key: "funds", label: "Quỹ phòng (Lưu trữ)", icon: Coins01Icon }]
+    : [
+        { key: "members", label: "Thành viên", icon: UserGroupIcon },
+        { key: "attendance", label: "Điểm danh", icon: Calendar01Icon },
+        { key: "funds", label: "Quỹ phòng", icon: Coins01Icon },
+      ];
 
   return (
     <div className="rounded-3xl border border-neutral-200 bg-white p-6 lg:p-8 shadow-xs">
@@ -106,9 +115,22 @@ export function MeetingHeader({
           </div>
         </div>
 
-        {/* Action Button: Settings Icon Button for Owner / Admin */}
-        {isOwnerOrAdmin && !isArchived && (
-          <div className="flex items-center gap-2">
+        {/* Action Buttons: Leave Room for Member, Settings for Owner / Admin */}
+        <div className="flex items-center gap-2">
+          {isMember && !isOwner && !isArchived && onOpenLeaveModal && (
+            <button
+              type="button"
+              onClick={onOpenLeaveModal}
+              className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50/60 px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-rose-400"
+              title="Rời khỏi phòng họp này"
+              aria-label="Rời khỏi phòng họp"
+            >
+              <HugeiconsIcon icon={Logout01Icon} size={15} />
+              <span>Rời phòng</span>
+            </button>
+          )}
+
+          {isOwnerOrAdmin && !isArchived && (
             <button
               type="button"
               onClick={() => setIsSettingsModalOpen(true)}
@@ -118,8 +140,8 @@ export function MeetingHeader({
             >
               <HugeiconsIcon icon={Settings01Icon} size={18} />
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Modal Cài Đặt Phòng Họp */}

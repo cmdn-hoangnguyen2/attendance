@@ -93,6 +93,7 @@ export class SupabaseRoomRepository implements RoomRepository {
       .from("rooms")
       .select("*")
       .eq("owner_id", ownerId)
+      .eq("status", "active")
       .order("created_at", { ascending: false });
 
     if (error || !rooms) return [];
@@ -124,6 +125,7 @@ export class SupabaseRoomRepository implements RoomRepository {
       .from("rooms")
       .select("*")
       .in("id", roomIds)
+      .eq("status", "active")
       .order("created_at", { ascending: false });
 
     if (error || !rooms) return [];
@@ -384,6 +386,17 @@ export class SupabaseMembershipRepository implements MembershipRepository {
   }
 
   async leave(roomId: string, userId: string): Promise<RoomMembership> {
+    // Owner cannot leave room (docs/01-product-scope.md line 26)
+    const { data: room } = await this.client
+      .from("rooms")
+      .select("owner_id")
+      .eq("id", roomId)
+      .maybeSingle();
+
+    if (room && room.owner_id === userId) {
+      throw new Error("Chủ phòng không thể tự rời phòng. Vui lòng chuyển giao quyền chủ phòng hoặc lưu trữ phòng họp trước.");
+    }
+
     const { data, error } = await this.client
       .from("room_memberships")
       .update({

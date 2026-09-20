@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import type {
   AttendanceRecord,
   AttendanceStatus,
@@ -16,6 +16,7 @@ import {
   HelpCircleIcon,
   Coins01Icon,
   Clock01Icon,
+  LockIcon,
 } from "@hugeicons/core-free-icons";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
 
@@ -42,8 +43,10 @@ export function AttendanceTab({
   onOwnerOverride,
   onCreateFundFromCandidate,
 }: AttendanceTabProps) {
-  // Toggle mô phỏng thời gian phục vụ preview UI: Trước giờ G vs Sau giờ G
-  const [isPastDeadline, setIsPastDeadline] = useState(false);
+  // Tự động xác định hạn chót điểm danh dựa trên startsAt thực tế (docs/03-domain-and-states.md)
+  const isPastDeadline = Boolean(
+    meetingSession?.startsAt && new Date() >= new Date(meetingSession.startsAt)
+  );
 
   // Tìm bản ghi điểm danh của current user
   const myRecord = attendanceRecords.find((r) => r.userId === currentUser?.id);
@@ -88,37 +91,12 @@ export function AttendanceTab({
               <p className="text-xs text-neutral-muted mt-0.5 flex items-center gap-1.5">
                 <HugeiconsIcon icon={Clock01Icon} size={14} />
                 <span>
-                  Hạn chót tự điểm danh: Đúng thời điểm bắt đầu (10:00:00). Sau mốc này hệ thống tự khóa.
+                  {meetingSession
+                    ? `Hạn chót tự điểm danh: ${new Date(meetingSession.startsAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} ngày ${new Date(meetingSession.startsAt).toLocaleDateString("vi-VN")}. Sau mốc này hệ thống tự khóa.`
+                    : "Hạn chót tự điểm danh: Đúng thời điểm bắt đầu cuộc họp. Sau mốc này hệ thống tự khóa."}
                 </span>
               </p>
             </div>
-          </div>
-
-          {/* Toggle mô phỏng thời gian (Phase 1 UI Mock Tool) */}
-          <div className="flex items-center gap-2 rounded-xl bg-neutral-100 p-1.5 border border-neutral-200">
-            <span className="text-xs font-semibold text-neutral-muted pl-2">Mô phỏng:</span>
-            <button
-              type="button"
-              onClick={() => setIsPastDeadline(false)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-                !isPastDeadline
-                  ? "bg-white text-primary-dark shadow-xs"
-                  : "text-neutral-muted hover:text-neutral-dark"
-              }`}
-            >
-              Trước giờ G (Tự điểm danh)
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsPastDeadline(true)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-                isPastDeadline
-                  ? "bg-rose-600 text-white shadow-xs"
-                  : "text-neutral-muted hover:text-neutral-dark"
-              }`}
-            >
-              Sau giờ G (Khóa & Xử lý Quỹ)
-            </button>
           </div>
         </div>
 
@@ -185,9 +163,12 @@ export function AttendanceTab({
             </div>
           </div>
         ) : (
-          <div className="rounded-xl border border-neutral-200 bg-neutral-100/60 p-4 text-xs text-neutral-muted">
-            🔒 <strong>Đã khóa tự điểm danh:</strong> Đã quá thời hạn bắt đầu cuộc họp. Mọi thay đổi
-            điểm danh hiện tại chỉ có thể được thực hiện bởi Chủ phòng hoặc Admin.
+          <div className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-neutral-100/60 p-4 text-xs text-neutral-muted">
+            <HugeiconsIcon icon={LockIcon} size={16} className="shrink-0 text-neutral-500" />
+            <span>
+              <strong>Đã khóa tự điểm danh:</strong> Đã quá thời hạn bắt đầu cuộc họp. Mọi thay đổi
+              điểm danh hiện tại chỉ có thể được thực hiện bởi Chủ phòng hoặc Admin.
+            </span>
           </div>
         )}
       </section>
