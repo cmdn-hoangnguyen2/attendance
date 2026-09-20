@@ -65,12 +65,14 @@ export class SupabaseMeetingSessionRepository implements MeetingSessionRepositor
   }
 
   async findCurrentByRoomId(roomId: string): Promise<MeetingSession | null> {
-    // Current eligible session: scheduled or active, closest starts_at
+    // Current eligible session: scheduled or active, closest starts_at, and closes_at > now() (Read-level expiration guard)
+    const nowIso = new Date().toISOString();
     const { data, error } = await this.client
       .from("meeting_sessions")
       .select("*")
       .eq("room_id", roomId)
       .in("status", ["scheduled", "active"])
+      .gt("closes_at", nowIso)
       .order("starts_at", { ascending: true })
       .limit(1)
       .maybeSingle();
@@ -119,6 +121,54 @@ export class SupabaseMeetingSessionRepository implements MeetingSessionRepositor
       throw new Error(`Failed to close meeting session: ${error?.message}`);
     }
     return this.mapSession(data);
+  }
+
+  async closeExpiredSessions(asOfDate: Date = new Date()): Promise<{ closedCount: number; sessionIds: string[] }> {
+    const asOfIso = asOfDate.toISOString();
+
+    // 1. Query expired sessions that are still scheduled or active
+    const { data: expiredSessions, error: queryError } = await this.client
+      .from("meeting_sessions")
+      .select("id, room_id, closes_at")
+      .in("status", ["scheduled", "active"])
+      .lte("closes_at", asOfIso);
+
+    if (queryError) {
+      throw new Error(`Failed to query expired meeting sessions: ${queryError.message}`);
+    }
+
+    if (!expiredSessions || expiredSessions.length === 0) {
+      return { closedCount: 0, sessionIds: [] };
+    }
+
+    const sessionIds = expiredSessions.map((s) => s.id);
+
+    // 2. Batch update status to 'closed'
+    const { error: updateError } = await this.client
+      .from("meeting_sessions")
+      .update({ status: "closed" })
+      .in("id", sessionIds);
+
+    if (updateError) {
+      throw new Error(`Failed to batch close meeting sessions: ${updateError.message}`);
+    }
+
+    // 3. Log audit entries for scheduled closes (non-blocking)
+    const auditEntries = expiredSessions.map((s) => ({
+      actor_id: "00000000-0000-0000-0000-000000000001", // System / Primary Admin actor
+      action: "session.closed_scheduled",
+      target_type: "meeting_session",
+      target_id: s.id,
+      metadata: { roomId: s.room_id, closesAt: s.closes_at, closedAt: asOfIso },
+    }));
+
+    try {
+      await this.client.from("audit_logs").insert(auditEntries);
+    } catch {
+      // Non-critical audit insertion catch
+    }
+
+    return { closedCount: sessionIds.length, sessionIds };
   }
 }
 

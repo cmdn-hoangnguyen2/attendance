@@ -14,6 +14,7 @@ import {
   Globe02Icon,
   LockIcon,
   UserIcon,
+  Clock01Icon,
 } from "@hugeicons/core-free-icons";
 
 export interface RoomsManagementTabProps {
@@ -34,6 +35,35 @@ export function RoomsManagementTab({
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<RoomStatusFilter>("all");
   const [selectedRoomToArchive, setSelectedRoomToArchive] = useState<Room | null>(null);
+  const [isClosingSessions, setIsClosingSessions] = useState(false);
+  const [closeFeedback, setCloseFeedback] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleManualCloseSessions = async () => {
+    setIsClosingSessions(true);
+    setCloseFeedback(null);
+    try {
+      const res = await fetch("/api/cron/close-sessions", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setCloseFeedback({
+          success: true,
+          message: data.message || `Đã đóng ${data.closedCount} phiên họp quá hạn.`,
+        });
+      } else {
+        setCloseFeedback({
+          success: false,
+          message: data.error || "Có lỗi xảy ra khi đóng phiên họp.",
+        });
+      }
+    } catch (err: unknown) {
+      setCloseFeedback({
+        success: false,
+        message: err instanceof Error ? err.message : "Lỗi kết nối máy chủ.",
+      });
+    } finally {
+      setIsClosingSessions(false);
+    }
+  };
 
   // Thống kê
   const activeRoomsCount = rooms.filter((r) => r.status === "active").length;
@@ -69,6 +99,38 @@ export function RoomsManagementTab({
           <p className="text-xs font-semibold text-neutral-600">Đã lưu trữ (Archived)</p>
           <p className="text-2xl font-black text-neutral-800 mt-1">{archivedRoomsCount}</p>
         </div>
+      </section>
+
+      {/* Tiện ích Quét & Đóng phiên họp quá hạn (Scheduled Close Cron) */}
+      <section aria-label="Scheduled Close Sessions Cron" className="rounded-2xl border border-[#C9F2E3] bg-gradient-to-r from-white via-[#E8FBF4]/30 to-white p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#05966B]">
+            <HugeiconsIcon icon={Clock01Icon} size={16} />
+            <span>Tự động đóng phiên họp (Scheduled Close Session)</span>
+          </div>
+          <p className="text-xs text-[#4B665D]">
+            Các phiên họp quá hạn <code className="font-mono bg-neutral-100 px-1 py-0.5 rounded text-[11px]">closesAt</code> (nửa đêm sau giờ họp) sẽ tự động đóng. Bạn có thể kích hoạt quét dọn dẹp thủ công ngay lập tức.
+          </p>
+          {closeFeedback && (
+            <p className={`text-xs font-semibold pt-1 ${closeFeedback.success ? "text-[#05966B]" : "text-rose-600"}`}>
+              {closeFeedback.message}
+            </p>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleManualCloseSessions}
+          disabled={isClosingSessions}
+          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white border border-[#C9F2E3] px-4 py-2.5 text-xs font-semibold text-[#0B1F1A] shadow-xs hover:bg-[#E8FBF4] hover:text-[#05966B] hover:border-[#10D9A3] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <HugeiconsIcon
+            icon={ArrowReloadHorizontalIcon}
+            size={16}
+            className={isClosingSessions ? "animate-spin text-[#05966B]" : ""}
+          />
+          <span>{isClosingSessions ? "Đang quét..." : "Quét & Đóng phiên quá hạn"}</span>
+        </button>
       </section>
 
       {/* Thanh bộ lọc & Tìm kiếm */}

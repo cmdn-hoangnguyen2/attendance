@@ -16,6 +16,7 @@ export interface MeetingSessionRepository {
     closesAt: string;
   }): Promise<MeetingSession>;
   close(id: string): Promise<MeetingSession>;
+  closeExpiredSessions(asOfDate?: Date): Promise<{ closedCount: number; sessionIds: string[] }>;
 }
 
 export interface AttendanceRepository {
