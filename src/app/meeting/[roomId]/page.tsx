@@ -687,17 +687,33 @@ export default function MeetingDetailPage() {
           }}
           uploadHandler={async (file: File) => {
             if (!currentUser) throw new Error("Vui lòng đăng nhập để thực hiện.");
-            return roomPaymentImageRepository.uploadAndLinkImage(
-              roomId,
-              file,
-              file.type,
-              file.size,
-              currentUser.id
-            );
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("actorId", currentUser.id);
+
+            const res = await fetch(`/api/rooms/${roomId}/payment-qr`, {
+              method: "POST",
+              body: formData,
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+              throw new Error(data.error || "Tải tệp lên Supabase Storage thất bại.");
+            }
+
+            return data.data;
           }}
           deleteHandler={async () => {
             if (!currentUser) throw new Error("Vui lòng đăng nhập để thực hiện.");
-            await roomPaymentImageRepository.remove(roomId, currentUser.id);
+            const res = await fetch(
+              `/api/rooms/${roomId}/payment-qr?actorId=${encodeURIComponent(currentUser.id)}`,
+              { method: "DELETE" }
+            );
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+              throw new Error(data.error || "Xóa ảnh mã QR thất bại.");
+            }
           }}
         />
       )}
