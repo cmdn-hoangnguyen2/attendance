@@ -252,7 +252,7 @@ function RealAuthProviderInner({ children }: { children: React.ReactNode }) {
     login,
     logout,
     isMockActive: false,
-    isLoading: isAuth0Loading || isSyncing,
+    isLoading: isAuth0Loading || isSyncing || (Boolean(auth0User) && !dbUser),
   };
 
   // Deny access if user was soft-deleted per docs/04-auth-security.md rule 5

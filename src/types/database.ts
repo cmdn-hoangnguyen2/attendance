@@ -52,6 +52,7 @@ export interface Database {
         Row: {
           id: string;
           name: string;
+          type: "meeting" | "channel";
           visibility: "public" | "private";
           owner_id: string;
           status: "active" | "archived";
@@ -63,6 +64,7 @@ export interface Database {
         Insert: {
           id?: string;
           name: string;
+          type?: "meeting" | "channel";
           visibility?: "public" | "private";
           owner_id: string;
           status?: "active" | "archived";
@@ -74,11 +76,42 @@ export interface Database {
         Update: {
           id?: string;
           name?: string;
+          type?: "meeting" | "channel";
           visibility?: "public" | "private";
           owner_id?: string;
           status?: "active" | "archived";
           archived_at?: string | null;
           archived_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      app_notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          content: string;
+          is_read: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          content: string;
+          is_read?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          content?: string;
+          is_read?: boolean;
           created_at?: string;
           updated_at?: string;
         };

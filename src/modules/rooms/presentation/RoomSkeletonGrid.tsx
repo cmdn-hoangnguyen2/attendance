@@ -1,31 +1,38 @@
 import React from "react";
 
+const ROOM_SKELETON_ITEMS = [1, 2, 3, 4];
+
 export function RoomSkeletonGrid() {
+  const skeletonCards = ROOM_SKELETON_ITEMS.map((item) => (
+    <article
+      key={item}
+      className="RoomSkeletonGrid__card flex min-h-60 animate-pulse flex-col gap-6 rounded-2xl border border-neutral-border bg-white p-6 shadow-xs"
+    >
+      <div className="RoomSkeletonGrid__badges flex items-center gap-2">
+        <span className="RoomSkeletonGrid__badge h-6 w-20 rounded-full bg-neutral-200" />
+        <span className="RoomSkeletonGrid__badge h-6 w-16 rounded-full bg-neutral-100" />
+      </div>
+
+      <div className="RoomSkeletonGrid__content flex flex-col gap-4">
+        <span className="RoomSkeletonGrid__title h-6 w-3/4 rounded-lg bg-neutral-200" />
+        <div className="RoomSkeletonGrid__metadata grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <span className="RoomSkeletonGrid__metadata-line h-4 w-1/2 rounded-md bg-neutral-100 sm:col-span-2" />
+          <span className="RoomSkeletonGrid__metadata-line h-4 w-24 rounded-md bg-neutral-100" />
+          <span className="RoomSkeletonGrid__metadata-line h-4 w-20 rounded-md bg-neutral-100" />
+        </div>
+      </div>
+
+      <span className="RoomSkeletonGrid__action mt-auto h-10 w-full rounded-xl bg-neutral-200" />
+    </article>
+  ));
+
   return (
     <div
+      className="RoomSkeletonGrid grid grid-cols-1 gap-6 xl:grid-cols-2"
       aria-label="Đang tải danh sách phòng..."
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+      aria-live="polite"
     >
-      {[1, 2, 3, 4].map((item) => (
-        <div
-          key={item}
-          className="flex flex-col justify-between rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs animate-pulse"
-        >
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="h-5 w-20 rounded-md bg-neutral-200" />
-              <div className="h-4 w-24 rounded bg-neutral-100" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="h-5 w-3/4 rounded bg-neutral-200" />
-              <div className="h-4 w-1/2 rounded bg-neutral-100" />
-            </div>
-          </div>
-          <div className="mt-6 border-t border-neutral-100 pt-4">
-            <div className="h-9 w-full rounded-lg bg-neutral-200" />
-          </div>
-        </div>
-      ))}
+      {skeletonCards}
     </div>
   );
 }

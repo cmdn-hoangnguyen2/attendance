@@ -18,8 +18,9 @@ import {
   PlusSignIcon,
   Home01Icon,
 } from "@hugeicons/core-free-icons";
-import { PageContainer } from "@/components/layout/PageContainer";
-import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
+import { PageLayout } from "@/components/layout/PageLayout";
+import { Pagination } from "@/components/ui/Pagination";
+import { DropdownFilter, type DropdownFilterItem } from "@/components/ui/DropdownFilter";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 type MyRoomsTab = "owned" | "joined";
@@ -123,37 +124,33 @@ export default function MyRoomsPage() {
   // Nếu người dùng chưa đăng nhập hoặc đang kiểm tra phiên
   if (isAuthLoading || !isAuthenticated || !currentUser) {
     return (
-      <div className="flex-1 bg-neutral-50/50">
-        <PageContainer as="main">
-          <div className="flex flex-col gap-6 py-8 animate-pulse">
-            <div className="h-12 w-64 rounded-xl bg-neutral-200" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="h-48 rounded-2xl bg-neutral-100" />
-              <div className="h-48 rounded-2xl bg-neutral-100" />
-              <div className="h-48 rounded-2xl bg-neutral-100" />
-            </div>
+      <PageLayout>
+        <div className="flex flex-col gap-6 animate-pulse">
+          <div className="h-12 w-64 rounded-xl bg-neutral-200" />
+          <div className="flex flex-col gap-4">
+            <div className="h-24 rounded-2xl bg-neutral-200" />
+            <div className="h-24 rounded-2xl bg-neutral-200" />
+            <div className="h-24 rounded-2xl bg-neutral-200" />
           </div>
-        </PageContainer>
-      </div>
+        </div>
+      </PageLayout>
     );
   }
 
-  const tabItems: PillTabItem<MyRoomsTab>[] = [
+  const tabItems: DropdownFilterItem<MyRoomsTab>[] = [
     {
       key: "owned",
       label: "Phòng tôi tạo",
-      icon: CrownIcon,
     },
     {
       key: "joined",
       label: "Phòng đã tham gia",
-      icon: UserGroupIcon,
     },
   ];
 
   return (
-    <div className="flex-1 bg-neutral-50/50">
-      <PageContainer as="main">
+    <PageLayout>
+      <div className="flex flex-col gap-6">
         {/* Header Trang: Tiêu đề & Action (Pill button) */}
         <section aria-labelledby="my-rooms-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -176,12 +173,14 @@ export default function MyRoomsPage() {
         </section>
 
         {/* Thanh điều hướng PillTabs & Bộ lọc tìm kiếm */}
-        <section aria-label="Bộ lọc phòng của tôi" className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
-          <PillTabs
-            tabs={tabItems}
-            activeKey={activeTab}
-            onChange={setActiveTab}
-          />
+        <section aria-label="Bộ lọc phòng của tôi" className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+          <div className="flex-shrink-0">
+            <DropdownFilter
+              items={tabItems}
+              activeKey={activeTab}
+              onChange={setActiveTab}
+            />
+          </div>
 
           {/* Input Tìm kiếm: Pill layout */}
           <div className="relative w-full sm:w-72">
@@ -202,14 +201,15 @@ export default function MyRoomsPage() {
 
         {/* Danh sách phòng: Grid 4 cột chuẩn Desktop */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
+          <div className="flex flex-col gap-4 animate-pulse">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-48 rounded-2xl bg-neutral-200" />
+              <div key={i} className="h-24 rounded-2xl bg-neutral-200" />
             ))}
           </div>
         ) : displayedRooms.length > 0 ? (
           <section aria-label="Danh sách kết quả phòng">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex flex-col gap-4">
+              <div className="bg-white border border-neutral-200 rounded-2xl divide-y divide-neutral-100 overflow-y-auto h-[600px] shadow-sm custom-scrollbar">
               {displayedRooms.map((room) => {
                 const owner = usersMap.get(room.ownerId);
                 return (
@@ -226,6 +226,8 @@ export default function MyRoomsPage() {
                   />
                 );
               })}
+              </div>
+              <Pagination currentPage={1} totalPages={1} onPageChange={() => {}} />
             </div>
           </section>
         ) : (
@@ -271,7 +273,7 @@ export default function MyRoomsPage() {
           onClose={() => setIsCreateModalOpen(false)}
           onCreateRoom={handleCreateRoom}
         />
-      </PageContainer>
-    </div>
+      </div>
+    </PageLayout>
   );
 }

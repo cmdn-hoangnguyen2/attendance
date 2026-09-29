@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { JoinRequestStatus, type JoinRequest, type Room, type User } from "@/types/domain";
 import { RemoveMemberModal } from "./RemoveMemberModal";
+import { InviteMemberModal } from "@/modules/rooms/presentation/InviteMemberModal";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Search01Icon,
@@ -37,6 +38,7 @@ export function MembersTab({
 }: MembersTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMemberToRemove, setSelectedMemberToRemove] = useState<User | null>(null);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const pendingRequests = joinRequests.filter((req) => req.status === JoinRequestStatus.PENDING);
 
@@ -126,17 +128,28 @@ export function MembersTab({
             <p className="text-xs text-neutral-muted">Tất cả thành viên đang hoạt động trong phòng</p>
           </div>
 
-          <div className="relative w-full sm:w-72">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-muted">
-              <HugeiconsIcon icon={Search01Icon} size={16} />
-            </span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm theo tên hoặc email..."
-              className="w-full rounded-lg border border-neutral-border bg-neutral-50/50 py-1.5 pr-3 pl-9 text-xs text-neutral-dark focus:border-primary focus:bg-white focus:outline-none"
-            />
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="relative w-full sm:w-72">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-muted">
+                <HugeiconsIcon icon={Search01Icon} size={16} />
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm theo tên hoặc email..."
+                className="w-full rounded-lg border border-neutral-border bg-neutral-50/50 py-1.5 pr-3 pl-9 text-xs text-neutral-dark focus:border-primary focus:bg-white focus:outline-none"
+              />
+            </div>
+            {isOwnerOrAdmin && (
+              <button
+                onClick={() => setIsInviteModalOpen(true)}
+                className="w-full sm:w-auto flex justify-center items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-neutral-dark hover:bg-primary-hover transition-colors shrink-0"
+              >
+                <HugeiconsIcon icon={UserAdd01Icon} size={18} />
+                Mời thành viên
+              </button>
+            )}
           </div>
         </div>
 
@@ -211,6 +224,11 @@ export function MembersTab({
           selectedMemberToRemove ? (hasOutstandingDebtMap[selectedMemberToRemove.id] ?? false) : false
         }
         onConfirmRemove={onRemoveMember}
+      />
+
+      <InviteMemberModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
       />
     </div>
   );

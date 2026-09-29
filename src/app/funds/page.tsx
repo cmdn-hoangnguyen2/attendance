@@ -21,9 +21,10 @@ import {
   CreditCardIcon,
   Building01Icon,
 } from "@hugeicons/core-free-icons";
+import { PageLayout } from "@/components/layout/PageLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useUserRealtime } from "@/lib/realtime/useUserRealtime";
-import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
+import { DropdownFilter, type DropdownFilterItem } from "@/components/ui/DropdownFilter";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FundFilterTab, FundContributionStatus, RoomStatus } from "@/types/domain";
 
@@ -189,31 +190,29 @@ export default function PersonalFundsPage() {
   // Nếu người dùng chưa đăng nhập hoặc đang kiểm tra phiên
   if (isAuthLoading || !isAuthenticated || !currentUser) {
     return (
-      <div className="flex-1 bg-neutral-50/50">
-        <PageContainer as="main">
-          <div className="flex flex-col gap-6 py-8 animate-pulse">
-            <div className="h-12 w-64 rounded-xl bg-neutral-200" />
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="h-32 rounded-2xl bg-neutral-100" />
-              <div className="h-32 rounded-2xl bg-neutral-100" />
-              <div className="h-32 rounded-2xl bg-neutral-100" />
-            </div>
-            <div className="h-64 rounded-2xl bg-neutral-100" />
+      <PageLayout>
+        <div className="flex flex-col gap-6 animate-pulse">
+          <div className="h-12 w-64 rounded-xl bg-neutral-200" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="h-32 rounded-2xl bg-neutral-100" />
+            <div className="h-32 rounded-2xl bg-neutral-100" />
+            <div className="h-32 rounded-2xl bg-neutral-100" />
           </div>
-        </PageContainer>
-      </div>
+          <div className="h-64 rounded-2xl bg-neutral-100" />
+        </div>
+      </PageLayout>
     );
   }
 
-  const tabItems: PillTabItem<FundFilterTab>[] = [
+  const tabItems: DropdownFilterItem<FundFilterTab>[] = [
     { key: FundFilterTab.ALL, label: "Tất cả" },
     { key: FundFilterTab.OUTSTANDING, label: "Cần thanh toán" },
     { key: FundFilterTab.PAID, label: "Đã thanh toán" },
   ];
 
   return (
-    <div className="flex-1 bg-neutral-50/50">
-      <PageContainer as="main">
+    <PageLayout>
+      <div className="flex flex-col gap-8">
         {/* Header Trang: Tiêu đề súc tích */}
         <section aria-labelledby="funds-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -289,10 +288,10 @@ export default function PersonalFundsPage() {
           </div>
         </section>
 
-        {/* Filter PillTabs */}
-        <section aria-label="Bộ lọc trạng thái quỹ" className="flex items-center justify-between border-b border-neutral-200 pb-4">
-          <PillTabs
-            tabs={tabItems}
+        {/* Filter Dropdown */}
+        <section aria-label="Bộ lọc trạng thái quỹ" className="flex items-center justify-between">
+          <DropdownFilter
+            items={tabItems}
             activeKey={statusFilter}
             onChange={setStatusFilter}
           />
@@ -421,7 +420,7 @@ export default function PersonalFundsPage() {
             isRoomArchived={activeRoom?.status === RoomStatus.ARCHIVED}
           />
         )}
-      </PageContainer>
-    </div>
+      </div>
+    </PageLayout>
   );
 }

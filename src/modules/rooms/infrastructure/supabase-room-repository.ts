@@ -11,6 +11,7 @@ import {
   type Room,
   type RoomMembership,
   type RoomVisibility,
+  RoomType,
 } from "@/types/domain";
 import type {
   JoinRequestRepository,
@@ -29,6 +30,7 @@ export class SupabaseRoomRepository implements RoomRepository {
     return {
       id: row.id,
       name: row.name,
+      type: row.type,
       visibility: row.visibility,
       ownerId: row.owner_id,
       status: row.status,
@@ -153,6 +155,7 @@ export class SupabaseRoomRepository implements RoomRepository {
 
   async create(roomData: {
     name: string;
+    type?: RoomType;
     visibility: RoomVisibility;
     ownerId: string;
   }): Promise<Room> {
@@ -160,6 +163,7 @@ export class SupabaseRoomRepository implements RoomRepository {
       .from(DatabaseTable.ROOMS)
       .insert({
         name: roomData.name,
+        type: roomData.type ?? RoomType.MEETING,
         visibility: roomData.visibility,
         owner_id: roomData.ownerId,
         status: RoomStatus.ACTIVE,

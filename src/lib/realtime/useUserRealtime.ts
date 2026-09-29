@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { createRealtimeChannelName } from "@/lib/realtime/createRealtimeChannelName.mjs";
 
 export interface UseUserRealtimeOptions {
   userId: string;
@@ -38,7 +39,7 @@ export function useUserRealtime({
       }, 300);
     };
 
-    const channelName = `user:${userId}:${Date.now()}`;
+    const channelName = createRealtimeChannelName(`user:${userId}`);
     const channel = supabase.channel(channelName);
 
     // 1. Fund contribution changes for this user
@@ -60,6 +61,18 @@ export function useUserRealtime({
         event: "*",
         schema: "public",
         table: "payments",
+      },
+      triggerUpdate
+    );
+
+    // 3. App notifications changes
+    channel.on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "app_notifications",
+        filter: `user_id=eq.${userId}`,
       },
       triggerUpdate
     );

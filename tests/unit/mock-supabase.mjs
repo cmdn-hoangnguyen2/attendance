@@ -10,6 +10,15 @@ export class MockRealtimeChannel {
   }
 
   on(type, filter, callback) {
+    if (
+      this.status === "SUBSCRIBED" &&
+      (type === "postgres_changes" || type === "presence")
+    ) {
+      throw new Error(
+        `cannot add \`${type}\` callbacks for realtime:${this.name} after \`subscribe()\`.`
+      );
+    }
+
     this.listeners.push({ type, filter, callback });
     return this;
   }

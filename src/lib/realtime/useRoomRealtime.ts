@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { createRealtimeChannelName } from "@/lib/realtime/createRealtimeChannelName.mjs";
 
 export interface UseRoomRealtimeOptions {
   roomId: string;
@@ -41,7 +42,7 @@ export function useRoomRealtime({
       }, 300);
     };
 
-    const channelName = `room:${roomId}:${Date.now()}`;
+    const channelName = createRealtimeChannelName(`room:${roomId}`);
     const channel = supabase.channel(channelName);
 
     // 1. Attendance records changes

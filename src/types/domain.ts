@@ -37,9 +37,17 @@ export enum RoomStatusEnum {
 export type RoomStatus = "active" | "archived";
 export const RoomStatus = RoomStatusEnum;
 
+export enum RoomTypeEnum {
+  MEETING = "meeting",
+  CHANNEL = "channel",
+}
+export type RoomType = "meeting" | "channel";
+export const RoomType = RoomTypeEnum;
+
 export interface Room {
   id: string;
   name: string;
+  type?: RoomType;
   visibility: RoomVisibility;
   ownerId: string;
   status: RoomStatus;
@@ -249,3 +257,25 @@ export enum RoomDetailTabEnum {
 }
 export type RoomDetailTab = "attendance" | "funds" | "members" | "settings";
 export const RoomDetailTab = RoomDetailTabEnum;
+
+export interface PeerDebt {
+  id: string;
+  roomId: string;
+  creditorId: string;
+  debtorId: string;
+  amount: number;
+  reason?: string;
+  status: "outstanding" | "paid";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+}
+

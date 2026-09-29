@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { RoomVisibility } from "@/types/domain";
+import { RoomType, RoomVisibility } from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, Globe02Icon, LockIcon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Globe02Icon, LockIcon, Camera02Icon, Comment01Icon } from "@hugeicons/core-free-icons";
 
 export interface CreateRoomModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateRoom: (data: { name: string; visibility: RoomVisibility }) => void;
+  onCreateRoom: (data: { name: string; type: RoomType; visibility: RoomVisibility }) => void;
 }
 
 export function CreateRoomModal({
@@ -17,6 +17,7 @@ export function CreateRoomModal({
   onCreateRoom,
 }: CreateRoomModalProps) {
   const [name, setName] = useState("");
+  const [type, setType] = useState<RoomType>(RoomType.MEETING);
   const [visibility, setVisibility] = useState<RoomVisibility>(RoomVisibility.PUBLIC);
   const [error, setError] = useState("");
 
@@ -43,9 +44,11 @@ export function CreateRoomModal({
     }
     onCreateRoom({
       name: name.trim(),
+      type,
       visibility,
     });
     setName("");
+    setType(RoomType.MEETING);
     setVisibility(RoomVisibility.PUBLIC);
     setError("");
     onClose();
@@ -116,6 +119,70 @@ export function CreateRoomModal({
             {error ? (
               <span className="text-xs font-medium text-rose-500">{error}</span>
             ) : null}
+          </div>
+
+          {/* Field 1.5: Loại phòng (Type) */}
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-semibold text-neutral-dark">
+              Loại không gian
+            </span>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setType(RoomType.MEETING)}
+                className={`flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all ${
+                  type === RoomType.MEETING
+                    ? "border-primary bg-neutral-surface/50 shadow-xs"
+                    : "border-neutral-200 bg-white hover:bg-neutral-50"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <HugeiconsIcon
+                    icon={Camera02Icon}
+                    size={18}
+                    className={
+                      type === RoomType.MEETING
+                        ? "text-primary-dark"
+                        : "text-neutral-muted"
+                    }
+                  />
+                  <span className="text-sm font-bold text-neutral-dark">
+                    Phòng họp (Meeting)
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-muted">
+                  Dành cho các buổi họp, điểm danh và quản lý quỹ phạt.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setType(RoomType.CHANNEL)}
+                className={`flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all ${
+                  type === RoomType.CHANNEL
+                    ? "border-primary bg-neutral-surface/50 shadow-xs"
+                    : "border-neutral-200 bg-white hover:bg-neutral-50"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <HugeiconsIcon
+                    icon={Comment01Icon}
+                    size={18}
+                    className={
+                      type === RoomType.CHANNEL
+                        ? "text-primary-dark"
+                        : "text-neutral-muted"
+                    }
+                  />
+                  <span className="text-sm font-bold text-neutral-dark">
+                    Kênh chung (Channel)
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-muted">
+                  Không gian thảo luận, tin tức và quỹ chung.
+                </p>
+              </button>
+            </div>
           </div>
 
           {/* Field 2: Quyền riêng tư (Visibility) */}

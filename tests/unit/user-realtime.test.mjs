@@ -1,5 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
+import { createRealtimeChannelName } from "../../src/lib/realtime/createRealtimeChannelName.mjs";
 import { MockSupabaseClient } from "./mock-supabase.mjs";
 
 describe("User Realtime Flow (Unit Tests)", () => {
@@ -19,7 +20,7 @@ describe("User Realtime Flow (Unit Tests)", () => {
         }, 300);
       };
 
-      const channelName = `user:${userId}:${Date.now()}`;
+      const channelName = createRealtimeChannelName(`user:${userId}`);
       channel = client.channel(channelName);
 
       // 1. Fund contribution changes for this user
@@ -103,5 +104,34 @@ describe("User Realtime Flow (Unit Tests)", () => {
     assert.strictEqual(updates, 1);
 
     controller.cleanup();
+  });
+
+  test("creates separate channels for simultaneous subscriptions to the same user", () => {
+    const client = new MockSupabaseClient();
+    const originalNow = Date.now;
+
+    Date.now = () => 1790687403143;
+
+    try {
+      const firstController = createUserRealtimeController({
+        userId: "user-789",
+        onDataChange: () => {},
+        enabled: true,
+        client,
+      });
+
+      assert.doesNotThrow(() =>
+        createUserRealtimeController({
+          userId: "user-789",
+          onDataChange: () => {},
+          enabled: true,
+          client,
+        })
+      );
+
+      firstController.cleanup();
+    } finally {
+      Date.now = originalNow;
+    }
   });
 });

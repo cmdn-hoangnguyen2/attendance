@@ -3,6 +3,7 @@ import type {
   Room,
   RoomMembership,
   RoomVisibility,
+  RoomType,
 } from "@/types/domain";
 
 export interface RoomRepository {
@@ -16,6 +17,7 @@ export interface RoomRepository {
   findJoinedByUserId(userId: string): Promise<Room[]>;
   create(room: {
     name: string;
+    type?: RoomType;
     visibility: RoomVisibility;
     ownerId: string;
   }): Promise<Room>;

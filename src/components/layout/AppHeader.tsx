@@ -6,27 +6,15 @@ import { usePathname } from "next/navigation";
 import { useAuthMock } from "@/context/AuthMockContext";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Home01Icon,
-  Folder01Icon,
-  Coins01Icon,
-  Settings01Icon,
   Login01Icon,
   Logout01Icon,
-  Menu01Icon,
-  Cancel01Icon,
 } from "@hugeicons/core-free-icons";
+import { NotificationPopover } from "./NotificationPopover";
 
 export function AppHeader() {
   const pathname = usePathname();
   const { currentUser, isAuthenticated, isAdmin, login, logout, isMockActive } = useAuthMock();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [prevPathname, setPrevPathname] = useState(pathname);
 
-  // Auto-close mobile menu during render when route changes
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname);
-    setIsMobileMenuOpen(false);
-  }
 
   const handleLogout = () => {
     logout();
@@ -36,12 +24,7 @@ export function AppHeader() {
     login();
   };
 
-  const navLinks = [
-    { href: "/", label: "Trang chủ", icon: Home01Icon, show: true },
-    { href: "/my-rooms", label: "Phòng của tôi", icon: Folder01Icon, show: isAuthenticated },
-    { href: "/funds", label: "Quỹ", icon: Coins01Icon, show: isAuthenticated },
-    { href: "/settings", label: "Cài đặt", icon: Settings01Icon, show: isAdmin },
-  ];
+
 
   const isLoginPage = pathname === "/login";
 
@@ -68,30 +51,7 @@ export function AppHeader() {
             </div>
           </Link>
 
-          {/* Navigation Links (Desktop) - hidden on /login */}
-          {!isLoginPage && (
-            <nav aria-label="Menu chính" className="hidden md:flex items-center gap-2">
-              {navLinks
-                .filter((item) => item.show)
-                .map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
-                        isActive
-                          ? "bg-neutral-surface text-primary-dark"
-                          : "text-neutral-muted hover:bg-neutral-50 hover:text-neutral-dark"
-                      }`}
-                    >
-                      <HugeiconsIcon icon={item.icon} size={18} />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-            </nav>
-          )}
+
         </div>
 
         {/* User Auth Section & Mobile Menu Button - hidden on /login */}
@@ -99,6 +59,8 @@ export function AppHeader() {
           <div className="flex items-center gap-3">
             {isAuthenticated && currentUser ? (
               <div className="flex items-center gap-3">
+                <NotificationPopover />
+
                 {/* User Avatar Circle: 32x32px (chuẩn 8pt) */}
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-surface font-bold text-xs text-primary-dark border border-neutral-border">
                   {currentUser.displayName.charAt(0).toUpperCase()}
@@ -143,50 +105,10 @@ export function AppHeader() {
               </button>
             )}
 
-            {/* Mobile Menu Toggle Button: 40x40px touch target (chuẩn 8pt) */}
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex h-10 w-10 md:hidden items-center justify-center rounded-xl border border-neutral-border bg-neutral-surface text-primary-dark transition-colors hover:bg-neutral-border/60 focus-visible:ring-2 focus-visible:ring-primary"
-              aria-expanded={isMobileMenuOpen}
-              aria-label="Mở menu điều hướng"
-            >
-              <HugeiconsIcon icon={isMobileMenuOpen ? Cancel01Icon : Menu01Icon} size={20} />
-            </button>
+            {/* Mobile Menu Toggle Button removed since nav is moved to SubNav */}
           </div>
         )}
       </div>
-
-      {/* Mobile Navigation Dropdown Menu - hidden on /login */}
-      {!isLoginPage && isMobileMenuOpen && (
-        <nav
-          aria-label="Menu di động"
-          className="border-t border-neutral-border bg-white px-6 py-4 md:hidden shadow-lg animate-in slide-in-from-top-2"
-        >
-          <div className="flex flex-col gap-1.5">
-            {navLinks
-              .filter((item) => item.show)
-              .map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                      isActive
-                        ? "bg-neutral-surface text-primary-dark"
-                        : "text-neutral-muted hover:bg-neutral-50 hover:text-neutral-dark"
-                    }`}
-                  >
-                    <HugeiconsIcon icon={item.icon} size={20} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-          </div>
-        </nav>
-      )}
     </header>
   );
 }

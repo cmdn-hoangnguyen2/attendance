@@ -37,7 +37,9 @@ import { TransferOwnershipModal } from "@/modules/rooms/presentation/TransferOwn
 import { UploadPaymentQrModal } from "@/modules/funds/presentation/UploadPaymentQrModal";
 import { AccessRevokedModal } from "@/modules/meetings/presentation/AccessRevokedModal";
 import { LeaveRoomModal } from "@/modules/meetings/presentation/LeaveRoomModal";
-import { PageContainer } from "@/components/layout/PageContainer";
+import { PageLayout } from "@/components/layout/PageLayout";
+import { NeoMarquee } from "@/components/ui/NeoMarquee";
+import { PeerDebtDashboard } from "@/modules/rooms/presentation/PeerDebtDashboard";
 import { useRoomRealtime } from "@/lib/realtime/useRoomRealtime";
 import {
   attendanceRepository,
@@ -49,6 +51,7 @@ import {
   roomPaymentImageRepository,
   roomRepository,
   userRepository,
+  notificationRepository,
 } from "@/lib/repository";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -84,6 +87,7 @@ export default function MeetingDetailPage() {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [fundCandidates, setFundCandidates] = useState<FundCandidate[]>([]);
   const [contributions, setContributions] = useState<FundContribution[]>([]);
+  const [marqueeReferenceTime, setMarqueeReferenceTime] = useState(0);
 
   // State cho các modal Archive, Transfer Ownership, QR Code và Rời phòng
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
@@ -114,6 +118,7 @@ export default function MeetingDetailPage() {
     let isMounted = true;
 
     async function fetchData() {
+      if (!room) setIsLoading(true);
       try {
         const [fetchedRoom, fetchedUsers, fetchedMembers, fetchedRequests, fetchedSessions, fetchedFunds, fetchedImage] =
           await Promise.all([
@@ -146,6 +151,7 @@ export default function MeetingDetailPage() {
         setMemberships(fetchedMembers);
         setJoinRequests(fetchedRequests);
         setContributions(fetchedFunds);
+        setMarqueeReferenceTime(Date.now());
 
         if (fetchedSessions.length > 0) {
           const currentSession = fetchedSessions[0];
@@ -240,6 +246,17 @@ export default function MeetingDetailPage() {
     try {
       const reviewerId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
       await joinRequestRepository.approve(requestId, reviewerId);
+
+      const req = joinRequests.find((r) => r.id === requestId);
+      if (req && room) {
+        await notificationRepository.create({
+          userId: req.requesterId,
+          title: "Yêu cầu tham gia được duyệt",
+          content: `Yêu cầu tham gia phòng "${room.name}" của bạn đã được duyệt.`,
+          isRead: false,
+        });
+      }
+
       setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("Failed to approve request:", err);
@@ -254,6 +271,16 @@ export default function MeetingDetailPage() {
       setJoinRequests((prev) =>
         prev.map((r) => (r.id === requestId ? { ...r, status: JoinRequestStatus.REJECTED } : r)),
       );
+
+      const req = joinRequests.find((r) => r.id === requestId);
+      if (req && room) {
+        await notificationRepository.create({
+          userId: req.requesterId,
+          title: "Yêu cầu tham gia bị từ chối",
+          content: `Yêu cầu tham gia phòng "${room.name}" của bạn đã bị từ chối.`,
+          isRead: false,
+        });
+      }
     } catch (err) {
       console.error("Failed to reject request:", err);
     }
@@ -512,6 +539,44 @@ export default function MeetingDetailPage() {
     }
   };
 
+  const marqueeMessages = useMemo(() => {
+    const msgs: string[] = [];
+    const ONE_DAY = 24 * 60 * 60 * 1000;
+
+    if (contributions.length > 0) {
+      contributions.forEach((c) => {
+        const u = usersMap.get(c.contributorId);
+        const name = u?.displayName || "Ai đó";
+        const isPaid = c.status === FundContributionStatus.PAID;
+        const createdTimeDiff = marqueeReferenceTime - new Date(c.createdAt).getTime();
+        const updatedTimeDiff = marqueeReferenceTime - new Date(c.updatedAt).getTime();
+
+        // 1. Nếu còn nợ -> Show vĩnh viễn (đến khi trả)
+        if (!isPaid) {
+          msgs.push(`${name} ĐANG NỢ QUỸ ${c.amount.toLocaleString("vi-VN")}Đ VÌ ${c.reasonDetails || c.reason}`);
+        }
+
+        // 2. Nếu đi trễ trong vòng 24h (dựa vào reason và createdAt)
+        if ((c.reason === "Đi trễ" || (c.reasonDetails || "").toLowerCase().includes("trễ")) && createdTimeDiff <= ONE_DAY) {
+          msgs.push(`${name} VỪA ĐI TRỄ HÔM NAY!`);
+        }
+
+        // 3. Nếu đã thanh toán trong vòng 24h
+        if (isPaid && updatedTimeDiff <= ONE_DAY) {
+          msgs.push(`${name} VỪA THANH TOÁN ${c.amount.toLocaleString("vi-VN")}Đ`);
+        }
+      });
+    }
+
+    const uniqueMsgs = Array.from(new Set(msgs)).slice(0, 10);
+
+    if (uniqueMsgs.length === 0) {
+      uniqueMsgs.push("CHÀO MỪNG ĐẾN VỚI PHÒNG HỌP");
+    }
+
+    return uniqueMsgs.map(msg => msg.toUpperCase());
+  }, [contributions, marqueeReferenceTime, usersMap]);
+
   if (isLoading || isAuthLoading || !isAuthenticated) {
     return (
       <main className="mx-auto max-w-7xl px-6 py-12">
@@ -527,32 +592,35 @@ export default function MeetingDetailPage() {
   // Trường hợp 1: Không tìm thấy phòng
   if (!room) {
     return (
-      <main className="mx-auto max-w-4xl px-6 py-16 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-red-600 mb-6">
-          <HugeiconsIcon icon={ShieldAlertIcon} size={32} />
-        </div>
-        <h1 className="text-2xl font-bold text-neutral-dark mb-2">
-          Không tìm thấy phòng họp
-        </h1>
-        <p className="text-sm text-neutral-muted mb-8">
-          Phòng họp bạn đang truy cập không tồn tại hoặc đã bị xóa khỏi hệ thống.
-        </p>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 rounded-xl bg-primary-dark px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-primary-dark/90"
-        >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
-          <span>Về trang chủ</span>
-        </Link>
-      </main>
+      <PageLayout>
+        <main className="mx-auto max-w-4xl px-6 py-16 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-red-600 mb-6">
+            <HugeiconsIcon icon={ShieldAlertIcon} size={32} />
+          </div>
+          <h1 className="text-2xl font-bold text-neutral-dark mb-2">
+            Không tìm thấy phòng họp
+          </h1>
+          <p className="text-sm text-neutral-muted mb-8">
+            Phòng họp bạn đang truy cập không tồn tại hoặc đã bị xóa khỏi hệ thống.
+          </p>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary-dark px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-primary-dark/90"
+          >
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
+            <span>Về trang chủ</span>
+          </Link>
+        </main>
+      </PageLayout>
     );
   }
 
   // Trường hợp 2A-0: Phòng đã lưu trữ (Archived) - Chỉ Owner/Admin được vào xem Quỹ, thành viên thường bị chặn
   if (room.status === RoomStatus.ARCHIVED && !isOwnerOrAdmin) {
     return (
-      <main className="mx-auto max-w-xl px-6 py-16 text-center">
-        <div className="rounded-3xl border border-neutral-border bg-white p-8 shadow-md">
+      <PageLayout>
+        <main className="mx-auto max-w-xl px-6 py-16 text-center">
+          <div className="rounded-3xl border border-neutral-border bg-white p-8 shadow-md">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-600 mb-6">
             <HugeiconsIcon icon={Archive01Icon} size={32} />
           </div>
@@ -580,26 +648,30 @@ export default function MeetingDetailPage() {
           </div>
         </div>
       </main>
+      </PageLayout>
     );
   }
 
   // Trường hợp 2A: Người dùng bị chủ phòng hoặc admin xóa khỏi phòng (Kicked member)
   if (isCurrentUserRemoved) {
     return (
-      <main className="mx-auto max-w-xl px-6 py-16 text-center">
-        <AccessRevokedModal
-          isOpen={true}
-          roomName={room.name}
-        />
-      </main>
+      <PageLayout>
+        <main className="mx-auto max-w-xl px-6 py-16 text-center">
+          <AccessRevokedModal
+            isOpen={true}
+            roomName={room.name}
+          />
+        </main>
+      </PageLayout>
     );
   }
 
   // Trường hợp 2B: Người dùng chưa đăng nhập hoặc không có quyền truy cập phòng kín
   if (!hasAccess) {
     return (
-      <main className="mx-auto max-w-xl px-6 py-16 text-center">
-        {/* Container: Bo góc 24px (rounded-3xl), padding 32px (p-8) */}
+      <PageLayout>
+        <main className="mx-auto max-w-xl px-6 py-16 text-center">
+          {/* Container: Bo góc 24px (rounded-3xl), padding 32px (p-8) */}
         <div className="rounded-3xl border border-neutral-border bg-white p-8 shadow-md">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 text-amber-800 mb-6">
             <HugeiconsIcon icon={LockIcon} size={32} />
@@ -642,12 +714,13 @@ export default function MeetingDetailPage() {
           </div>
         </div>
       </main>
+    </PageLayout>
     );
   }
 
   // Trường hợp 3: Thành viên hoặc Chủ phòng / Admin truy cập thành công
   return (
-    <PageContainer as="main">
+    <PageLayout>
       {/* Header Room Chi Tiết */}
       <MeetingHeader
         room={room}
@@ -664,6 +737,8 @@ export default function MeetingDetailPage() {
         onOpenPaymentQrModal={() => setIsPaymentQrModalOpen(true)}
         onOpenLeaveModal={() => setIsLeaveModalOpen(true)}
       />
+
+      <NeoMarquee messages={marqueeMessages} />
 
       {/* Tab 1: Thành viên & Duyệt tham gia (Chỉ khả dụng khi phòng chưa archive) */}
       {room.status !== RoomStatus.ARCHIVED && activeTab === RoomDetailTab.MEMBERS && (
@@ -697,17 +772,21 @@ export default function MeetingDetailPage() {
 
       {/* Tab 3: Quỹ phòng & Thanh toán (Luôn khả dụng hoặc là tab duy nhất khi archive) */}
       {(room.status === RoomStatus.ARCHIVED || activeTab === RoomDetailTab.FUNDS) && (
-        <RoomFundsTab
-          room={room}
-          owner={owner}
-          members={activeMembers}
-          contributions={contributions}
-          usersMap={usersMap}
-          isOwnerOrAdmin={isOwnerOrAdmin}
-          onCreateContribution={handleCreateContribution}
-          onConfirmPayment={handleConfirmPayment}
-          onRevertPayment={handleRevertPayment}
-        />
+        room.type === "channel" ? (
+          <PeerDebtDashboard />
+        ) : (
+          <RoomFundsTab
+            room={room}
+            owner={owner}
+            members={activeMembers}
+            contributions={contributions}
+            usersMap={usersMap}
+            isOwnerOrAdmin={isOwnerOrAdmin}
+            onCreateContribution={handleCreateContribution}
+            onConfirmPayment={handleConfirmPayment}
+            onRevertPayment={handleRevertPayment}
+          />
+        )
       )}
 
       {/* Modal Lưu Trữ Phòng Họp */}
@@ -796,6 +875,6 @@ export default function MeetingDetailPage() {
           onConfirmLeave={handleLeaveRoom}
         />
       )}
-    </PageContainer>
+    </PageLayout>
   );
 }

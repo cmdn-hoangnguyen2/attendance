@@ -1,5 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
+import { createRealtimeChannelName } from "../../src/lib/realtime/createRealtimeChannelName.mjs";
 import { MockSupabaseClient } from "./mock-supabase.mjs";
 
 describe("Lobby Realtime Flow (Unit Tests)", () => {
@@ -19,7 +20,7 @@ describe("Lobby Realtime Flow (Unit Tests)", () => {
         }, 300);
       };
 
-      const channelName = `lobby:global:${Date.now()}`;
+      const channelName = createRealtimeChannelName("lobby:global");
       channel = client.channel(channelName);
 
       // 1. Rooms changes
