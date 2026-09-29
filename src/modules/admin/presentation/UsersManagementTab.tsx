@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import type { Room, User } from "@/types/domain";
+import { GlobalRole, RoomStatus, UserStatus, type Room, type User } from "@/types/domain";
 import { ArchiveUserModal } from "./ArchiveUserModal";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -21,7 +21,7 @@ export interface UsersManagementTabProps {
   onRestoreUser: (userId: string) => void;
 }
 
-type UserStatusFilter = "all" | "active" | "soft_deleted";
+type UserStatusFilter = "all" | UserStatus;
 
 export function UsersManagementTab({
   users,
@@ -35,8 +35,8 @@ export function UsersManagementTab({
   const [selectedUserToArchive, setSelectedUserToArchive] = useState<User | null>(null);
 
   // Thống kê
-  const activeUsersCount = users.filter((u) => u.status === "active").length;
-  const softDeletedUsersCount = users.filter((u) => u.status === "soft_deleted").length;
+  const activeUsersCount = users.filter((u) => u.status === UserStatus.ACTIVE).length;
+  const softDeletedUsersCount = users.filter((u) => u.status === UserStatus.SOFT_DELETED).length;
 
   // Lọc danh sách người dùng
   const filteredUsers = useMemo(() => {
@@ -57,7 +57,7 @@ export function UsersManagementTab({
   const userOwnedActiveRooms = useMemo(() => {
     if (!selectedUserToArchive) return [];
     return rooms.filter(
-      (r) => r.ownerId === selectedUserToArchive.id && r.status === "active",
+      (r) => r.ownerId === selectedUserToArchive.id && r.status === RoomStatus.ACTIVE,
     );
   }, [rooms, selectedUserToArchive]);
 
@@ -65,8 +65,8 @@ export function UsersManagementTab({
   const eligibleAdmins = useMemo(() => {
     return users.filter(
       (u) =>
-        u.role === "admin" &&
-        u.status === "active" &&
+        u.role === GlobalRole.ADMIN &&
+        u.status === UserStatus.ACTIVE &&
         u.id !== selectedUserToArchive?.id,
     );
   }, [users, selectedUserToArchive]);
@@ -112,9 +112,9 @@ export function UsersManagementTab({
 
           <button
             type="button"
-            onClick={() => setStatusFilter("active")}
+            onClick={() => setStatusFilter(UserStatus.ACTIVE)}
             className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
-              statusFilter === "active"
+              statusFilter === UserStatus.ACTIVE
                 ? "bg-primary-dark text-white shadow-xs"
                 : "bg-white text-primary-dark border border-neutral-border hover:bg-neutral-surface/50"
             }`}
@@ -127,9 +127,9 @@ export function UsersManagementTab({
 
           <button
             type="button"
-            onClick={() => setStatusFilter("soft_deleted")}
+            onClick={() => setStatusFilter(UserStatus.SOFT_DELETED)}
             className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
-              statusFilter === "soft_deleted"
+              statusFilter === UserStatus.SOFT_DELETED
                 ? "bg-rose-700 text-white shadow-xs"
                 : "bg-white text-rose-800 border border-rose-200 hover:bg-rose-50"
             }`}
@@ -181,7 +181,7 @@ export function UsersManagementTab({
             </thead>
             <tbody className="divide-y divide-neutral-100">
               {filteredUsers.map((user) => {
-                const isActive = user.status === "active";
+                const isActive = user.status === UserStatus.ACTIVE;
                 const isCurrent = user.id === currentAdmin?.id;
 
                 return (
@@ -210,7 +210,7 @@ export function UsersManagementTab({
                     </td>
 
                     <td className="px-6 py-4">
-                      {user.role === "admin" ? (
+                      {user.role === GlobalRole.ADMIN ? (
                         <span className="inline-flex items-center gap-1 rounded-md bg-purple-100 px-2.5 py-1 text-[11px] font-bold text-purple-800">
                           <HugeiconsIcon icon={SecurityCheckIcon} size={12} />
                           <span>Admin</span>

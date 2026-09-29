@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import type { User } from "@/types/domain";
+import { ConfirmationPhrase, type User } from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, Alert02Icon } from "@hugeicons/core-free-icons";
 
@@ -13,7 +13,7 @@ export interface RemoveMemberModalProps {
   onConfirmRemove: (userId: string) => void;
 }
 
-const REQUIRED_PHRASE = "I agree to remove this user";
+const REQUIRED_PHRASE = ConfirmationPhrase.REMOVE_MEMBER_WITH_DEBT;
 
 export function RemoveMemberModal({
   isOpen,

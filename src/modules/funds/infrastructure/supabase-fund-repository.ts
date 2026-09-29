@@ -1,10 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import type {
-  FundContribution,
+import {
+  DatabaseTable,
   FundContributionReason,
-  Payment,
-  RoomPaymentImage,
+  FundContributionStatus,
+  StorageBucket,
+  type FundContribution,
+  type Payment,
+  type RoomPaymentImage,
 } from "@/types/domain";
 import type {
   FundContributionRepository,
@@ -36,7 +39,7 @@ export class SupabaseFundContributionRepository implements FundContributionRepos
 
   async findById(id: string): Promise<FundContribution | null> {
     const { data, error } = await this.client
-      .from("fund_contributions")
+      .from(DatabaseTable.FUND_CONTRIBUTIONS)
       .select("*")
       .eq("id", id)
       .maybeSingle();
@@ -47,7 +50,7 @@ export class SupabaseFundContributionRepository implements FundContributionRepos
 
   async findByRoomId(roomId: string): Promise<FundContribution[]> {
     const { data, error } = await this.client
-      .from("fund_contributions")
+      .from(DatabaseTable.FUND_CONTRIBUTIONS)
       .select("*")
       .eq("room_id", roomId)
       .order("created_at", { ascending: false });
@@ -58,7 +61,7 @@ export class SupabaseFundContributionRepository implements FundContributionRepos
 
   async findByContributorId(userId: string): Promise<FundContribution[]> {
     const { data, error } = await this.client
-      .from("fund_contributions")
+      .from(DatabaseTable.FUND_CONTRIBUTIONS)
       .select("*")
       .eq("contributor_id", userId)
       .order("created_at", { ascending: false });
@@ -76,12 +79,12 @@ export class SupabaseFundContributionRepository implements FundContributionRepos
     meetingSessionId?: string;
     createdBy: string;
   }): Promise<FundContribution> {
-    if (data.reason === "Khác" && (!data.reasonDetails || data.reasonDetails.trim().length === 0)) {
-      throw new Error("Reason 'Khác' requires non-empty details");
+    if (data.reason === FundContributionReason.OTHER && (!data.reasonDetails || data.reasonDetails.trim().length === 0)) {
+      throw new Error(`Reason '${FundContributionReason.OTHER}' requires non-empty details`);
     }
 
     const { data: contribution, error } = await this.client
-      .from("fund_contributions")
+      .from(DatabaseTable.FUND_CONTRIBUTIONS)
       .insert({
         room_id: data.roomId,
         contributor_id: data.contributorId,
@@ -89,7 +92,7 @@ export class SupabaseFundContributionRepository implements FundContributionRepos
         reason: data.reason,
         reason_details: data.reasonDetails ?? null,
         meeting_session_id: data.meetingSessionId ?? null,
-        status: "outstanding",
+        status: FundContributionStatus.OUTSTANDING,
         created_by: data.createdBy,
       })
       .select("*")
@@ -99,7 +102,7 @@ export class SupabaseFundContributionRepository implements FundContributionRepos
       throw new Error(`Failed to create fund contribution: ${error?.message}`);
     }
 
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: data.createdBy,
       action: "fund_contribution.created",
       target_type: "fund_contribution",
@@ -112,9 +115,9 @@ export class SupabaseFundContributionRepository implements FundContributionRepos
 
   async markPaid(id: string): Promise<FundContribution> {
     const { data, error } = await this.client
-      .from("fund_contributions")
+      .from(DatabaseTable.FUND_CONTRIBUTIONS)
       .update({
-        status: "paid",
+        status: FundContributionStatus.PAID,
       })
       .eq("id", id)
       .select("*")
@@ -147,7 +150,7 @@ export class SupabasePaymentRepository implements PaymentRepository {
 
   async findByContributionId(contributionId: string): Promise<Payment | null> {
     const { data, error } = await this.client
-      .from("payments")
+      .from(DatabaseTable.PAYMENTS)
       .select("*")
       .eq("contribution_id", contributionId)
       .maybeSingle();
@@ -163,7 +166,7 @@ export class SupabasePaymentRepository implements PaymentRepository {
   }): Promise<Payment> {
     // 1. Insert payment record (append-only)
     const { data: payment, error: paymentError } = await this.client
-      .from("payments")
+      .from(DatabaseTable.PAYMENTS)
       .insert({
         contribution_id: data.contributionId,
         amount: Math.round(data.amount),
@@ -180,12 +183,12 @@ export class SupabasePaymentRepository implements PaymentRepository {
 
     // 2. Update fund contribution status to paid
     await this.client
-      .from("fund_contributions")
-      .update({ status: "paid" })
+      .from(DatabaseTable.FUND_CONTRIBUTIONS)
+      .update({ status: FundContributionStatus.PAID })
       .eq("id", data.contributionId);
 
     // 3. Log audit
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: data.confirmedBy,
       action: "payment.confirmed",
       target_type: "fund_contribution",
@@ -199,7 +202,7 @@ export class SupabasePaymentRepository implements PaymentRepository {
   async revertPayment(contributionId: string, actorId: string): Promise<void> {
     // 1. Delete payment records for this contribution
     const { error: delError } = await this.client
-      .from("payments")
+      .from(DatabaseTable.PAYMENTS)
       .delete()
       .eq("contribution_id", contributionId);
 
@@ -209,8 +212,8 @@ export class SupabasePaymentRepository implements PaymentRepository {
 
     // 2. Revert fund contribution status to outstanding
     const { error: updateError } = await this.client
-      .from("fund_contributions")
-      .update({ status: "outstanding" })
+      .from(DatabaseTable.FUND_CONTRIBUTIONS)
+      .update({ status: FundContributionStatus.OUTSTANDING })
       .eq("id", contributionId);
 
     if (updateError) {
@@ -218,7 +221,7 @@ export class SupabasePaymentRepository implements PaymentRepository {
     }
 
     // 3. Log audit
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: actorId,
       action: "payment.reverted",
       target_type: "fund_contribution",
@@ -245,7 +248,7 @@ export class SupabaseRoomPaymentImageRepository implements RoomPaymentImageRepos
 
   async findByRoomId(roomId: string): Promise<RoomPaymentImage | null> {
     const { data, error } = await this.client
-      .from("room_payment_images")
+      .from(DatabaseTable.ROOM_PAYMENT_IMAGES)
       .select("*")
       .eq("room_id", roomId)
       .maybeSingle();
@@ -262,7 +265,7 @@ export class SupabaseRoomPaymentImageRepository implements RoomPaymentImageRepos
     uploadedBy: string;
   }): Promise<RoomPaymentImage> {
     const { data: image, error } = await this.client
-      .from("room_payment_images")
+      .from(DatabaseTable.ROOM_PAYMENT_IMAGES)
       .upsert(
         {
           room_id: data.roomId,
@@ -309,7 +312,7 @@ export class SupabaseRoomPaymentImageRepository implements RoomPaymentImageRepos
 
     // Upload to private bucket
     const { error: uploadError } = await this.client.storage
-      .from("payment-images")
+      .from(StorageBucket.PAYMENT_IMAGES)
       .upload(storagePath, file, {
         contentType: mimeType,
         upsert: true,
@@ -332,7 +335,7 @@ export class SupabaseRoomPaymentImageRepository implements RoomPaymentImageRepos
     });
 
     // Audit log
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: actorId,
       action: "room_payment_image.uploaded",
       target_type: "room",
@@ -346,12 +349,12 @@ export class SupabaseRoomPaymentImageRepository implements RoomPaymentImageRepos
   async remove(roomId: string, actorId: string): Promise<void> {
     const existing = await this.findByRoomId(roomId);
     if (existing?.storagePath) {
-      await this.client.storage.from("payment-images").remove([existing.storagePath]);
+      await this.client.storage.from(StorageBucket.PAYMENT_IMAGES).remove([existing.storagePath]);
     }
 
-    await this.client.from("room_payment_images").delete().eq("room_id", roomId);
+    await this.client.from(DatabaseTable.ROOM_PAYMENT_IMAGES).delete().eq("room_id", roomId);
 
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: actorId,
       action: "room_payment_image.removed",
       target_type: "room",
@@ -361,7 +364,7 @@ export class SupabaseRoomPaymentImageRepository implements RoomPaymentImageRepos
 
   async getSignedUrl(storagePath: string): Promise<string> {
     const { data, error } = await this.client.storage
-      .from("payment-images")
+      .from(StorageBucket.PAYMENT_IMAGES)
       .createSignedUrl(storagePath, 3600); // 1 hour expiration
 
     if (error || !data?.signedUrl) {

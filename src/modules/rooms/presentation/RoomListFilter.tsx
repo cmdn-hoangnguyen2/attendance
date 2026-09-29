@@ -5,7 +5,9 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Search01Icon } from "@hugeicons/core-free-icons";
 import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
 
-export type RoomFilterTab = "all" | "public" | "private";
+import { RoomFilterTab } from "@/types/domain";
+
+export { RoomFilterTab };
 
 export interface RoomListFilterProps {
   searchQuery: string;
@@ -23,9 +25,9 @@ export function RoomListFilter({
   onTabChange,
 }: RoomListFilterProps) {
   const tabs: PillTabItem<RoomFilterTab>[] = [
-    { key: "all", label: "Tất cả" },
-    { key: "public", label: "Công khai" },
-    { key: "private", label: "Riêng tư" },
+    { key: RoomFilterTab.ALL, label: "Tất cả" },
+    { key: RoomFilterTab.PUBLIC, label: "Công khai" },
+    { key: RoomFilterTab.PRIVATE, label: "Riêng tư" },
   ];
 
   return (

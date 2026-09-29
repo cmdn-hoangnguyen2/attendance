@@ -1,13 +1,14 @@
 import { Auth0Client } from "@auth0/nextjs-auth0/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { SupabaseUserRepository } from "@/modules/admin/infrastructure/supabase-admin-repository";
+import { Auth0Claim, GlobalRole } from "@/types/domain";
 
 /**
  * Server-side Auth0 Client configured for Next.js App Router (v4).
  * Single Source of Truth: docs/04-auth-security.md
  * - Automatically verifies identity & manages server sessions.
  * - Synchronizes active user into Supabase users table via beforeSessionSaved hook.
- * - Admin role is determined by the custom claim https://diemdanh.cmdn/role emitted by Auth0 RBAC.
+ * - Admin role is determined by Auth0 RBAC custom claims, permissions, or scope.
  */
 function resolveAppBaseUrl(): string {
   const customUrl = process.env.APP_BASE_URL;
@@ -40,17 +41,25 @@ export const auth0 = new Auth0Client({
   async beforeSessionSaved(session) {
     const auth0User = session.user;
     if (auth0User && auth0User.sub && auth0User.email) {
-      // Determine global role from Auth0 custom claim, roles array, or permissions/scope
-      const roleClaim = auth0User["https://diemdanh.cmdn/role"] as string | undefined;
-      const rolesArray = (auth0User.roles || auth0User["https://diemdanh.cmdn/roles"]) as string[] | undefined;
-      const permissionsArray = (auth0User.permissions || auth0User["https://diemdanh.cmdn/permissions"]) as string[] | undefined;
+      // Determine global role from Auth0 custom claim, roles array, permissions, or scope
+      const roleClaim = auth0User[Auth0Claim.ROLE] as string | undefined;
+      const rolesArray = (auth0User.roles || auth0User[Auth0Claim.ROLES]) as string[] | undefined;
+      const permissionsArray = (auth0User.permissions || auth0User[Auth0Claim.PERMISSIONS]) as string[] | undefined;
+      const scopeValue = auth0User[Auth0Claim.SCOPE] || auth0User.scope;
+      const scopeArray =
+        typeof scopeValue === "string"
+          ? scopeValue.split(" ")
+          : Array.isArray(scopeValue)
+            ? (scopeValue as string[])
+            : [];
 
       const isAdmin =
-        roleClaim === "admin" ||
-        rolesArray?.includes("admin") ||
-        permissionsArray?.includes("admin");
+        roleClaim === GlobalRole.ADMIN ||
+        rolesArray?.includes(GlobalRole.ADMIN) ||
+        permissionsArray?.includes(GlobalRole.ADMIN) ||
+        scopeArray.includes(GlobalRole.ADMIN);
 
-      const role: "admin" | "user" = isAdmin ? "admin" : "user";
+      const role: GlobalRole = isAdmin ? GlobalRole.ADMIN : GlobalRole.USER;
 
       try {
         const supabase = createServerSupabaseClient();

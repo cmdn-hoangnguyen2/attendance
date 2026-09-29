@@ -19,8 +19,7 @@ import {
 import { PageContainer } from "@/components/layout/PageContainer";
 
 import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
-
-type SettingsTab = "users" | "rooms";
+import { ConfirmationPhrase, GlobalRole, SettingsTab } from "@/types/domain";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -33,7 +32,7 @@ export default function SettingsPage() {
     }
   }, [isAuthLoading, isAuthenticated, router]);
 
-  const [activeTab, setActiveTab] = useState<SettingsTab>("users");
+  const [activeTab, setActiveTab] = useState<SettingsTab>(SettingsTab.USERS);
   const [isLoading, setIsLoading] = useState(true);
 
   const [usersList, setUsersList] = useState<User[]>([]);
@@ -81,7 +80,7 @@ export default function SettingsPage() {
   }, [usersList]);
 
   // Kiểm tra quyền Admin
-  const isAdmin = Boolean(currentUser && currentUser.role === "admin");
+  const isAdmin = Boolean(currentUser && currentUser.role === GlobalRole.ADMIN);
 
   // Handler: Xóa mềm người dùng
   const handleArchiveUser = async (userId: string, replacementAdminId?: string) => {
@@ -91,7 +90,7 @@ export default function SettingsPage() {
         userId,
         replacementAdminId ?? "",
         currentUser.id,
-        "Archive this user"
+        ConfirmationPhrase.ARCHIVE_USER
       );
       setRefreshKey((k) => k + 1);
     } catch (err) {
@@ -114,7 +113,7 @@ export default function SettingsPage() {
   const handleArchiveRoom = async (roomId: string) => {
     if (!currentUser) return;
     try {
-      await roomRepository.archive(roomId, currentUser.id, "Archive this room");
+      await roomRepository.archive(roomId, currentUser.id, ConfirmationPhrase.ARCHIVE_ROOM);
       setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("Failed to archive room:", err);
@@ -198,8 +197,8 @@ export default function SettingsPage() {
   }
 
   const tabItems: PillTabItem<SettingsTab>[] = [
-    { key: "users", label: "Người dùng", icon: UserGroupIcon },
-    { key: "rooms", label: "Phòng họp", icon: Folder01Icon },
+    { key: SettingsTab.USERS, label: "Người dùng", icon: UserGroupIcon },
+    { key: SettingsTab.ROOMS, label: "Phòng họp", icon: Folder01Icon },
   ];
 
   return (
@@ -229,7 +228,7 @@ export default function SettingsPage() {
           <div className="h-16 rounded-2xl bg-neutral-200" />
           <div className="h-64 rounded-2xl bg-neutral-100" />
         </div>
-      ) : activeTab === "users" ? (
+      ) : activeTab === SettingsTab.USERS ? (
         /* Tab 1: Quản lý Users */
         <UsersManagementTab
           users={usersList}

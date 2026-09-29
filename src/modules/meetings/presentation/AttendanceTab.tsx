@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import type {
-  AttendanceRecord,
+import {
   AttendanceStatus,
-  FundCandidate,
-  MeetingSession,
-  User,
+  type AttendanceRecord,
+  type FundCandidate,
+  type MeetingSession,
+  type User,
 } from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -50,7 +50,7 @@ export function AttendanceTab({
 
   // Tìm bản ghi điểm danh của current user
   const myRecord = attendanceRecords.find((r) => r.userId === currentUser?.id);
-  const myStatus: AttendanceStatus = myRecord?.status ?? "absent";
+  const myStatus: AttendanceStatus = myRecord?.status ?? AttendanceStatus.ABSENT;
 
   // Lấy snapshot ứng viên đóng quỹ (danh sách absent)
   // Quy tắc: 'leave' không bao giờ vào danh sách này
@@ -58,14 +58,14 @@ export function AttendanceTab({
     ? members
         .filter((member) => {
           const rec = attendanceRecords.find((r) => r.userId === member.id);
-          return (rec?.status ?? "absent") === "absent";
+          return (rec?.status ?? AttendanceStatus.ABSENT) === AttendanceStatus.ABSENT;
         })
         .map((member) => ({
           userId: member.id,
           meetingSessionId: meetingSession?.id ?? "session-current",
           userDisplayName: member.displayName,
           userEmail: member.email,
-          attendanceStatus: "absent" as AttendanceStatus,
+          attendanceStatus: AttendanceStatus.ABSENT,
           suggestedAmount: 10000,
         }))
     : fundCandidates;
@@ -111,9 +111,9 @@ export function AttendanceTab({
                 <p className="text-sm font-semibold text-neutral-dark mt-0.5">
                   Bạn có tham gia phiên họp này không? (Trạng thái hiện tại:{" "}
                   <strong className="text-primary-dark">
-                    {myStatus === "present"
+                    {myStatus === AttendanceStatus.PRESENT
                       ? "Có mặt"
-                      : myStatus === "leave"
+                      : myStatus === AttendanceStatus.LEAVE
                       ? "Xin phép nghỉ"
                       : "Vắng mặt"}
                   </strong>
@@ -125,9 +125,9 @@ export function AttendanceTab({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => onSelfCheckIn("present")}
+                  onClick={() => onSelfCheckIn(AttendanceStatus.PRESENT)}
                   className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                    myStatus === "present"
+                    myStatus === AttendanceStatus.PRESENT
                       ? "bg-primary-dark text-white shadow-xs"
                       : "bg-white text-neutral-dark border border-neutral-border hover:bg-neutral-surface"
                   }`}
@@ -137,9 +137,9 @@ export function AttendanceTab({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onSelfCheckIn("leave")}
+                  onClick={() => onSelfCheckIn(AttendanceStatus.LEAVE)}
                   className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                    myStatus === "leave"
+                    myStatus === AttendanceStatus.LEAVE
                       ? "bg-blue-600 text-white shadow-xs"
                       : "bg-white text-neutral-dark border border-neutral-200 hover:bg-neutral-50"
                   }`}
@@ -149,9 +149,9 @@ export function AttendanceTab({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onSelfCheckIn("absent")}
+                  onClick={() => onSelfCheckIn(AttendanceStatus.ABSENT)}
                   className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                    myStatus === "absent"
+                    myStatus === AttendanceStatus.ABSENT
                       ? "bg-rose-600 text-white shadow-xs"
                       : "bg-white text-neutral-dark border border-neutral-200 hover:bg-neutral-50"
                   }`}
@@ -258,7 +258,7 @@ export function AttendanceTab({
             <tbody className="divide-y divide-neutral-100">
               {members.map((member) => {
                 const record = attendanceRecords.find((r) => r.userId === member.id);
-                const status: AttendanceStatus = record?.status ?? "absent";
+                const status: AttendanceStatus = record?.status ?? AttendanceStatus.ABSENT;
 
                 return (
                   <tr key={member.id} className="hover:bg-neutral-50/50">
@@ -275,12 +275,12 @@ export function AttendanceTab({
                     </td>
 
                     <td className="py-3 px-4">
-                      {status === "present" ? (
+                      {status === AttendanceStatus.PRESENT ? (
                         <span className="inline-flex items-center gap-1 rounded-md bg-neutral-surface px-2.5 py-1 text-xs font-bold text-primary-dark">
                           <HugeiconsIcon icon={CheckmarkCircle01Icon} size={14} />
                           <span>Có mặt</span>
                         </span>
-                      ) : status === "leave" ? (
+                      ) : status === AttendanceStatus.LEAVE ? (
                         <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-600">
                           <HugeiconsIcon icon={HelpCircleIcon} size={14} />
                           <span>Xin phép</span>
@@ -307,9 +307,9 @@ export function AttendanceTab({
                               onOwnerOverride(member.id, val as AttendanceStatus)
                             }
                             options={[
-                              { value: "present", label: "Có mặt" },
-                              { value: "leave", label: "Xin phép" },
-                              { value: "absent", label: "Vắng" },
+                              { value: AttendanceStatus.PRESENT, label: "Có mặt" },
+                              { value: AttendanceStatus.LEAVE, label: "Xin phép" },
+                              { value: AttendanceStatus.ABSENT, label: "Vắng" },
                             ]}
                             className="w-32 text-left"
                             ariaLabel={`Điều chỉnh điểm danh cho ${member.displayName}`}

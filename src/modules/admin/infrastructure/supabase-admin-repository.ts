@@ -1,6 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import type { AuditLog, User } from "@/types/domain";
+import {
+  ConfirmationPhrase,
+  DatabaseTable,
+  RoomStatus,
+  UserStatus,
+  type AuditLog,
+  type User,
+} from "@/types/domain";
 import type {
   AuditLogRepository,
   UserRepository,
@@ -28,7 +35,7 @@ export class SupabaseUserRepository implements UserRepository {
 
   async findById(id: string): Promise<User | null> {
     const { data, error } = await this.client
-      .from("users")
+      .from(DatabaseTable.USERS)
       .select("*")
       .eq("id", id)
       .maybeSingle();
@@ -39,7 +46,7 @@ export class SupabaseUserRepository implements UserRepository {
 
   async findByAuth0Subject(auth0Subject: string): Promise<User | null> {
     const { data, error } = await this.client
-      .from("users")
+      .from(DatabaseTable.USERS)
       .select("*")
       .eq("auth0_subject", auth0Subject)
       .maybeSingle();
@@ -50,7 +57,7 @@ export class SupabaseUserRepository implements UserRepository {
 
   async findByEmail(email: string): Promise<User | null> {
     const { data, error } = await this.client
-      .from("users")
+      .from(DatabaseTable.USERS)
       .select("*")
       .eq("email", email)
       .maybeSingle();
@@ -60,10 +67,10 @@ export class SupabaseUserRepository implements UserRepository {
   }
 
   async listAll(options?: { includeArchived?: boolean }): Promise<User[]> {
-    let query = this.client.from("users").select("*");
+    let query = this.client.from(DatabaseTable.USERS).select("*");
 
     if (!options?.includeArchived) {
-      query = query.eq("status", "active");
+      query = query.eq("status", UserStatus.ACTIVE);
     }
 
     const { data, error } = await query.order("created_at", { ascending: true });
@@ -78,7 +85,7 @@ export class SupabaseUserRepository implements UserRepository {
     role?: "admin" | "user";
   }): Promise<User> {
     const { data: user, error } = await this.client
-      .from("users")
+      .from(DatabaseTable.USERS)
       .upsert(
         {
           auth0_subject: data.auth0Subject,
@@ -103,16 +110,16 @@ export class SupabaseUserRepository implements UserRepository {
     actorId: string,
     confirmationPhrase: string
   ): Promise<User> {
-    if (confirmationPhrase.trim() !== "Archive this user") {
-      throw new Error("Confirmation phrase 'Archive this user' required");
+    if (confirmationPhrase.trim() !== ConfirmationPhrase.ARCHIVE_USER) {
+      throw new Error(`Confirmation phrase '${ConfirmationPhrase.ARCHIVE_USER}' required`);
     }
 
     // Transfer any active rooms owned by this user to replacement admin
     const { data: ownedRooms } = await this.client
-      .from("rooms")
+      .from(DatabaseTable.ROOMS)
       .select("id")
       .eq("owner_id", id)
-      .eq("status", "active");
+      .eq("status", RoomStatus.ACTIVE);
 
     if (ownedRooms && ownedRooms.length > 0) {
       if (!replacementAdminId) {
@@ -120,17 +127,17 @@ export class SupabaseUserRepository implements UserRepository {
       }
 
       await this.client
-        .from("rooms")
+        .from(DatabaseTable.ROOMS)
         .update({ owner_id: replacementAdminId })
         .eq("owner_id", id)
-        .eq("status", "active");
+        .eq("status", RoomStatus.ACTIVE);
     }
 
     // Soft-delete the user
     const { data: user, error } = await this.client
-      .from("users")
+      .from(DatabaseTable.USERS)
       .update({
-        status: "soft_deleted",
+        status: UserStatus.SOFT_DELETED,
         deleted_at: new Date().toISOString(),
         deleted_by: actorId,
       })
@@ -142,7 +149,7 @@ export class SupabaseUserRepository implements UserRepository {
       throw new Error(`Failed to archive user: ${error?.message}`);
     }
 
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: actorId,
       action: "user.soft_deleted",
       target_type: "user",
@@ -155,9 +162,9 @@ export class SupabaseUserRepository implements UserRepository {
 
   async restoreUser(id: string, actorId: string): Promise<User> {
     const { data: user, error } = await this.client
-      .from("users")
+      .from(DatabaseTable.USERS)
       .update({
-        status: "active",
+        status: UserStatus.ACTIVE,
         deleted_at: null,
         deleted_by: null,
       })
@@ -169,7 +176,7 @@ export class SupabaseUserRepository implements UserRepository {
       throw new Error(`Failed to restore user: ${error?.message}`);
     }
 
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: actorId,
       action: "user.restored",
       target_type: "user",
@@ -206,7 +213,7 @@ export class SupabaseAuditLogRepository implements AuditLogRepository {
     targetId: string;
     metadata?: Record<string, unknown>;
   }): Promise<void> {
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: entry.actorId ?? null,
       action: entry.action,
       target_type: entry.targetType,
@@ -217,7 +224,7 @@ export class SupabaseAuditLogRepository implements AuditLogRepository {
 
   async findByTarget(targetType: string, targetId: string): Promise<AuditLog[]> {
     const { data, error } = await this.client
-      .from("audit_logs")
+      .from(DatabaseTable.AUDIT_LOGS)
       .select("*")
       .eq("target_type", targetType)
       .eq("target_id", targetId)
@@ -229,7 +236,7 @@ export class SupabaseAuditLogRepository implements AuditLogRepository {
 
   async listRecent(limit = 50): Promise<AuditLog[]> {
     const { data, error } = await this.client
-      .from("audit_logs")
+      .from(DatabaseTable.AUDIT_LOGS)
       .select("*")
       .order("occurred_at", { ascending: false })
       .limit(limit);

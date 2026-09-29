@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import type { JoinRequest, Room, User } from "@/types/domain";
+import { JoinRequestStatus, type JoinRequest, type Room, type User } from "@/types/domain";
 import { RemoveMemberModal } from "./RemoveMemberModal";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -38,7 +38,7 @@ export function MembersTab({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMemberToRemove, setSelectedMemberToRemove] = useState<User | null>(null);
 
-  const pendingRequests = joinRequests.filter((req) => req.status === "pending");
+  const pendingRequests = joinRequests.filter((req) => req.status === JoinRequestStatus.PENDING);
 
   const filteredMembers = members.filter((member) => {
     if (!searchQuery.trim()) return true;

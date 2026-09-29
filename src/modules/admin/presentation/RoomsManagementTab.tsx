@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import type { Room, User } from "@/types/domain";
+import { RoomStatus, RoomVisibility, type Room, type User } from "@/types/domain";
 import { ArchiveRoomModal } from "@/modules/rooms/presentation/ArchiveRoomModal";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -24,7 +24,7 @@ export interface RoomsManagementTabProps {
   onRestoreRoom: (roomId: string) => void;
 }
 
-type RoomStatusFilter = "all" | "active" | "archived";
+type RoomStatusFilter = "all" | RoomStatus;
 
 export function RoomsManagementTab({
   rooms,
@@ -66,8 +66,8 @@ export function RoomsManagementTab({
   };
 
   // Thống kê
-  const activeRoomsCount = rooms.filter((r) => r.status === "active").length;
-  const archivedRoomsCount = rooms.filter((r) => r.status === "archived").length;
+  const activeRoomsCount = rooms.filter((r) => r.status === RoomStatus.ACTIVE).length;
+  const archivedRoomsCount = rooms.filter((r) => r.status === RoomStatus.ARCHIVED).length;
 
   // Lọc danh sách phòng
   const filteredRooms = useMemo(() => {
@@ -154,9 +154,9 @@ export function RoomsManagementTab({
 
           <button
             type="button"
-            onClick={() => setStatusFilter("active")}
+            onClick={() => setStatusFilter(RoomStatus.ACTIVE)}
             className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
-              statusFilter === "active"
+              statusFilter === RoomStatus.ACTIVE
                 ? "bg-primary-dark text-white shadow-xs"
                 : "bg-white text-primary-dark border border-neutral-border hover:bg-neutral-surface/50"
             }`}
@@ -169,9 +169,9 @@ export function RoomsManagementTab({
 
           <button
             type="button"
-            onClick={() => setStatusFilter("archived")}
+            onClick={() => setStatusFilter(RoomStatus.ARCHIVED)}
             className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
-              statusFilter === "archived"
+              statusFilter === RoomStatus.ARCHIVED
                 ? "bg-neutral-800 text-white shadow-xs"
                 : "bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-100"
             }`}
@@ -226,7 +226,7 @@ export function RoomsManagementTab({
             </thead>
             <tbody className="divide-y divide-neutral-100">
               {filteredRooms.map((room) => {
-                const isActive = room.status === "active";
+                const isActive = room.status === RoomStatus.ACTIVE;
                 const owner = usersMap.get(room.ownerId);
 
                 return (
@@ -251,7 +251,7 @@ export function RoomsManagementTab({
                     </td>
 
                     <td className="px-6 py-4">
-                      {room.visibility === "public" ? (
+                      {room.visibility === RoomVisibility.PUBLIC ? (
                         <span className="inline-flex items-center gap-1 rounded-md bg-neutral-surface px-2.5 py-1 text-[11px] font-bold text-primary-dark">
                           <HugeiconsIcon icon={Globe02Icon} size={12} />
                           <span>Công khai</span>

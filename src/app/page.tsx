@@ -2,13 +2,10 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import type { Room, RoomVisibility, User } from "@/types/domain";
+import { JoinRequestStatus, RoomFilterTab, RoomVisibility, type Room, type User } from "@/types/domain";
 import { useAuthMock } from "@/context/AuthMockContext";
 import { RoomCard } from "@/modules/rooms/presentation/RoomCard";
-import {
-  RoomListFilter,
-  type RoomFilterTab,
-} from "@/modules/rooms/presentation/RoomListFilter";
+import { RoomListFilter } from "@/modules/rooms/presentation/RoomListFilter";
 import { CreateRoomModal } from "@/modules/rooms/presentation/CreateRoomModal";
 import { RoomSkeletonGrid } from "@/modules/rooms/presentation/RoomSkeletonGrid";
 import {
@@ -44,12 +41,12 @@ export default function HomePage() {
 
   // Search and filter tab state
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<RoomFilterTab>("all");
+  const [activeTab, setActiveTab] = useState<RoomFilterTab>(RoomFilterTab.ALL);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Map to track join request status per room for current user
   const [requestStatusMap, setRequestStatusMap] = useState<
-    Record<string, "none" | "pending" | "approved" | "rejected">
+    Record<string, "none" | JoinRequestStatus>
   >({});
 
   // Refresh trigger for realtime updates
@@ -58,44 +55,47 @@ export default function HomePage() {
   // Subscribe to real-time changes across rooms, memberships, and join requests
   useLobbyRealtime({
     onDataChange: () => setRefreshKey((k) => k + 1),
-    enabled: isAuthenticated,
   });
 
-  // Fetch initial data from Supabase
+  // Fetch rooms and metadata from Supabase
   useEffect(() => {
-    if (!isAuthenticated) return;
     let isMounted = true;
 
     async function fetchData() {
+      setIsLoading(true);
       try {
-        const [fetchedRooms, fetchedUsers] = await Promise.all([
-          roomRepository.findCatalog({ includeArchived: false }),
-          userRepository.listAll({ includeArchived: true }),
+        const [rooms, users] = await Promise.all([
+          roomRepository.findCatalog(),
+          userRepository.listAll(),
         ]);
 
         if (!isMounted) return;
 
-        setRoomsList(fetchedRooms);
+        setRoomsList(rooms);
 
         const uMap = new Map<string, User>();
-        fetchedUsers.forEach((u) => uMap.set(u.id, u));
+        users.forEach((u) => uMap.set(u.id, u));
         setUsersMap(uMap);
 
+        // If authenticated, determine joined rooms and pending requests
         if (currentUser) {
-          const joined = await roomRepository.findJoinedByUserId(currentUser.id);
-          if (!isMounted) return;
-          setJoinedRoomIds(new Set(joined.map((r) => r.id)));
+          const [joinedRooms, requests] = await Promise.all([
+            roomRepository.findJoinedByUserId(currentUser.id),
+            joinRequestRepository.findByRequesterId(currentUser.id),
+          ]);
 
-          const reqs = await joinRequestRepository.findByRequesterId(currentUser.id);
           if (!isMounted) return;
-          const sMap: Record<string, "none" | "pending" | "approved" | "rejected"> = {};
-          reqs.forEach((r) => {
-            sMap[r.roomId] = r.status as "pending" | "approved" | "rejected";
+
+          setJoinedRoomIds(new Set(joinedRooms.map((r) => r.id)));
+
+          const reqMap: Record<string, "none" | JoinRequestStatus> = {};
+          requests.forEach((req) => {
+            reqMap[req.roomId] = req.status;
           });
-          setRequestStatusMap(sMap);
+          setRequestStatusMap(reqMap);
         }
       } catch (err) {
-        console.error("Failed to fetch rooms from Supabase:", err);
+        console.error("Failed to load lobby rooms:", err);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -108,14 +108,14 @@ export default function HomePage() {
     return () => {
       isMounted = false;
     };
-  }, [currentUser, isAuthenticated, refreshKey]);
+  }, [currentUser, refreshKey]);
 
   // Filtered rooms logic
   const filteredRooms = useMemo(() => {
     return roomsList.filter((room) => {
       // Filter by tab
-      if (activeTab === "public" && room.visibility !== "public") return false;
-      if (activeTab === "private" && room.visibility !== "private") return false;
+      if (activeTab === RoomFilterTab.PUBLIC && room.visibility !== RoomVisibility.PUBLIC) return false;
+      if (activeTab === RoomFilterTab.PRIVATE && room.visibility !== RoomVisibility.PRIVATE) return false;
 
       // Filter by search query
       if (searchQuery.trim()) {
@@ -159,7 +159,7 @@ export default function HomePage() {
     const targetRoom = roomsList.find((r) => r.id === roomId);
     const userId = currentUser?.id ?? "00000000-0000-0000-0000-000000000004";
 
-    if (targetRoom?.visibility === "public") {
+    if (targetRoom?.visibility === RoomVisibility.PUBLIC) {
       // Direct join
       try {
         await membershipRepository.addMember(roomId, userId);
@@ -178,7 +178,7 @@ export default function HomePage() {
         await joinRequestRepository.create(roomId, userId);
         setRequestStatusMap((prev) => ({
           ...prev,
-          [roomId]: "pending",
+          [roomId]: JoinRequestStatus.PENDING,
         }));
       } catch (err) {
         console.error("Failed to send join request:", err);
@@ -189,14 +189,14 @@ export default function HomePage() {
   // Handle cancel join request
   const handleCancelRequest = async (roomId: string) => {
     // Guard: Do not cancel if already joined or already approved
-    if (joinedRoomIds.has(roomId) || requestStatusMap[roomId] === "approved") {
+    if (joinedRoomIds.has(roomId) || requestStatusMap[roomId] === JoinRequestStatus.APPROVED) {
       return;
     }
     const userId = currentUser?.id ?? "00000000-0000-0000-0000-000000000004";
     try {
       const userRequests = await joinRequestRepository.findByRequesterId(userId);
       const pendingReq = userRequests.find(
-        (r) => r.roomId === roomId && r.status === "pending"
+        (r) => r.roomId === roomId && r.status === JoinRequestStatus.PENDING
       );
       if (pendingReq) {
         await joinRequestRepository.cancel(pendingReq.id, userId);

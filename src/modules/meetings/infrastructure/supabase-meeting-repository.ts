@@ -1,10 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import type {
-  AttendanceRecord,
+import {
   AttendanceStatus,
-  FundCandidate,
-  MeetingSession,
+  DatabaseTable,
+  MeetingStatus,
+  type AttendanceRecord,
+  type FundCandidate,
+  type MeetingSession,
 } from "@/types/domain";
 import type {
   AttendanceRepository,
@@ -44,7 +46,7 @@ export class SupabaseMeetingSessionRepository implements MeetingSessionRepositor
 
   async findById(id: string): Promise<MeetingSession | null> {
     const { data, error } = await this.client
-      .from("meeting_sessions")
+      .from(DatabaseTable.MEETING_SESSIONS)
       .select("*")
       .eq("id", id)
       .maybeSingle();
@@ -55,7 +57,7 @@ export class SupabaseMeetingSessionRepository implements MeetingSessionRepositor
 
   async findByRoomId(roomId: string): Promise<MeetingSession[]> {
     const { data, error } = await this.client
-      .from("meeting_sessions")
+      .from(DatabaseTable.MEETING_SESSIONS)
       .select("*")
       .eq("room_id", roomId)
       .order("starts_at", { ascending: false });
@@ -68,10 +70,10 @@ export class SupabaseMeetingSessionRepository implements MeetingSessionRepositor
     // Current eligible session: scheduled or active, closest starts_at, and closes_at > now() (Read-level expiration guard)
     const nowIso = new Date().toISOString();
     const { data, error } = await this.client
-      .from("meeting_sessions")
+      .from(DatabaseTable.MEETING_SESSIONS)
       .select("*")
       .eq("room_id", roomId)
-      .in("status", ["scheduled", "active"])
+      .in("status", [MeetingStatus.SCHEDULED, MeetingStatus.ACTIVE])
       .gt("closes_at", nowIso)
       .order("starts_at", { ascending: true })
       .limit(1)
@@ -89,14 +91,14 @@ export class SupabaseMeetingSessionRepository implements MeetingSessionRepositor
     title?: string;
   }): Promise<MeetingSession> {
     const { data, error } = await this.client
-      .from("meeting_sessions")
+      .from(DatabaseTable.MEETING_SESSIONS)
       .insert({
         room_id: sessionData.roomId,
         title: sessionData.title ?? "Meeting Session",
         starts_at: sessionData.startsAt,
         attendance_deadline: sessionData.attendanceDeadline,
         closes_at: sessionData.closesAt,
-        status: "scheduled",
+        status: MeetingStatus.SCHEDULED,
       })
       .select("*")
       .single();
@@ -109,9 +111,9 @@ export class SupabaseMeetingSessionRepository implements MeetingSessionRepositor
 
   async close(id: string): Promise<MeetingSession> {
     const { data, error } = await this.client
-      .from("meeting_sessions")
+      .from(DatabaseTable.MEETING_SESSIONS)
       .update({
-        status: "closed",
+        status: MeetingStatus.CLOSED,
       })
       .eq("id", id)
       .select("*")
@@ -128,9 +130,9 @@ export class SupabaseMeetingSessionRepository implements MeetingSessionRepositor
 
     // 1. Query expired sessions that are still scheduled or active
     const { data: expiredSessions, error: queryError } = await this.client
-      .from("meeting_sessions")
+      .from(DatabaseTable.MEETING_SESSIONS)
       .select("id, room_id, closes_at")
-      .in("status", ["scheduled", "active"])
+      .in("status", [MeetingStatus.SCHEDULED, MeetingStatus.ACTIVE])
       .lte("closes_at", asOfIso);
 
     if (queryError) {
@@ -145,8 +147,8 @@ export class SupabaseMeetingSessionRepository implements MeetingSessionRepositor
 
     // 2. Batch update status to 'closed'
     const { error: updateError } = await this.client
-      .from("meeting_sessions")
-      .update({ status: "closed" })
+      .from(DatabaseTable.MEETING_SESSIONS)
+      .update({ status: MeetingStatus.CLOSED })
       .in("id", sessionIds);
 
     if (updateError) {
@@ -163,7 +165,7 @@ export class SupabaseMeetingSessionRepository implements MeetingSessionRepositor
     }));
 
     try {
-      await this.client.from("audit_logs").insert(auditEntries);
+      await this.client.from(DatabaseTable.AUDIT_LOGS).insert(auditEntries);
     } catch {
       // Non-critical audit insertion catch
     }
@@ -192,7 +194,7 @@ export class SupabaseAttendanceRepository implements AttendanceRepository {
 
   async findBySessionId(sessionId: string): Promise<AttendanceRecord[]> {
     const { data, error } = await this.client
-      .from("attendance_records")
+      .from(DatabaseTable.ATTENDANCE_RECORDS)
       .select("*")
       .eq("meeting_session_id", sessionId);
 
@@ -202,7 +204,7 @@ export class SupabaseAttendanceRepository implements AttendanceRepository {
 
   async findUserRecord(sessionId: string, userId: string): Promise<AttendanceRecord | null> {
     const { data, error } = await this.client
-      .from("attendance_records")
+      .from(DatabaseTable.ATTENDANCE_RECORDS)
       .select("*")
       .eq("meeting_session_id", sessionId)
       .eq("user_id", userId)
@@ -219,7 +221,7 @@ export class SupabaseAttendanceRepository implements AttendanceRepository {
   ): Promise<AttendanceRecord> {
     // Check meeting session startsAt (deadline)
     const { data: session } = await this.client
-      .from("meeting_sessions")
+      .from(DatabaseTable.MEETING_SESSIONS)
       .select("starts_at")
       .eq("id", sessionId)
       .single();
@@ -229,7 +231,7 @@ export class SupabaseAttendanceRepository implements AttendanceRepository {
     }
 
     const { data, error } = await this.client
-      .from("attendance_records")
+      .from(DatabaseTable.ATTENDANCE_RECORDS)
       .upsert(
         {
           meeting_session_id: sessionId,
@@ -256,7 +258,7 @@ export class SupabaseAttendanceRepository implements AttendanceRepository {
     actorId: string
   ): Promise<AttendanceRecord> {
     const { data, error } = await this.client
-      .from("attendance_records")
+      .from(DatabaseTable.ATTENDANCE_RECORDS)
       .upsert(
         {
           meeting_session_id: sessionId,
@@ -275,7 +277,7 @@ export class SupabaseAttendanceRepository implements AttendanceRepository {
     }
 
     // Log audit
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: actorId,
       action: "attendance.override",
       target_type: "attendance_record",
@@ -288,7 +290,7 @@ export class SupabaseAttendanceRepository implements AttendanceRepository {
 
   async getCandidates(sessionId: string): Promise<FundCandidate[]> {
     const { data: candidates, error } = await this.client
-      .from("fund_candidates")
+      .from(DatabaseTable.FUND_CANDIDATES)
       .select(`
         id,
         user_id,
@@ -303,7 +305,7 @@ export class SupabaseAttendanceRepository implements AttendanceRepository {
 
     // Get attendance statuses
     const { data: attendance } = await this.client
-      .from("attendance_records")
+      .from(DatabaseTable.ATTENDANCE_RECORDS)
       .select("user_id, status")
       .eq("meeting_session_id", sessionId);
 
@@ -320,7 +322,7 @@ export class SupabaseAttendanceRepository implements AttendanceRepository {
         meetingSessionId: c.meeting_session_id,
         userDisplayName: user?.display_name ?? "Unknown",
         userEmail: user?.email ?? "",
-        attendanceStatus: statusMap.get(c.user_id) ?? "absent",
+        attendanceStatus: statusMap.get(c.user_id) ?? AttendanceStatus.ABSENT,
         suggestedAmount: c.suggested_amount,
       };
     });
@@ -332,7 +334,7 @@ export class SupabaseAttendanceRepository implements AttendanceRepository {
     suggestedAmount: number;
   }): Promise<FundCandidate> {
     const { data, error } = await this.client
-      .from("fund_candidates")
+      .from(DatabaseTable.FUND_CANDIDATES)
       .upsert(
         {
           meeting_session_id: candidate.sessionId,
@@ -362,7 +364,7 @@ export class SupabaseAttendanceRepository implements AttendanceRepository {
       meetingSessionId: row.meeting_session_id,
       userDisplayName: user?.display_name ?? "Unknown",
       userEmail: user?.email ?? "",
-      attendanceStatus: "absent",
+      attendanceStatus: AttendanceStatus.ABSENT,
       suggestedAmount: row.suggested_amount,
     };
   }

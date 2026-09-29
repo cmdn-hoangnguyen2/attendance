@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { SupabaseRoomPaymentImageRepository } from "@/modules/funds/infrastructure/supabase-fund-repository";
+import { DatabaseTable, GlobalRole } from "@/types/domain";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -54,7 +55,7 @@ export async function POST(
 
     // 3. Check Room Existence and Owner
     const { data: room, error: roomError } = await supabase
-      .from("rooms")
+      .from(DatabaseTable.ROOMS)
       .select("id, owner_id")
       .eq("id", roomId)
       .single();
@@ -68,13 +69,13 @@ export async function POST(
 
     // 4. Check Actor Role
     const { data: user } = await supabase
-      .from("users")
+      .from(DatabaseTable.USERS)
       .select("id, role")
       .eq("id", actorId)
       .single();
 
     const isOwner = room.owner_id === actorId;
-    const isAdmin = user?.role === "admin";
+    const isAdmin = user?.role === GlobalRole.ADMIN;
 
     if (!isOwner && !isAdmin) {
       return NextResponse.json(
@@ -136,7 +137,7 @@ export async function DELETE(
 
     // 1. Check Room Existence and Owner
     const { data: room, error: roomError } = await supabase
-      .from("rooms")
+      .from(DatabaseTable.ROOMS)
       .select("id, owner_id")
       .eq("id", roomId)
       .single();
@@ -150,13 +151,13 @@ export async function DELETE(
 
     // 2. Check Actor Role
     const { data: user } = await supabase
-      .from("users")
+      .from(DatabaseTable.USERS)
       .select("id, role")
       .eq("id", actorId)
       .single();
 
     const isOwner = room.owner_id === actorId;
-    const isAdmin = user?.role === "admin";
+    const isAdmin = user?.role === GlobalRole.ADMIN;
 
     if (!isOwner && !isAdmin) {
       return NextResponse.json(

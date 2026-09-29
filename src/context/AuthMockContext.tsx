@@ -9,7 +9,7 @@ import React, {
   useCallback,
 } from "react";
 import { Auth0Provider, useUser } from "@auth0/nextjs-auth0/client";
-import type { User } from "@/types/domain";
+import { User, GlobalRole, UserStatus, Auth0Claim } from "@/types/domain";
 import { userRepository } from "@/lib/repository";
 
 export type MockRole = "guest" | "user" | "owner" | "admin";
@@ -33,8 +33,8 @@ const SEED_USERS_BY_ROLE: Record<MockRole, User | null> = {
     auth0Subject: "auth0|admin-primary",
     email: "nvhoang2012002@gmail.com",
     displayName: "Hoang Nguyen",
-    role: "admin",
-    status: "active",
+    role: GlobalRole.ADMIN,
+    status: UserStatus.ACTIVE,
     createdAt: "2026-01-02T01:00:00.000Z",
     updatedAt: "2026-01-02T01:00:00.000Z",
   },
@@ -43,8 +43,8 @@ const SEED_USERS_BY_ROLE: Record<MockRole, User | null> = {
     auth0Subject: "auth0|owner-lan",
     email: "lan.nguyen@example.com",
     displayName: "Lan Nguyen",
-    role: "user",
-    status: "active",
+    role: GlobalRole.USER,
+    status: UserStatus.ACTIVE,
     createdAt: "2026-01-03T02:00:00.000Z",
     updatedAt: "2026-01-03T02:00:00.000Z",
   },
@@ -53,8 +53,8 @@ const SEED_USERS_BY_ROLE: Record<MockRole, User | null> = {
     auth0Subject: "auth0|member-minh",
     email: "minh.tran@example.com",
     displayName: "Minh Tran",
-    role: "user",
-    status: "active",
+    role: GlobalRole.USER,
+    status: UserStatus.ACTIVE,
     createdAt: "2026-01-04T02:00:00.000Z",
     updatedAt: "2026-01-04T02:00:00.000Z",
   },
@@ -109,7 +109,7 @@ function MockAuthProvider({ children }: { children: React.ReactNode }) {
     currentRole,
     setRole: setCurrentRole,
     isAuthenticated: currentRole !== "guest" && currentUser !== null,
-    isAdmin: currentRole === "admin",
+    isAdmin: currentRole === GlobalRole.ADMIN,
     login,
     logout,
     isMockActive: true,
@@ -148,16 +148,24 @@ function RealAuthProviderInner({ children }: { children: React.ReactNode }) {
 
         // If not found yet (beforeSessionSaved delay), onboard user directly
         if (!existing && auth0User.email) {
-          const customRole = auth0User["https://diemdanh.cmdn/role"] as string | undefined;
-          const rolesArray = (auth0User.roles || auth0User["https://diemdanh.cmdn/roles"]) as string[] | undefined;
-          const permissionsArray = (auth0User.permissions || auth0User["https://diemdanh.cmdn/permissions"]) as string[] | undefined;
+          const customRole = auth0User[Auth0Claim.ROLE] as string | undefined;
+          const rolesArray = (auth0User.roles || auth0User[Auth0Claim.ROLES]) as string[] | undefined;
+          const permissionsArray = (auth0User.permissions || auth0User[Auth0Claim.PERMISSIONS]) as string[] | undefined;
+          const scopeValue = auth0User[Auth0Claim.SCOPE] || auth0User.scope;
+          const scopeArray =
+            typeof scopeValue === "string"
+              ? scopeValue.split(" ")
+              : Array.isArray(scopeValue)
+                ? (scopeValue as string[])
+                : [];
 
           const isAdmin =
-            customRole === "admin" ||
-            rolesArray?.includes("admin") ||
-            permissionsArray?.includes("admin");
+            customRole === GlobalRole.ADMIN ||
+            rolesArray?.includes(GlobalRole.ADMIN) ||
+            permissionsArray?.includes(GlobalRole.ADMIN) ||
+            scopeArray.includes(GlobalRole.ADMIN);
 
-          const role: "admin" | "user" = isAdmin ? "admin" : "user";
+          const role: GlobalRole = isAdmin ? GlobalRole.ADMIN : GlobalRole.USER;
           existing = await userRepository.createOrSync({
             auth0Subject: auth0User.sub,
             email: auth0User.email,
@@ -187,21 +195,29 @@ function RealAuthProviderInner({ children }: { children: React.ReactNode }) {
     };
   }, [auth0User]);
 
-  const customRole = auth0User?.["https://diemdanh.cmdn/role"] as string | undefined;
-  const rolesArray = (auth0User?.roles || auth0User?.["https://diemdanh.cmdn/roles"]) as string[] | undefined;
-  const permissionsArray = (auth0User?.permissions || auth0User?.["https://diemdanh.cmdn/permissions"]) as string[] | undefined;
+  const customRole = auth0User?.[Auth0Claim.ROLE] as string | undefined;
+  const rolesArray = (auth0User?.roles || auth0User?.[Auth0Claim.ROLES]) as string[] | undefined;
+  const permissionsArray = (auth0User?.permissions || auth0User?.[Auth0Claim.PERMISSIONS]) as string[] | undefined;
+  const scopeValue = auth0User?.[Auth0Claim.SCOPE] || auth0User?.scope;
+  const scopeArray =
+    typeof scopeValue === "string"
+      ? scopeValue.split(" ")
+      : Array.isArray(scopeValue)
+        ? (scopeValue as string[])
+        : [];
 
+  // Authority is exclusively Auth0 session claims/scope per docs/04-auth-security.md (database cannot override)
   const isAdmin =
-    customRole === "admin" ||
-    rolesArray?.includes("admin") ||
-    permissionsArray?.includes("admin") ||
-    dbUser?.role === "admin";
-  const isAuthenticated = Boolean(auth0User && dbUser && dbUser.status !== "soft_deleted");
+    customRole === GlobalRole.ADMIN ||
+    rolesArray?.includes(GlobalRole.ADMIN) ||
+    permissionsArray?.includes(GlobalRole.ADMIN) ||
+    scopeArray.includes(GlobalRole.ADMIN);
+  const isAuthenticated = Boolean(auth0User && dbUser && dbUser.status !== UserStatus.SOFT_DELETED);
 
   const currentRole: MockRole = useMemo(() => {
     if (!isAuthenticated) return "guest";
-    if (isAdmin) return "admin";
-    return "user";
+    if (isAdmin) return GlobalRole.ADMIN;
+    return GlobalRole.USER;
   }, [isAuthenticated, isAdmin]);
 
   const login = useCallback(() => {
@@ -240,7 +256,7 @@ function RealAuthProviderInner({ children }: { children: React.ReactNode }) {
   };
 
   // Deny access if user was soft-deleted per docs/04-auth-security.md rule 5
-  if (dbUser?.status === "soft_deleted") {
+  if (dbUser?.status === UserStatus.SOFT_DELETED) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-neutral-50 p-6 text-center">
         <div className="max-w-md rounded-2xl bg-white p-8 shadow-sm border border-neutral-200">

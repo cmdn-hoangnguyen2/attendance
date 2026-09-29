@@ -1,10 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import type {
-  JoinRequest,
-  Room,
-  RoomMembership,
-  RoomVisibility,
+import {
+  ConfirmationPhrase,
+  DatabaseTable,
+  FundContributionStatus,
+  JoinRequestStatus,
+  MembershipStatus,
+  RoomStatus,
+  type JoinRequest,
+  type Room,
+  type RoomMembership,
+  type RoomVisibility,
 } from "@/types/domain";
 import type {
   JoinRequestRepository,
@@ -35,7 +41,7 @@ export class SupabaseRoomRepository implements RoomRepository {
 
   async findById(id: string): Promise<Room | null> {
     const { data: room, error } = await this.client
-      .from("rooms")
+      .from(DatabaseTable.ROOMS)
       .select("*")
       .eq("id", id)
       .maybeSingle();
@@ -44,10 +50,10 @@ export class SupabaseRoomRepository implements RoomRepository {
 
     // Fetch active member count
     const { count } = await this.client
-      .from("room_memberships")
+      .from(DatabaseTable.ROOM_MEMBERSHIPS)
       .select("*", { count: "exact", head: true })
       .eq("room_id", id)
-      .eq("status", "active");
+      .eq("status", MembershipStatus.ACTIVE);
 
     return this.mapRoom(room, count ?? 0);
   }
@@ -57,10 +63,10 @@ export class SupabaseRoomRepository implements RoomRepository {
     search?: string;
     includeArchived?: boolean;
   }): Promise<Room[]> {
-    let query = this.client.from("rooms").select("*");
+    let query = this.client.from(DatabaseTable.ROOMS).select("*");
 
     if (!options?.includeArchived) {
-      query = query.eq("status", "active");
+      query = query.eq("status", RoomStatus.ACTIVE);
     }
 
     if (options?.visibility) {
@@ -76,9 +82,9 @@ export class SupabaseRoomRepository implements RoomRepository {
 
     // Get active memberships count grouped by room
     const { data: memberships } = await this.client
-      .from("room_memberships")
+      .from(DatabaseTable.ROOM_MEMBERSHIPS)
       .select("room_id")
-      .eq("status", "active");
+      .eq("status", MembershipStatus.ACTIVE);
 
     const countMap = new Map<string, number>();
     memberships?.forEach((m) => {
@@ -90,18 +96,18 @@ export class SupabaseRoomRepository implements RoomRepository {
 
   async findByOwnerId(ownerId: string): Promise<Room[]> {
     const { data: rooms, error } = await this.client
-      .from("rooms")
+      .from(DatabaseTable.ROOMS)
       .select("*")
       .eq("owner_id", ownerId)
-      .eq("status", "active")
+      .eq("status", RoomStatus.ACTIVE)
       .order("created_at", { ascending: false });
 
     if (error || !rooms) return [];
 
     const { data: memberships } = await this.client
-      .from("room_memberships")
+      .from(DatabaseTable.ROOM_MEMBERSHIPS)
       .select("room_id")
-      .eq("status", "active");
+      .eq("status", MembershipStatus.ACTIVE);
 
     const countMap = new Map<string, number>();
     memberships?.forEach((m) => {
@@ -113,28 +119,28 @@ export class SupabaseRoomRepository implements RoomRepository {
 
   async findJoinedByUserId(userId: string): Promise<Room[]> {
     const { data: memberships, error: memError } = await this.client
-      .from("room_memberships")
+      .from(DatabaseTable.ROOM_MEMBERSHIPS)
       .select("room_id")
       .eq("user_id", userId)
-      .eq("status", "active");
+      .eq("status", MembershipStatus.ACTIVE);
 
     if (memError || !memberships || memberships.length === 0) return [];
 
     const roomIds = memberships.map((m) => m.room_id);
     const { data: rooms, error } = await this.client
-      .from("rooms")
+      .from(DatabaseTable.ROOMS)
       .select("*")
       .in("id", roomIds)
-      .eq("status", "active")
+      .eq("status", RoomStatus.ACTIVE)
       .order("created_at", { ascending: false });
 
     if (error || !rooms) return [];
 
     // Fetch member counts
     const { data: allMemberships } = await this.client
-      .from("room_memberships")
+      .from(DatabaseTable.ROOM_MEMBERSHIPS)
       .select("room_id")
-      .eq("status", "active")
+      .eq("status", MembershipStatus.ACTIVE)
       .in("room_id", roomIds);
 
     const countMap = new Map<string, number>();
@@ -151,12 +157,12 @@ export class SupabaseRoomRepository implements RoomRepository {
     ownerId: string;
   }): Promise<Room> {
     const { data: newRoom, error } = await this.client
-      .from("rooms")
+      .from(DatabaseTable.ROOMS)
       .insert({
         name: roomData.name,
         visibility: roomData.visibility,
         owner_id: roomData.ownerId,
-        status: "active",
+        status: RoomStatus.ACTIVE,
       })
       .select("*")
       .single();
@@ -166,10 +172,10 @@ export class SupabaseRoomRepository implements RoomRepository {
     }
 
     // Owner automatically becomes active member
-    await this.client.from("room_memberships").insert({
+    await this.client.from(DatabaseTable.ROOM_MEMBERSHIPS).insert({
       room_id: newRoom.id,
       user_id: roomData.ownerId,
-      status: "active",
+      status: MembershipStatus.ACTIVE,
     });
 
     return this.mapRoom(newRoom, 1);
@@ -177,7 +183,7 @@ export class SupabaseRoomRepository implements RoomRepository {
 
   async update(id: string, data: Partial<Pick<Room, "name" | "visibility">>): Promise<Room> {
     const { data: updated, error } = await this.client
-      .from("rooms")
+      .from(DatabaseTable.ROOMS)
       .update({
         ...(data.name && { name: data.name }),
         ...(data.visibility && { visibility: data.visibility }),
@@ -194,14 +200,14 @@ export class SupabaseRoomRepository implements RoomRepository {
   }
 
   async archive(id: string, actorId: string, confirmationPhrase: string): Promise<Room> {
-    if (confirmationPhrase.trim() !== "Archive this room") {
-      throw new Error("Invalid confirmation phrase for archiving room");
+    if (confirmationPhrase.trim() !== ConfirmationPhrase.ARCHIVE_ROOM) {
+      throw new Error(`Invalid confirmation phrase for archiving room. Expected '${ConfirmationPhrase.ARCHIVE_ROOM}'`);
     }
 
     const { data: archived, error } = await this.client
-      .from("rooms")
+      .from(DatabaseTable.ROOMS)
       .update({
-        status: "archived",
+        status: RoomStatus.ARCHIVED,
         archived_at: new Date().toISOString(),
         archived_by: actorId,
       })
@@ -214,7 +220,7 @@ export class SupabaseRoomRepository implements RoomRepository {
     }
 
     // Record audit log
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: actorId,
       action: "room.archived",
       target_type: "room",
@@ -226,9 +232,9 @@ export class SupabaseRoomRepository implements RoomRepository {
 
   async restore(id: string, actorId: string): Promise<Room> {
     const { data: restored, error } = await this.client
-      .from("rooms")
+      .from(DatabaseTable.ROOMS)
       .update({
-        status: "active",
+        status: RoomStatus.ACTIVE,
         archived_at: null,
         archived_by: null,
       })
@@ -241,7 +247,7 @@ export class SupabaseRoomRepository implements RoomRepository {
     }
 
     // Record audit log
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: actorId,
       action: "room.restored",
       target_type: "room",
@@ -253,7 +259,7 @@ export class SupabaseRoomRepository implements RoomRepository {
 
   async transferOwnership(id: string, newOwnerId: string, actorId: string): Promise<Room> {
     const { data: transferred, error } = await this.client
-      .from("rooms")
+      .from(DatabaseTable.ROOMS)
       .update({
         owner_id: newOwnerId,
       })
@@ -265,7 +271,7 @@ export class SupabaseRoomRepository implements RoomRepository {
       throw new Error(`Failed to transfer ownership: ${error?.message}`);
     }
 
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: actorId,
       action: "room.ownership_transferred",
       target_type: "room",
@@ -296,7 +302,7 @@ export class SupabaseMembershipRepository implements MembershipRepository {
 
   async findByRoomId(roomId: string): Promise<RoomMembership[]> {
     const { data, error } = await this.client
-      .from("room_memberships")
+      .from(DatabaseTable.ROOM_MEMBERSHIPS)
       .select("*")
       .eq("room_id", roomId);
 
@@ -306,7 +312,7 @@ export class SupabaseMembershipRepository implements MembershipRepository {
 
   async findMember(roomId: string, userId: string): Promise<RoomMembership | null> {
     const { data, error } = await this.client
-      .from("room_memberships")
+      .from(DatabaseTable.ROOM_MEMBERSHIPS)
       .select("*")
       .eq("room_id", roomId)
       .eq("user_id", userId)
@@ -320,11 +326,11 @@ export class SupabaseMembershipRepository implements MembershipRepository {
 
   async addMember(roomId: string, userId: string): Promise<RoomMembership> {
     const { data, error } = await this.client
-      .from("room_memberships")
+      .from(DatabaseTable.ROOM_MEMBERSHIPS)
       .insert({
         room_id: roomId,
         user_id: userId,
-        status: "active",
+        status: MembershipStatus.ACTIVE,
       })
       .select("*")
       .single();
@@ -344,29 +350,29 @@ export class SupabaseMembershipRepository implements MembershipRepository {
   ): Promise<RoomMembership> {
     // Check if user has outstanding fund contributions
     const { data: debts } = await this.client
-      .from("fund_contributions")
+      .from(DatabaseTable.FUND_CONTRIBUTIONS)
       .select("id")
       .eq("room_id", roomId)
       .eq("contributor_id", userId)
-      .eq("status", "outstanding");
+      .eq("status", FundContributionStatus.OUTSTANDING);
 
     if (debts && debts.length > 0) {
-      if (confirmationPhrase?.trim() !== "I agree to remove this user") {
-        throw new Error("Confirmation phrase 'I agree to remove this user' required for member with debt");
+      if (confirmationPhrase?.trim() !== ConfirmationPhrase.REMOVE_MEMBER_WITH_DEBT) {
+        throw new Error(`Confirmation phrase '${ConfirmationPhrase.REMOVE_MEMBER_WITH_DEBT}' required for member with debt`);
       }
     }
 
     const { data, error } = await this.client
-      .from("room_memberships")
+      .from(DatabaseTable.ROOM_MEMBERSHIPS)
       .update({
-        status: "removed",
+        status: MembershipStatus.REMOVED,
         removed_at: new Date().toISOString(),
         removed_by: actorId,
         removal_reason: reason ?? null,
       })
       .eq("room_id", roomId)
       .eq("user_id", userId)
-      .eq("status", "active")
+      .eq("status", MembershipStatus.ACTIVE)
       .select("*")
       .single();
 
@@ -374,7 +380,7 @@ export class SupabaseMembershipRepository implements MembershipRepository {
       throw new Error(`Failed to remove member: ${error?.message}`);
     }
 
-    await this.client.from("audit_logs").insert({
+    await this.client.from(DatabaseTable.AUDIT_LOGS).insert({
       actor_id: actorId,
       action: "membership.removed",
       target_type: "room_membership",
@@ -388,7 +394,7 @@ export class SupabaseMembershipRepository implements MembershipRepository {
   async leave(roomId: string, userId: string): Promise<RoomMembership> {
     // Owner cannot leave room (docs/01-product-scope.md line 26)
     const { data: room } = await this.client
-      .from("rooms")
+      .from(DatabaseTable.ROOMS)
       .select("owner_id")
       .eq("id", roomId)
       .maybeSingle();
@@ -398,14 +404,14 @@ export class SupabaseMembershipRepository implements MembershipRepository {
     }
 
     const { data, error } = await this.client
-      .from("room_memberships")
+      .from(DatabaseTable.ROOM_MEMBERSHIPS)
       .update({
-        status: "left",
+        status: MembershipStatus.LEFT,
         left_at: new Date().toISOString(),
       })
       .eq("room_id", roomId)
       .eq("user_id", userId)
-      .eq("status", "active")
+      .eq("status", MembershipStatus.ACTIVE)
       .select("*")
       .single();
 
@@ -437,7 +443,7 @@ export class SupabaseJoinRequestRepository implements JoinRequestRepository {
 
   async findByRoomId(roomId: string): Promise<JoinRequest[]> {
     const { data, error } = await this.client
-      .from("join_requests")
+      .from(DatabaseTable.JOIN_REQUESTS)
       .select("*")
       .eq("room_id", roomId)
       .order("created_at", { ascending: false });
@@ -448,7 +454,7 @@ export class SupabaseJoinRequestRepository implements JoinRequestRepository {
 
   async findByRequesterId(userId: string): Promise<JoinRequest[]> {
     const { data, error } = await this.client
-      .from("join_requests")
+      .from(DatabaseTable.JOIN_REQUESTS)
       .select("*")
       .eq("requester_id", userId);
 
@@ -458,11 +464,11 @@ export class SupabaseJoinRequestRepository implements JoinRequestRepository {
 
   async create(roomId: string, requesterId: string): Promise<JoinRequest> {
     const { data, error } = await this.client
-      .from("join_requests")
+      .from(DatabaseTable.JOIN_REQUESTS)
       .insert({
         room_id: roomId,
         requester_id: requesterId,
-        status: "pending",
+        status: JoinRequestStatus.PENDING,
       })
       .select("*")
       .single();
@@ -475,9 +481,9 @@ export class SupabaseJoinRequestRepository implements JoinRequestRepository {
 
   async approve(requestId: string, reviewerId: string): Promise<JoinRequest> {
     const { data: request, error } = await this.client
-      .from("join_requests")
+      .from(DatabaseTable.JOIN_REQUESTS)
       .update({
-        status: "approved",
+        status: JoinRequestStatus.APPROVED,
         reviewed_by: reviewerId,
         reviewed_at: new Date().toISOString(),
       })
@@ -490,10 +496,10 @@ export class SupabaseJoinRequestRepository implements JoinRequestRepository {
     }
 
     // Add requester as active member
-    await this.client.from("room_memberships").insert({
+    await this.client.from(DatabaseTable.ROOM_MEMBERSHIPS).insert({
       room_id: request.room_id,
       user_id: request.requester_id,
-      status: "active",
+      status: MembershipStatus.ACTIVE,
     });
 
     return this.mapRequest(request);
@@ -501,9 +507,9 @@ export class SupabaseJoinRequestRepository implements JoinRequestRepository {
 
   async reject(requestId: string, reviewerId: string): Promise<JoinRequest> {
     const { data, error } = await this.client
-      .from("join_requests")
+      .from(DatabaseTable.JOIN_REQUESTS)
       .update({
-        status: "rejected",
+        status: JoinRequestStatus.REJECTED,
         reviewed_by: reviewerId,
         reviewed_at: new Date().toISOString(),
       })
@@ -519,9 +525,9 @@ export class SupabaseJoinRequestRepository implements JoinRequestRepository {
 
   async cancel(requestId: string, requesterId: string): Promise<JoinRequest> {
     const { data, error } = await this.client
-      .from("join_requests")
+      .from(DatabaseTable.JOIN_REQUESTS)
       .update({
-        status: "cancelled",
+        status: JoinRequestStatus.CANCELLED,
       })
       .eq("id", requestId)
       .eq("requester_id", requesterId)

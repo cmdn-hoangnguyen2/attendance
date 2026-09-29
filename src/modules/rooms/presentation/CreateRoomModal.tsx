@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import type { RoomVisibility } from "@/types/domain";
+import { RoomVisibility } from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, Globe02Icon, LockIcon } from "@hugeicons/core-free-icons";
 
@@ -17,7 +17,7 @@ export function CreateRoomModal({
   onCreateRoom,
 }: CreateRoomModalProps) {
   const [name, setName] = useState("");
-  const [visibility, setVisibility] = useState<RoomVisibility>("public");
+  const [visibility, setVisibility] = useState<RoomVisibility>(RoomVisibility.PUBLIC);
   const [error, setError] = useState("");
 
   // Handle Escape key to close modal
@@ -46,7 +46,7 @@ export function CreateRoomModal({
       visibility,
     });
     setName("");
-    setVisibility("public");
+    setVisibility(RoomVisibility.PUBLIC);
     setError("");
     onClose();
   };
@@ -127,9 +127,9 @@ export function CreateRoomModal({
               {/* Option 1: Công khai */}
               <button
                 type="button"
-                onClick={() => setVisibility("public")}
+                onClick={() => setVisibility(RoomVisibility.PUBLIC)}
                 className={`flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all ${
-                  visibility === "public"
+                  visibility === RoomVisibility.PUBLIC
                     ? "border-primary bg-neutral-surface/50 shadow-xs"
                     : "border-neutral-200 bg-white hover:bg-neutral-50"
                 }`}
@@ -139,7 +139,7 @@ export function CreateRoomModal({
                     icon={Globe02Icon}
                     size={18}
                     className={
-                      visibility === "public"
+                      visibility === RoomVisibility.PUBLIC
                         ? "text-primary-dark"
                         : "text-neutral-muted"
                     }
@@ -156,9 +156,9 @@ export function CreateRoomModal({
               {/* Option 2: Riêng tư */}
               <button
                 type="button"
-                onClick={() => setVisibility("private")}
+                onClick={() => setVisibility(RoomVisibility.PRIVATE)}
                 className={`flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all ${
-                  visibility === "private"
+                  visibility === RoomVisibility.PRIVATE
                     ? "border-primary bg-neutral-surface/50 shadow-xs"
                     : "border-neutral-200 bg-white hover:bg-neutral-50"
                 }`}
@@ -168,7 +168,7 @@ export function CreateRoomModal({
                     icon={LockIcon}
                     size={18}
                     className={
-                      visibility === "private"
+                      visibility === RoomVisibility.PRIVATE
                         ? "text-primary-dark"
                         : "text-neutral-muted"
                     }
@@ -178,7 +178,7 @@ export function CreateRoomModal({
                   </span>
                 </div>
                 <p className="text-xs text-neutral-muted">
-                  Cần gửi yêu cầu và được Chủ phòng hoặc Admin phê duyệt.
+                  Thành viên cần gửi yêu cầu tham gia và được duyệt.
                 </p>
               </button>
             </div>

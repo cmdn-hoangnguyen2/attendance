@@ -1,15 +1,27 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import type { FundCandidate, FundContributionReason, User } from "@/types/domain";
-import { formatVND } from "@/lib/utils";
+import {
+  AttendanceStatus,
+  FundContributionReason,
+  type FundCandidate,
+  type User,
+} from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, Coins01Icon } from "@hugeicons/core-free-icons";
+import {
+  Coins01Icon,
+  Cancel01Icon,
+  Alert02Icon,
+  PlusSignIcon,
+  UserIcon,
+} from "@hugeicons/core-free-icons";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import { formatVND } from "@/lib/utils";
 
 export interface CreateFundContributionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  roomId?: string;
   roomMembers: User[];
   candidate?: FundCandidate | null;
   preselectedUserId?: string;
@@ -24,12 +36,13 @@ export interface CreateFundContributionModalProps {
 export function CreateFundContributionModal({
   isOpen,
   onClose,
+  roomId,
   roomMembers,
   candidate,
   preselectedUserId,
   onCreateContribution,
 }: CreateFundContributionModalProps) {
-  const [selectedUserId, setSelectedUserId] = useState(() =>
+  const [selectedUserId, setSelectedUserId] = useState<string>(() =>
     candidate
       ? candidate.userId
       : preselectedUserId
@@ -40,7 +53,9 @@ export function CreateFundContributionModal({
   );
   const [amount, setAmount] = useState(() => candidate?.suggestedAmount || 10000);
   const [reason, setReason] = useState<FundContributionReason>(() =>
-    candidate?.attendanceStatus === "absent" ? "Bận nhưng chưa xin phép" : "Đi trễ",
+    candidate?.attendanceStatus === AttendanceStatus.ABSENT
+      ? FundContributionReason.BUSY_WITHOUT_PERMISSION
+      : FundContributionReason.LATE,
   );
   const [reasonDetails, setReasonDetails] = useState("");
   const [error, setError] = useState("");
@@ -73,8 +88,8 @@ export function CreateFundContributionModal({
       setError("Số tiền đóng quỹ phải lớn hơn 0 VND.");
       return;
     }
-    if (reason === "Khác" && !reasonDetails.trim()) {
-      setError("Vui lòng nhập chi tiết lý do khi chọn 'Khác'.");
+    if (reason === FundContributionReason.OTHER && !reasonDetails.trim()) {
+      setError(`Vui lòng nhập chi tiết lý do khi chọn '${FundContributionReason.OTHER}'.`);
       return;
     }
 
@@ -82,7 +97,7 @@ export function CreateFundContributionModal({
       contributorId: selectedUserId,
       amount: Math.round(amount), // integer VND
       reason,
-      reasonDetails: reason === "Khác" ? reasonDetails.trim() : undefined,
+      reasonDetails: reason === FundContributionReason.OTHER ? reasonDetails.trim() : undefined,
     });
     handleClose();
   };
@@ -190,15 +205,15 @@ export function CreateFundContributionModal({
               value={reason}
               onChange={(val) => setReason(val as FundContributionReason)}
               options={[
-                { value: "Đi trễ", label: "Đi trễ" },
-                { value: "Bận nhưng chưa xin phép", label: "Bận nhưng chưa xin phép" },
-                { value: "Khác", label: "Khác (Yêu cầu nhập chi tiết)" },
+                { value: FundContributionReason.LATE, label: FundContributionReason.LATE },
+                { value: FundContributionReason.BUSY_WITHOUT_PERMISSION, label: FundContributionReason.BUSY_WITHOUT_PERMISSION },
+                { value: FundContributionReason.OTHER, label: `${FundContributionReason.OTHER} (Yêu cầu nhập chi tiết)` },
               ]}
             />
           </div>
 
           {/* Field 4 (Conditional): Chi tiết lý do nếu chọn 'Khác' */}
-          {reason === "Khác" ? (
+          {reason === FundContributionReason.OTHER ? (
             <div className="flex flex-col gap-2 animate-in fade-in">
               <label htmlFor="reason-details" className="text-sm font-semibold text-neutral-dark">
                 Chi tiết lý do <span className="text-rose-500">*</span>

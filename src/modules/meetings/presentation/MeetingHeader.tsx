@@ -2,7 +2,13 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import type { Room, User } from "@/types/domain";
+import {
+  RoomDetailTab,
+  RoomStatus,
+  RoomVisibility,
+  type Room,
+  type User,
+} from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
@@ -17,7 +23,7 @@ import {
 import { RoomSettingsModal } from "@/modules/rooms/presentation/RoomSettingsModal";
 import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
 
-export type MeetingTab = "members" | "attendance" | "funds";
+export type MeetingTab = RoomDetailTab;
 
 export interface MeetingHeaderProps {
   room: Room;
@@ -50,15 +56,15 @@ export function MeetingHeader({
   onOpenLeaveModal,
 }: MeetingHeaderProps) {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const isPublic = room.visibility === "public";
-  const isArchived = room.status === "archived";
+  const isPublic = room.visibility === RoomVisibility.PUBLIC;
+  const isArchived = room.status === RoomStatus.ARCHIVED;
 
   const tabs: PillTabItem<MeetingTab>[] = isArchived
-    ? [{ key: "funds", label: "Quỹ phòng (Lưu trữ)", icon: Coins01Icon }]
+    ? [{ key: RoomDetailTab.FUNDS, label: "Quỹ phòng (Lưu trữ)", icon: Coins01Icon }]
     : [
-        { key: "members", label: "Thành viên", icon: UserGroupIcon },
-        { key: "attendance", label: "Điểm danh", icon: Calendar01Icon },
-        { key: "funds", label: "Quỹ phòng", icon: Coins01Icon },
+        { key: RoomDetailTab.MEMBERS, label: "Thành viên", icon: UserGroupIcon },
+        { key: RoomDetailTab.ATTENDANCE, label: "Điểm danh", icon: Calendar01Icon },
+        { key: RoomDetailTab.FUNDS, label: "Quỹ phòng", icon: Coins01Icon },
       ];
 
   return (

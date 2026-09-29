@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import Link from "next/link";
-import type { Room, User } from "@/types/domain";
+import { GlobalRole, JoinRequestStatus, RoomVisibility, type Room, type User } from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Globe02Icon,
@@ -19,7 +19,7 @@ export interface RoomCardProps {
   currentUser: User | null;
   isMember?: boolean;
   isOwner?: boolean;
-  joinRequestStatus?: "none" | "pending" | "approved" | "rejected";
+  joinRequestStatus?: "none" | JoinRequestStatus;
   onRequestJoin: (roomId: string) => void;
   onCancelRequest: (roomId: string) => void;
 }
@@ -35,12 +35,12 @@ export function RoomCard({
   onRequestJoin,
   onCancelRequest,
 }: RoomCardProps) {
-  const isPublic = room.visibility === "public";
+  const isPublic = room.visibility === RoomVisibility.PUBLIC;
   const canDirectlyEnter =
     isMember ||
     isOwner ||
-    currentUser?.role === "admin" ||
-    joinRequestStatus === "approved";
+    currentUser?.role === GlobalRole.ADMIN ||
+    joinRequestStatus === JoinRequestStatus.APPROVED;
 
   const formattedMeetingTime = useMemo(() => {
     if (!meetingStartTime) return "-";
@@ -144,7 +144,7 @@ export function RoomCard({
         ) : (
           /* Private Room States */
           <div>
-            {joinRequestStatus === "pending" ? (
+            {joinRequestStatus === JoinRequestStatus.PENDING ? (
               <div className="flex flex-col gap-2">
                 <span className="text-center text-xs font-semibold text-amber-700 bg-amber-50 py-1.5 rounded-full border border-amber-200">
                   Đang chờ duyệt...
@@ -157,7 +157,7 @@ export function RoomCard({
                   Hủy yêu cầu
                 </button>
               </div>
-            ) : joinRequestStatus === "rejected" ? (
+            ) : joinRequestStatus === JoinRequestStatus.REJECTED ? (
               <div className="flex flex-col gap-2">
                 <span className="text-center text-xs font-medium text-rose-700 bg-rose-50 py-1.5 rounded-full border border-rose-200">
                   Yêu cầu đã bị từ chối

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import type { Room, User } from "@/types/domain";
+import { ConfirmationPhrase, type Room, type User } from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   UserRemove01Icon,
@@ -20,7 +20,7 @@ export interface ArchiveUserModalProps {
   onConfirmArchiveUser: (userId: string, replacementAdminId?: string) => void;
 }
 
-const REQUIRED_CONFIRMATION_PHRASE = "Archive this user";
+const REQUIRED_CONFIRMATION_PHRASE = ConfirmationPhrase.ARCHIVE_USER;
 
 export function ArchiveUserModal({
   isOpen,

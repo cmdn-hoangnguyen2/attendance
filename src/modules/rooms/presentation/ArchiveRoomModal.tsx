@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import type { Room } from "@/types/domain";
+import { ConfirmationPhrase, type Room } from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Archive01Icon,
@@ -18,7 +18,7 @@ export interface ArchiveRoomModalProps {
   onConfirmArchive: (roomId: string) => void;
 }
 
-const REQUIRED_CONFIRMATION_PHRASE = "Archive this room";
+const REQUIRED_CONFIRMATION_PHRASE = ConfirmationPhrase.ARCHIVE_ROOM;
 
 export function ArchiveRoomModal({
   isOpen,

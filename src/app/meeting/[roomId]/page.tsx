@@ -4,17 +4,25 @@ import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuthMock } from "@/context/AuthMockContext";
-import type {
-  AttendanceRecord,
+import {
   AttendanceStatus,
-  FundCandidate,
-  FundContribution,
+  ConfirmationPhrase,
   FundContributionReason,
-  JoinRequest,
-  MeetingSession,
-  Room,
-  RoomMembership,
-  User,
+  FundContributionStatus,
+  GlobalRole,
+  JoinRequestStatus,
+  MeetingStatus,
+  MembershipStatus,
+  RoomDetailTab,
+  RoomStatus,
+  type AttendanceRecord,
+  type FundCandidate,
+  type FundContribution,
+  type JoinRequest,
+  type MeetingSession,
+  type Room,
+  type RoomMembership,
+  type User,
 } from "@/types/domain";
 
 import {
@@ -84,10 +92,10 @@ export default function MeetingDetailPage() {
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
 
   // Tab điều hướng hiện tại
-  const [activeTab, setActiveTab] = useState<MeetingTab>("members");
+  const [activeTab, setActiveTab] = useState<RoomDetailTab>(RoomDetailTab.MEMBERS);
 
   // Trạng thái yêu cầu tham gia của currentUser nếu đang ở ngoài phòng
-  const [requestJoinStatus, setRequestJoinStatus] = useState<"none" | "pending" | "approved">("none");
+  const [requestJoinStatus, setRequestJoinStatus] = useState<JoinRequestStatus | "none">("none");
 
   // Refresh trigger
   const [refreshKey, setRefreshKey] = useState(0);
@@ -153,10 +161,10 @@ export default function MeetingDetailPage() {
 
         if (currentUser) {
           const userReq = fetchedRequests.find(
-            (r) => r.requesterId === currentUser.id && r.status === "pending"
+            (r) => r.requesterId === currentUser.id && r.status === JoinRequestStatus.PENDING
           );
           if (userReq) {
-            setRequestJoinStatus("pending");
+            setRequestJoinStatus(JoinRequestStatus.PENDING);
           }
         }
       } catch (err) {
@@ -184,19 +192,19 @@ export default function MeetingDetailPage() {
   // Danh sách thành viên kích hoạt (User[])
   const activeMembers = useMemo(() => {
     return memberships
-      .filter((m) => m.status === "active")
+      .filter((m) => m.status === MembershipStatus.ACTIVE)
       .map((m) => usersMap.get(m.userId))
       .filter((u): u is User => Boolean(u));
   }, [memberships, usersMap]);
 
   // Kiểm tra quyền hạn
   const isOwner = Boolean(currentUser && room && room.ownerId === currentUser.id);
-  const isAdmin = currentUser?.role === "admin";
+  const isAdmin = currentUser?.role === GlobalRole.ADMIN;
   const isOwnerOrAdmin = isOwner || isAdmin;
   const isMember = Boolean(
     currentUser &&
       memberships.some(
-        (m) => m.userId === currentUser.id && m.status === "active",
+        (m) => m.userId === currentUser.id && m.status === MembershipStatus.ACTIVE,
       ),
   );
   const hasAccess = isOwnerOrAdmin || isMember;
@@ -206,13 +214,13 @@ export default function MeetingDetailPage() {
     if (!currentUser || isOwnerOrAdmin) return false;
     // Nếu vẫn còn bản ghi membership active thì không bị xóa
     const hasActive = memberships.some(
-      (m) => m.userId === currentUser.id && m.status === "active"
+      (m) => m.userId === currentUser.id && m.status === MembershipStatus.ACTIVE
     );
     if (hasActive) return false;
 
     // Kiểm tra xem có bản ghi bị removed không
     return memberships.some(
-      (m) => m.userId === currentUser.id && m.status === "removed"
+      (m) => m.userId === currentUser.id && m.status === MembershipStatus.REMOVED
     );
   }, [currentUser, isOwnerOrAdmin, memberships]);
 
@@ -220,7 +228,7 @@ export default function MeetingDetailPage() {
   const hasOutstandingDebtMap = useMemo(() => {
     const debtMap: Record<string, boolean> = {};
     contributions.forEach((c) => {
-      if (c.status === "outstanding") {
+      if (c.status === FundContributionStatus.OUTSTANDING) {
         debtMap[c.contributorId] = true;
       }
     });
@@ -244,7 +252,7 @@ export default function MeetingDetailPage() {
       const reviewerId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
       await joinRequestRepository.reject(requestId, reviewerId);
       setJoinRequests((prev) =>
-        prev.map((r) => (r.id === requestId ? { ...r, status: "rejected" as const } : r)),
+        prev.map((r) => (r.id === requestId ? { ...r, status: JoinRequestStatus.REJECTED } : r)),
       );
     } catch (err) {
       console.error("Failed to reject request:", err);
@@ -259,7 +267,7 @@ export default function MeetingDetailPage() {
       setMemberships((prev) =>
         prev.map((m) =>
           m.userId === userId
-            ? { ...m, status: "removed" as const, leftAt: new Date().toISOString() }
+            ? { ...m, status: MembershipStatus.REMOVED, leftAt: new Date().toISOString() }
             : m,
         ),
       );
@@ -275,7 +283,7 @@ export default function MeetingDetailPage() {
       let session = meetingSession;
       if (!session) {
         const sessions = await meetingSessionRepository.findByRoomId(roomId);
-        const activeOrScheduled = sessions.find((s) => s.status !== "closed");
+        const activeOrScheduled = sessions.find((s) => s.status !== MeetingStatus.CLOSED);
         if (activeOrScheduled) {
           session = activeOrScheduled;
           setMeetingSession(activeOrScheduled);
@@ -318,7 +326,7 @@ export default function MeetingDetailPage() {
     let session = meetingSession;
     if (!session) {
       const sessions = await meetingSessionRepository.findByRoomId(roomId);
-      const activeOrScheduled = sessions.find((s) => s.status !== "closed");
+      const activeOrScheduled = sessions.find((s) => s.status !== MeetingStatus.CLOSED);
       if (activeOrScheduled) {
         session = activeOrScheduled;
         setMeetingSession(activeOrScheduled);
@@ -368,7 +376,7 @@ export default function MeetingDetailPage() {
         meetingSessionId: candidate.meetingSessionId,
         contributorId: candidate.userId,
         amount: candidate.suggestedAmount || 50000,
-        reason: candidate.attendanceStatus === "absent" ? "Bận nhưng chưa xin phép" : "Đi trễ",
+        reason: candidate.attendanceStatus === AttendanceStatus.ABSENT ? FundContributionReason.BUSY_WITHOUT_PERMISSION : FundContributionReason.LATE,
         reasonDetails: "Ghi nhận từ ứng viên vắng mặt buổi họp",
         createdBy: actorId,
       });
@@ -427,7 +435,7 @@ export default function MeetingDetailPage() {
       setContributions((prev) =>
         prev.map((c) =>
           c.id === contributionId
-            ? { ...c, status: "paid" as const, updatedAt: new Date().toISOString() }
+            ? { ...c, status: FundContributionStatus.PAID, updatedAt: new Date().toISOString() }
             : c,
         ),
       );
@@ -444,7 +452,7 @@ export default function MeetingDetailPage() {
       setContributions((prev) =>
         prev.map((c) =>
           c.id === contributionId
-            ? { ...c, status: "outstanding" as const, updatedAt: new Date().toISOString() }
+            ? { ...c, status: FundContributionStatus.OUTSTANDING, updatedAt: new Date().toISOString() }
             : c,
         ),
       );
@@ -454,11 +462,12 @@ export default function MeetingDetailPage() {
   };
 
   // Handler: Lưu trữ phòng họp
-  const handleArchiveRoom = async (phrase = "Archive this room") => {
-    if (!room) return;
+  const handleArchiveRoom = async (targetRoomId?: string) => {
+    const idToArchive = targetRoomId || room?.id;
+    if (!idToArchive) return;
     try {
       const actorId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
-      const archived = await roomRepository.archive(room.id, actorId, phrase);
+      const archived = await roomRepository.archive(idToArchive, actorId, ConfirmationPhrase.ARCHIVE_ROOM);
       setRoom(archived);
       setIsArchiveModalOpen(false);
     } catch (err) {
@@ -484,7 +493,7 @@ export default function MeetingDetailPage() {
     if (!currentUser || !room) return;
     try {
       await joinRequestRepository.create(room.id, currentUser.id);
-      setRequestJoinStatus("pending");
+      setRequestJoinStatus(JoinRequestStatus.PENDING);
       setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("Failed to request join room:", err);
@@ -540,7 +549,7 @@ export default function MeetingDetailPage() {
   }
 
   // Trường hợp 2A-0: Phòng đã lưu trữ (Archived) - Chỉ Owner/Admin được vào xem Quỹ, thành viên thường bị chặn
-  if (room.status === "archived" && !isOwnerOrAdmin) {
+  if (room.status === RoomStatus.ARCHIVED && !isOwnerOrAdmin) {
     return (
       <main className="mx-auto max-w-xl px-6 py-16 text-center">
         <div className="rounded-3xl border border-neutral-border bg-white p-8 shadow-md">
@@ -615,7 +624,7 @@ export default function MeetingDetailPage() {
               <span>Trang chủ</span>
             </Link>
 
-            {requestJoinStatus === "pending" ? (
+            {requestJoinStatus === JoinRequestStatus.PENDING ? (
               <div className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-amber-100 px-6 py-3 text-sm font-semibold text-amber-800">
                 <HugeiconsIcon icon={Clock01Icon} size={18} />
                 <span>Đang chờ chủ phòng duyệt</span>
@@ -643,7 +652,7 @@ export default function MeetingDetailPage() {
       <MeetingHeader
         room={room}
         owner={owner}
-        activeTab={room.status === "archived" ? "funds" : activeTab}
+        activeTab={room.status === RoomStatus.ARCHIVED ? RoomDetailTab.FUNDS : activeTab}
         onTabChange={setActiveTab}
         membersCount={activeMembers.length}
         fundsCount={contributions.length}
@@ -657,7 +666,7 @@ export default function MeetingDetailPage() {
       />
 
       {/* Tab 1: Thành viên & Duyệt tham gia (Chỉ khả dụng khi phòng chưa archive) */}
-      {room.status !== "archived" && activeTab === "members" && (
+      {room.status !== RoomStatus.ARCHIVED && activeTab === RoomDetailTab.MEMBERS && (
         <MembersTab
           room={room}
           members={activeMembers}
@@ -672,7 +681,7 @@ export default function MeetingDetailPage() {
       )}
 
       {/* Tab 2: Điểm danh & Snapshot ứng viên quỹ (Chỉ khả dụng khi phòng chưa archive) */}
-      {room.status !== "archived" && activeTab === "attendance" && (
+      {room.status !== RoomStatus.ARCHIVED && activeTab === RoomDetailTab.ATTENDANCE && (
         <AttendanceTab
           meetingSession={meetingSession}
           members={activeMembers}
@@ -687,7 +696,7 @@ export default function MeetingDetailPage() {
       )}
 
       {/* Tab 3: Quỹ phòng & Thanh toán (Luôn khả dụng hoặc là tab duy nhất khi archive) */}
-      {(room.status === "archived" || activeTab === "funds") && (
+      {(room.status === RoomStatus.ARCHIVED || activeTab === RoomDetailTab.FUNDS) && (
         <RoomFundsTab
           room={room}
           owner={owner}

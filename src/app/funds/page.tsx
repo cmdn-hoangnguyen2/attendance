@@ -25,8 +25,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { useUserRealtime } from "@/lib/realtime/useUserRealtime";
 import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
 import { EmptyState } from "@/components/ui/EmptyState";
-
-type FundStatusFilter = "all" | "outstanding" | "paid";
+import { FundFilterTab, FundContributionStatus, RoomStatus } from "@/types/domain";
 
 export default function PersonalFundsPage() {
   const router = useRouter();
@@ -40,7 +39,7 @@ export default function PersonalFundsPage() {
   }, [isAuthLoading, isAuthenticated, router]);
 
   // Filter tab: Tất cả vs Cần thanh toán vs Đã hoàn thành
-  const [statusFilter, setStatusFilter] = useState<FundStatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<FundFilterTab>(FundFilterTab.ALL);
   const [isLoading, setIsLoading] = useState(true);
 
   const [contributions, setContributions] = useState<FundContribution[]>([]);
@@ -122,10 +121,10 @@ export default function PersonalFundsPage() {
     let totalPaidAmount = 0;
 
     contributions.forEach((c) => {
-      if (c.status === "outstanding") {
+      if (c.status === FundContributionStatus.OUTSTANDING) {
         outstandingCount += 1;
         totalOutstandingAmount += c.amount;
-      } else if (c.status === "paid") {
+      } else if (c.status === FundContributionStatus.PAID) {
         paidCount += 1;
         totalPaidAmount += c.amount;
       }
@@ -141,11 +140,11 @@ export default function PersonalFundsPage() {
 
   // Lọc danh sách theo tab
   const filteredContributions = useMemo(() => {
-    if (statusFilter === "outstanding") {
-      return contributions.filter((c) => c.status === "outstanding");
+    if (statusFilter === FundFilterTab.OUTSTANDING) {
+      return contributions.filter((c) => c.status === FundContributionStatus.OUTSTANDING);
     }
-    if (statusFilter === "paid") {
-      return contributions.filter((c) => c.status === "paid");
+    if (statusFilter === FundFilterTab.PAID) {
+      return contributions.filter((c) => c.status === FundContributionStatus.PAID);
     }
     return contributions;
   }, [contributions, statusFilter]);
@@ -206,10 +205,10 @@ export default function PersonalFundsPage() {
     );
   }
 
-  const tabItems: PillTabItem<FundStatusFilter>[] = [
-    { key: "all", label: "Tất cả" },
-    { key: "outstanding", label: "Cần thanh toán" },
-    { key: "paid", label: "Đã thanh toán" },
+  const tabItems: PillTabItem<FundFilterTab>[] = [
+    { key: FundFilterTab.ALL, label: "Tất cả" },
+    { key: FundFilterTab.OUTSTANDING, label: "Cần thanh toán" },
+    { key: FundFilterTab.PAID, label: "Đã thanh toán" },
   ];
 
   return (
@@ -310,8 +309,8 @@ export default function PersonalFundsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredContributions.map((contribution) => {
               const room = roomsMap.get(contribution.roomId);
-              const isOutstanding = contribution.status === "outstanding";
-              const isRoomArchived = room?.status === "archived";
+              const isOutstanding = contribution.status === FundContributionStatus.OUTSTANDING;
+              const isRoomArchived = room?.status === RoomStatus.ARCHIVED;
 
               return (
                 <article
@@ -402,7 +401,7 @@ export default function PersonalFundsPage() {
             icon={Coins01Icon}
             title="Không có khoản nghĩa vụ nào"
             description={
-              statusFilter === "outstanding"
+              statusFilter === FundFilterTab.OUTSTANDING
                 ? "Tuyệt vời! Bạn không còn khoản nợ quỹ nào cần thanh toán."
                 : "Hiện chưa có khoản đóng góp quỹ nào trong danh mục đã chọn."
             }
@@ -419,7 +418,7 @@ export default function PersonalFundsPage() {
             amount={selectedContribution.amount}
             reason={selectedContribution.reason}
             paymentImageUrl={activePaymentImage}
-            isRoomArchived={activeRoom?.status === "archived"}
+            isRoomArchived={activeRoom?.status === RoomStatus.ARCHIVED}
           />
         )}
       </PageContainer>

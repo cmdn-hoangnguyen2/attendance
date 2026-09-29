@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import type { FundContribution, FundContributionReason, Room, User } from "@/types/domain";
+import {
+  FundContributionStatus,
+  RoomStatus,
+  type FundContribution,
+  type FundContributionReason,
+  type Room,
+  type User,
+} from "@/types/domain";
 import { formatVND } from "@/lib/utils";
 import { CreateFundContributionModal } from "@/modules/funds/presentation/CreateFundContributionModal";
 import { PaymentInfoModal } from "@/modules/funds/presentation/PaymentInfoModal";
@@ -46,15 +53,15 @@ export function RoomFundsTab({
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
-  const isArchived = room.status === "archived";
+  const isArchived = room.status === RoomStatus.ARCHIVED;
 
   // Tính tổng số tiền quỹ
   const totalOutstanding = contributions
-    .filter((c) => c.status === "outstanding")
+    .filter((c) => c.status === FundContributionStatus.OUTSTANDING)
     .reduce((sum, c) => sum + c.amount, 0);
 
   const totalPaid = contributions
-    .filter((c) => c.status === "paid")
+    .filter((c) => c.status === FundContributionStatus.PAID)
     .reduce((sum, c) => sum + c.amount, 0);
 
   return (
@@ -83,7 +90,7 @@ export function RoomFundsTab({
             {formatVND(totalOutstanding)}
           </div>
           <span className="text-xs text-amber-700 mt-1 block">
-            {contributions.filter((c) => c.status === "outstanding").length} khoản cần thanh toán
+            {contributions.filter((c) => c.status === FundContributionStatus.OUTSTANDING).length} khoản cần thanh toán
           </span>
         </div>
 
@@ -96,7 +103,7 @@ export function RoomFundsTab({
             {formatVND(totalPaid)}
           </div>
           <span className="text-xs text-neutral-muted mt-1 block">
-            {contributions.filter((c) => c.status === "paid").length} khoản đã xác nhận
+            {contributions.filter((c) => c.status === FundContributionStatus.PAID).length} khoản đã xác nhận
           </span>
         </div>
 
@@ -168,7 +175,7 @@ export function RoomFundsTab({
               <tbody className="divide-y divide-neutral-100">
                 {contributions.map((item) => {
                   const contributor = usersMap.get(item.contributorId);
-                  const isPaid = item.status === "paid";
+                  const isPaid = item.status === FundContributionStatus.PAID;
 
                   return (
                     <tr key={item.id} className="hover:bg-neutral-50/50">
