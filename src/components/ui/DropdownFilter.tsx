@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowDown01Icon, CheckmarkBadge01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+
+import { cn } from "@/lib/utils";
 
 export interface DropdownFilterItem<T extends string> {
   key: T;
@@ -16,72 +18,100 @@ export interface DropdownFilterProps<T extends string> {
   label?: string;
 }
 
-export function DropdownFilter<T extends string>({
-  items,
-  activeKey,
-  onChange,
-  label,
-}: DropdownFilterProps<T>) {
+export function DropdownFilter<T extends string>({ items, activeKey, onChange, label }: DropdownFilterProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const activeItem = items.find((item) => item.key === activeKey);
+  const activeLabel = activeItem?.label ?? "Chọn...";
+  const labelContent = label ? (
+    <span className="DropdownFilter__prefix font-normal text-text-tertiary">{label}:</span>
+  ) : null;
 
-  // Handle click outside to close
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
+      const clickedOutside =
+        dropdownRef.current && !dropdownRef.current.contains(event.target as Node);
+      if (clickedOutside) setIsOpen(false);
     }
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const activeItem = items.find((item) => item.key === activeKey);
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsOpen(false);
+    }
+
+    if (isOpen) window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
+  const itemElements = items.map((item) => {
+    const isActive = activeKey === item.key;
+    const activeIcon = isActive ? (
+      <HugeiconsIcon className="DropdownFilter__selected-icon shrink-0 text-primary" icon={CheckmarkBadge01Icon} size={16} aria-hidden />
+    ) : null;
+    const handleItemSelect = () => {
+      onChange(item.key);
+      setIsOpen(false);
+    };
+
+    return (
+      <button
+        className={cn(
+          "DropdownFilter__option",
+          isActive && "DropdownFilter__option--active",
+          "flex min-h-12 w-full items-center justify-between gap-4 rounded-md px-4 py-2 text-left text-sm font-medium transition-colors",
+          isActive
+            ? "bg-primary-soft text-primary-active"
+            : "text-text-primary hover:bg-surface-subtle",
+        )}
+        key={item.key}
+        type="button"
+        onClick={handleItemSelect}
+        role="option"
+        aria-selected={isActive}
+      >
+        <span className="DropdownFilter__option-label">{item.label}</span>
+        {activeIcon}
+      </button>
+    );
+  });
+
+  const menuContent = isOpen ? (
+    <div className="DropdownFilter__menu absolute right-0 z-50 mt-2 w-full min-w-[200px] rounded-lg border border-border bg-surface p-2 shadow-lg" role="listbox">
+      {itemElements}
+    </div>
+  ) : null;
 
   return (
-    <div className="relative inline-block text-left" ref={dropdownRef}>
+    <div className="DropdownFilter relative inline-block text-left" ref={dropdownRef}>
       <button
+        className={cn(
+          "DropdownFilter__trigger",
+          isOpen && "DropdownFilter__trigger--open",
+          "inline-flex min-h-12 w-full min-w-40 items-center justify-between gap-2 rounded-md border border-border bg-surface px-4 py-2 text-sm font-semibold text-text-primary transition-colors",
+          "hover:border-border-strong hover:bg-surface-subtle focus-visible:outline-none md:min-h-10",
+          isOpen && "border-primary",
+        )}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center justify-between gap-2 w-full min-w-[160px] rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-800 shadow-xs transition-all hover:bg-neutral-50 hover:border-neutral-300 focus-visible:ring-2 focus-visible:ring-neutral-200 focus:outline-none"
+        onClick={() => setIsOpen((currentOpen) => !currentOpen)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
       >
-        <span>
-          {label && <span className="text-neutral-500 font-normal mr-1">{label}:</span>}
-          {activeItem?.label || "Chọn..."}
+        <span className="DropdownFilter__value flex min-w-0 items-center gap-2">
+          {labelContent}
+          <span className="DropdownFilter__active-label truncate">{activeLabel}</span>
         </span>
         <HugeiconsIcon
+          className={cn("DropdownFilter__chevron", "shrink-0 text-text-tertiary transition-transform duration-150", isOpen && "rotate-180 text-primary")}
           icon={ArrowDown01Icon}
           size={16}
-          className={`text-neutral-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          aria-hidden
         />
       </button>
-
-      {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-full min-w-[200px] origin-top-right rounded-2xl bg-white shadow-lg ring-1 ring-black/5 focus:outline-none overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-          <div className="py-2">
-            {items.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => {
-                  onChange(item.key);
-                  setIsOpen(false);
-                }}
-                className={`flex w-full items-center justify-between px-5 py-2.5 text-sm font-medium transition-colors ${
-                  activeKey === item.key
-                    ? "bg-primary/10 text-primary-dark"
-                    : "text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"
-                }`}
-              >
-                <span>{item.label}</span>
-                {activeKey === item.key && (
-                  <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} className="text-primary-dark" />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {menuContent}
     </div>
   );
 }

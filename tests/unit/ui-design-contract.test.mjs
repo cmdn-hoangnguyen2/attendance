@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, test } from "node:test";
 
@@ -7,6 +7,9 @@ const projectRoot = process.cwd();
 const globalsCss = readFileSync(path.join(projectRoot, "src/app/globals.css"), "utf8");
 const rootLayout = readFileSync(path.join(projectRoot, "src/app/layout.tsx"), "utf8");
 const domainTypes = readFileSync(path.join(projectRoot, "src/types/domain.ts"), "utf8");
+
+const readProjectFile = (relativePath) =>
+  readFileSync(path.join(projectRoot, relativePath), "utf8");
 
 describe("Cobalt Commons design contract", () => {
   test("keeps every approved color token and value in the Tailwind theme", () => {
@@ -65,5 +68,33 @@ describe("Cobalt Commons design contract", () => {
     for (const phrase of protectedPhrases) {
       assert.match(domainTypes, new RegExp(phrase));
     }
+  });
+
+  test("exports the approved shared primitive APIs", () => {
+    const primitiveFiles = [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/PageHeader.tsx",
+      "src/components/ui/StatusBadge.tsx",
+      "src/components/ui/ResponsiveDialog.tsx",
+    ];
+
+    for (const relativePath of primitiveFiles) {
+      assert.ok(existsSync(path.join(projectRoot, relativePath)), `${relativePath} must exist`);
+    }
+
+    const buttonSource = readProjectFile(primitiveFiles[0]);
+    const pageHeaderSource = readProjectFile(primitiveFiles[1]);
+    const statusBadgeSource = readProjectFile(primitiveFiles[2]);
+    const dialogSource = readProjectFile(primitiveFiles[3]);
+
+    assert.match(buttonSource, /variant\?:\s*"primary"\s*\|\s*"secondary"\s*\|\s*"ghost"\s*\|\s*"destructive"/);
+    assert.match(buttonSource, /size\?:\s*"compact"\s*\|\s*"default"\s*\|\s*"touch"/);
+    assert.match(buttonSource, /isLoading\?:\s*boolean/);
+    assert.match(buttonSource, /aria-busy/);
+    assert.match(pageHeaderSource, /export interface PageHeaderProps/);
+    assert.match(statusBadgeSource, /tone:\s*"info"\s*\|\s*"success"\s*\|\s*"warning"\s*\|\s*"danger"\s*\|\s*"neutral"/);
+    assert.match(dialogSource, /<dialog/);
+    assert.match(dialogSource, /showModal\(\)/);
+    assert.match(dialogSource, /preventClose/);
   });
 });
