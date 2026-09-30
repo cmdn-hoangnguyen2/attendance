@@ -1,9 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { RoomType, RoomVisibility } from "@/types/domain";
+import { useState, type FormEvent } from "react";
+import {
+  Camera02Icon,
+  Cancel01Icon,
+  Comment01Icon,
+  Globe02Icon,
+  LockIcon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, Globe02Icon, LockIcon, Camera02Icon, Comment01Icon } from "@hugeicons/core-free-icons";
+
+import { Button } from "@/components/ui/Button";
+import { ResponsiveDialog } from "@/components/ui/ResponsiveDialog";
+import { cn } from "@/lib/utils";
+import { RoomType, RoomVisibility } from "@/types/domain";
 
 export interface CreateRoomModalProps {
   isOpen: boolean;
@@ -21,25 +31,10 @@ export function CreateRoomModal({
   const [visibility, setVisibility] = useState<RoomVisibility>(RoomVisibility.PUBLIC);
   const [error, setError] = useState("");
 
-  // Handle Escape key to close modal
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
     if (!name.trim()) {
-      setError("Vui lòng nhập tên phòng họp.");
+      setError("Vui lòng nhập tên phòng.");
       return;
     }
     onCreateRoom({
@@ -54,221 +49,175 @@ export function CreateRoomModal({
     onClose();
   };
 
+  const footer = (
+    <div className="CreateRoomModal__actions flex flex-col-reverse gap-4 sm:flex-row sm:justify-end">
+      <Button className="w-full sm:w-auto" variant="secondary" size="touch" onClick={onClose}>
+        Hủy
+      </Button>
+      <Button className="w-full sm:w-auto" size="touch" type="submit" form="create-room-form">
+        Tạo phòng
+      </Button>
+    </div>
+  );
+
+  const optionClassName =
+    "CreateRoomModal__option flex min-h-28 flex-col gap-2 rounded-lg border p-4 text-left transition-colors focus-visible:outline-none";
+
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="create-room-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-in fade-in"
-      onClick={onClose}
+    <ResponsiveDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      labelledBy="create-room-title"
+      footer={footer}
+      size="md"
     >
-      {/* Modal Box: Padding 32px (p-8, space-5), Bo góc 16px (rounded-2xl) */}
-      <div
-        className="w-full max-w-lg rounded-2xl border border-neutral-border bg-white p-8 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header Modal */}
-        <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
-          <div className="flex flex-col gap-1">
-            <h2
-              id="create-room-title"
-              className="text-xl font-bold text-neutral-dark"
-            >
-              Tạo phòng họp mới
-            </h2>
-            <p className="text-xs text-neutral-muted">
-              Khởi tạo không gian điểm danh và quản lý quỹ cho nhóm của bạn
+      <header className="CreateRoomModal__header flex items-start justify-between gap-4 border-b border-border pb-6">
+        <div className="CreateRoomModal__heading min-w-0">
+          <h2 className="CreateRoomModal__title text-xl font-bold leading-8 text-text-primary md:text-2xl" id="create-room-title">
+            Tạo phòng mới
+          </h2>
+          <p className="CreateRoomModal__description mt-2 max-w-xl text-sm leading-6 text-text-secondary">
+            Tạo không gian điểm danh, họp và quản lý quỹ cho nhóm của bạn.
+          </p>
+        </div>
+        <button
+          className="CreateRoomModal__close flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-text-secondary hover:bg-surface-subtle hover:text-text-primary focus-visible:outline-none"
+          type="button"
+          onClick={onClose}
+          aria-label="Đóng cửa sổ tạo phòng"
+        >
+          <HugeiconsIcon icon={Cancel01Icon} size={20} aria-hidden />
+        </button>
+      </header>
+
+      <form className="CreateRoomModal__form mt-6 flex flex-col gap-6" id="create-room-form" onSubmit={handleSubmit}>
+        <div className="CreateRoomModal__field flex flex-col gap-2">
+          <label className="CreateRoomModal__label text-sm font-semibold text-text-primary" htmlFor="room-name">
+            Tên phòng <span className="text-danger">*</span>
+          </label>
+          <input
+            className={cn(
+              "CreateRoomModal__input h-12 w-full rounded-md border bg-surface px-4 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus-visible:ring-2",
+              error
+                ? "border-danger focus-visible:ring-danger/20"
+                : "border-border focus:border-primary focus-visible:ring-primary/20",
+            )}
+            id="room-name"
+            type="text"
+            value={name}
+            placeholder="Ví dụ: Daily Standup Frontend"
+            autoComplete="off"
+            autoFocus
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? "room-name-error" : "room-name-help"}
+            onChange={(event) => {
+              setName(event.target.value);
+              if (error) setError("");
+            }}
+          />
+          {error ? (
+            <p className="CreateRoomModal__error text-xs font-semibold text-danger" id="room-name-error" role="alert">
+              {error}
             </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng cửa sổ"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-muted hover:bg-neutral-100 hover:text-neutral-dark"
-          >
-            <HugeiconsIcon icon={Cancel01Icon} size={20} />
-          </button>
+          ) : (
+            <p className="CreateRoomModal__help text-xs leading-5 text-text-tertiary" id="room-name-help">
+              Dùng tên ngắn, dễ nhận biết với mọi thành viên.
+            </p>
+          )}
         </div>
 
-        {/* Form Fields: Spacing giữa các field là 24px (space-y-6, space-4) */}
-        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-          {/* Field 1: Tên phòng */}
-          {/* Spacing Label -> Input: 8px (gap-2, space-2) => Proximity Ratio = 24/8 = 3.0 */}
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="room-name"
-              className="text-sm font-semibold text-neutral-dark"
-            >
-              Tên phòng họp <span className="text-rose-500">*</span>
-            </label>
-            <input
-              id="room-name"
-              type="text"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (error) setError("");
-              }}
-              placeholder="VD: Daily Standup Frontend Team"
-              className={`w-full rounded-lg border px-4 py-2 text-sm text-neutral-dark placeholder:text-neutral-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                error
-                  ? "border-rose-400 bg-rose-50/30"
-                  : "border-neutral-border bg-neutral-50/50 focus:bg-white"
-              }`}
-            />
-            {error ? (
-              <span className="text-xs font-medium text-rose-500">{error}</span>
-            ) : null}
-          </div>
-
-          {/* Field 1.5: Loại phòng (Type) */}
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-semibold text-neutral-dark">
-              Loại không gian
-            </span>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setType(RoomType.MEETING)}
-                className={`flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all ${
-                  type === RoomType.MEETING
-                    ? "border-primary bg-neutral-surface/50 shadow-xs"
-                    : "border-neutral-200 bg-white hover:bg-neutral-50"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <HugeiconsIcon
-                    icon={Camera02Icon}
-                    size={18}
-                    className={
-                      type === RoomType.MEETING
-                        ? "text-primary-dark"
-                        : "text-neutral-muted"
-                    }
-                  />
-                  <span className="text-sm font-bold text-neutral-dark">
-                    Phòng họp (Meeting)
-                  </span>
-                </div>
-                <p className="text-xs text-neutral-muted">
-                  Dành cho các buổi họp, điểm danh và quản lý quỹ phạt.
-                </p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setType(RoomType.CHANNEL)}
-                className={`flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all ${
-                  type === RoomType.CHANNEL
-                    ? "border-primary bg-neutral-surface/50 shadow-xs"
-                    : "border-neutral-200 bg-white hover:bg-neutral-50"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <HugeiconsIcon
-                    icon={Comment01Icon}
-                    size={18}
-                    className={
-                      type === RoomType.CHANNEL
-                        ? "text-primary-dark"
-                        : "text-neutral-muted"
-                    }
-                  />
-                  <span className="text-sm font-bold text-neutral-dark">
-                    Kênh chung (Channel)
-                  </span>
-                </div>
-                <p className="text-xs text-neutral-muted">
-                  Không gian thảo luận, tin tức và quỹ chung.
-                </p>
-              </button>
-            </div>
-          </div>
-
-          {/* Field 2: Quyền riêng tư (Visibility) */}
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-semibold text-neutral-dark">
-              Quyền truy cập phòng
-            </span>
-            <div className="grid grid-cols-2 gap-3">
-              {/* Option 1: Công khai */}
-              <button
-                type="button"
-                onClick={() => setVisibility(RoomVisibility.PUBLIC)}
-                className={`flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all ${
-                  visibility === RoomVisibility.PUBLIC
-                    ? "border-primary bg-neutral-surface/50 shadow-xs"
-                    : "border-neutral-200 bg-white hover:bg-neutral-50"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <HugeiconsIcon
-                    icon={Globe02Icon}
-                    size={18}
-                    className={
-                      visibility === RoomVisibility.PUBLIC
-                        ? "text-primary-dark"
-                        : "text-neutral-muted"
-                    }
-                  />
-                  <span className="text-sm font-bold text-neutral-dark">
-                    Công khai
-                  </span>
-                </div>
-                <p className="text-xs text-neutral-muted">
-                  Mọi thành viên đều có thể tham gia ngay mà không cần duyệt.
-                </p>
-              </button>
-
-              {/* Option 2: Riêng tư */}
-              <button
-                type="button"
-                onClick={() => setVisibility(RoomVisibility.PRIVATE)}
-                className={`flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all ${
-                  visibility === RoomVisibility.PRIVATE
-                    ? "border-primary bg-neutral-surface/50 shadow-xs"
-                    : "border-neutral-200 bg-white hover:bg-neutral-50"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <HugeiconsIcon
-                    icon={LockIcon}
-                    size={18}
-                    className={
-                      visibility === RoomVisibility.PRIVATE
-                        ? "text-primary-dark"
-                        : "text-neutral-muted"
-                    }
-                  />
-                  <span className="text-sm font-bold text-neutral-dark">
-                    Riêng tư
-                  </span>
-                </div>
-                <p className="text-xs text-neutral-muted">
-                  Thành viên cần gửi yêu cầu tham gia và được duyệt.
-                </p>
-              </button>
-            </div>
-          </div>
-
-          {/* Action Buttons: Margin-top 32px (mt-8, space-5) */}
-          <div className="mt-8 flex items-center justify-end gap-3 border-t border-neutral-100 pt-4">
+        <fieldset className="CreateRoomModal__fieldset flex flex-col gap-4">
+          <legend className="CreateRoomModal__legend text-sm font-semibold text-text-primary">
+            Loại không gian
+          </legend>
+          <div className="CreateRoomModal__option-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
             <button
+              className={cn(
+                optionClassName,
+                type === RoomType.MEETING
+                  ? "border-primary bg-primary-soft text-primary-active"
+                  : "border-border bg-surface text-text-secondary hover:border-border-strong hover:bg-surface-subtle",
+              )}
               type="button"
-              onClick={onClose}
-              className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-muted hover:bg-neutral-50"
+              onClick={() => setType(RoomType.MEETING)}
+              aria-pressed={type === RoomType.MEETING}
             >
-              Hủy
+              <span className="CreateRoomModal__option-heading flex items-center gap-2 text-sm font-bold text-text-primary">
+                <HugeiconsIcon icon={Camera02Icon} size={20} aria-hidden />
+                Phòng họp
+              </span>
+              <span className="CreateRoomModal__option-description text-xs leading-5">
+                Dành cho họp, điểm danh và quỹ phạt.
+              </span>
             </button>
             <button
-              type="submit"
-              className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-neutral-dark shadow-xs transition-colors hover:bg-primary-hover hover:text-white"
+              className={cn(
+                optionClassName,
+                type === RoomType.CHANNEL
+                  ? "border-primary bg-primary-soft text-primary-active"
+                  : "border-border bg-surface text-text-secondary hover:border-border-strong hover:bg-surface-subtle",
+              )}
+              type="button"
+              onClick={() => setType(RoomType.CHANNEL)}
+              aria-pressed={type === RoomType.CHANNEL}
             >
-              Tạo phòng
+              <span className="CreateRoomModal__option-heading flex items-center gap-2 text-sm font-bold text-text-primary">
+                <HugeiconsIcon icon={Comment01Icon} size={20} aria-hidden />
+                Kênh chung
+              </span>
+              <span className="CreateRoomModal__option-description text-xs leading-5">
+                Dành cho thảo luận, tin tức và quỹ chung.
+              </span>
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+        </fieldset>
+
+        <fieldset className="CreateRoomModal__fieldset flex flex-col gap-4">
+          <legend className="CreateRoomModal__legend text-sm font-semibold text-text-primary">
+            Quyền truy cập
+          </legend>
+          <div className="CreateRoomModal__option-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <button
+              className={cn(
+                optionClassName,
+                visibility === RoomVisibility.PUBLIC
+                  ? "border-primary bg-primary-soft text-primary-active"
+                  : "border-border bg-surface text-text-secondary hover:border-border-strong hover:bg-surface-subtle",
+              )}
+              type="button"
+              onClick={() => setVisibility(RoomVisibility.PUBLIC)}
+              aria-pressed={visibility === RoomVisibility.PUBLIC}
+            >
+              <span className="CreateRoomModal__option-heading flex items-center gap-2 text-sm font-bold text-text-primary">
+                <HugeiconsIcon icon={Globe02Icon} size={20} aria-hidden />
+                Công khai
+              </span>
+              <span className="CreateRoomModal__option-description text-xs leading-5">
+                Thành viên có thể tham gia ngay.
+              </span>
+            </button>
+            <button
+              className={cn(
+                optionClassName,
+                visibility === RoomVisibility.PRIVATE
+                  ? "border-primary bg-primary-soft text-primary-active"
+                  : "border-border bg-surface text-text-secondary hover:border-border-strong hover:bg-surface-subtle",
+              )}
+              type="button"
+              onClick={() => setVisibility(RoomVisibility.PRIVATE)}
+              aria-pressed={visibility === RoomVisibility.PRIVATE}
+            >
+              <span className="CreateRoomModal__option-heading flex items-center gap-2 text-sm font-bold text-text-primary">
+                <HugeiconsIcon icon={LockIcon} size={20} aria-hidden />
+                Riêng tư
+              </span>
+              <span className="CreateRoomModal__option-description text-xs leading-5">
+                Chủ phòng cần phê duyệt yêu cầu.
+              </span>
+            </button>
+          </div>
+        </fieldset>
+      </form>
+    </ResponsiveDialog>
   );
 }

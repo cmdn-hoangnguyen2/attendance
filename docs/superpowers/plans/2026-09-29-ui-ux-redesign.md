@@ -15,7 +15,7 @@
 - Presentation-only scope. Do not modify domain policies, repositories, API handlers, Supabase, Auth0, realtime hooks, migrations, RLS, payloads, permissions, or business state transitions.
 - Preserve the exact phrases `Archive this user`, `Archive this room`, and `I agree to remove this user`.
 - Use Vietnamese-first UI copy except protected business confirmation phrases.
-- Use Cobalt Commons: canvas `#FFFDF8`, surface `#FFFFFF`, primary `#2F5BD3`, hover `#2446A8`, active `#1D3987`, primary soft `#E9EEFF`, community `#F59E42`, text `#172033`/`#596275`/`#667085`.
+- Use Cobalt Commons: canvas `#FFFFFF`, surface `#FFFFFF`, primary `#2F5BD3`, hover `#2446A8`, active `#1D3987`, primary soft `#E9EEFF`, community `#F59E42`, text `#172033`/`#596275`/`#667085`.
 - Use Plus Jakarta Sans through `next/font/google` with Vietnamese subset support and `display: "swap"`.
 - Use the existing 8-point grid. Standard control radii are `8px`, panels `16px`, large overlays `24px`.
 - Hugeicons remains the only application icon family.

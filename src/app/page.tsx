@@ -3,8 +3,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { PlusSignIcon, Search01Icon } from "@hugeicons/core-free-icons";
+import { Alert02Icon, PlusSignIcon, Search01Icon } from "@hugeicons/core-free-icons";
 
+import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { OnlineUsersSidebar } from "@/components/layout/OnlineUsersSidebar";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -42,6 +44,7 @@ export default function HomePage() {
   }, [isAuthLoading, isAuthenticated, router]);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadError, setHasLoadError] = useState(false);
   const [roomsList, setRoomsList] = useState<Room[]>([]);
   const [usersMap, setUsersMap] = useState<Map<string, User>>(new Map());
   const [joinedRoomIds, setJoinedRoomIds] = useState<Set<string>>(new Set());
@@ -72,6 +75,7 @@ export default function HomePage() {
       if (roomsList.length === 0) {
         setIsLoading(true);
       }
+      setHasLoadError(false);
       try {
         const [rooms, users] = await Promise.all([
           roomRepository.findCatalog(),
@@ -105,6 +109,7 @@ export default function HomePage() {
         }
       } catch (err) {
         console.error("Failed to load lobby rooms:", err);
+        if (isMounted) setHasLoadError(true);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -241,9 +246,9 @@ export default function HomePage() {
   }
 
   const actionButton = (
-    <button
-      className="HomePage__create-room-action flex items-center gap-2 rounded-xl border border-neutral-border bg-white px-4 py-2 text-sm font-semibold text-neutral-dark shadow-xs transition-colors hover:bg-neutral-50 hover:text-primary-dark"
-      type="button"
+    <Button
+      className="HomePage__create-room-action w-full sm:w-auto"
+      size="touch"
       onClick={() => {
         if (!isAuthenticated) {
           login();
@@ -252,9 +257,8 @@ export default function HomePage() {
         setIsCreateModalOpen(true);
       }}
     >
-      <HugeiconsIcon icon={PlusSignIcon} size={18} />
-      <span className="HomePage__create-room-label">Tạo phòng mới</span>
-    </button>
+      <span className="HomePage__create-room-label flex items-center gap-2"><HugeiconsIcon icon={PlusSignIcon} size={24} aria-hidden />Tạo phòng</span>
+    </Button>
   );
 
   const roomCards = filteredRooms.map((room) => {
@@ -282,16 +286,17 @@ export default function HomePage() {
   const trimmedSearchQuery = searchQuery.trim();
   const hasActiveRoomFilter = Boolean(trimmedSearchQuery) || activeTab !== RoomFilterTab.ALL;
   const emptyStateAction = hasActiveRoomFilter ? (
-    <button
-      className="HomePage__clear-filter-action rounded-full border border-neutral-300 bg-white px-5 py-2 text-xs font-semibold text-neutral-700 transition-colors hover:border-neutral-900 hover:bg-neutral-50"
-      type="button"
+    <Button
+      className="HomePage__clear-filter-action"
+      variant="secondary"
+      size="touch"
       onClick={() => {
         setSearchQuery("");
         setActiveTab(RoomFilterTab.ALL);
       }}
     >
-      Xóa bộ lọc tìm kiếm
-    </button>
+      Xóa bộ lọc
+    </Button>
   ) : null;
   const emptyStateDescription = trimmedSearchQuery
     ? `Không có kết quả nào khớp với từ khóa "${trimmedSearchQuery}". Vui lòng thử tìm kiếm với tên khác.`
@@ -301,6 +306,10 @@ export default function HomePage() {
   const renderRoomListContent = () => {
     if (isLoading) {
       return <RoomSkeletonGrid />;
+    }
+
+    if (hasLoadError && roomsList.length === 0) {
+      return <EmptyState icon={Alert02Icon} title="Chưa thể tải danh sách phòng" description="Vui lòng kiểm tra kết nối và tải lại trang." />;
     }
 
     if (filteredRooms.length === 0) {
@@ -316,7 +325,7 @@ export default function HomePage() {
 
     return (
       <section className="HomePage__room-results flex flex-col gap-6" aria-label="Danh sách kết quả phòng họp">
-        <div className="HomePage__room-grid grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="HomePage__room-grid grid grid-cols-1 gap-6 lg:grid-cols-2">
           {roomCards}
         </div>
         <div className="HomePage__pagination">
@@ -329,8 +338,14 @@ export default function HomePage() {
   const roomListContent = renderRoomListContent();
 
   return (
-    <PageLayout sidebar={<OnlineUsersSidebar />} actionButton={actionButton}>
-      <div className="HomePage flex flex-col gap-6">
+    <PageLayout contextRail={<OnlineUsersSidebar />}>
+      <div className="HomePage flex flex-col gap-8">
+        <PageHeader
+          id="home-page-title"
+          title="Không gian cộng đồng"
+          description="Tìm phòng phù hợp, tham gia cuộc họp và kết nối với các thành viên."
+          action={actionButton}
+        />
         {/* Filter and Search Bar */}
         <RoomListFilter
           searchQuery={searchQuery}

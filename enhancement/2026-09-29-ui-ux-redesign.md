@@ -74,6 +74,34 @@
 - Verification: navigation contract 3/3, full suite 69/69, TypeScript pass, scoped ESLint pass.
 - Visual limitation: the real Auth0 login route was smoke-tested with no horizontal overflow. Member/admin visual states require explicit mock-auth authorization and were not bypassed.
 
+### Task 4 — Home pilot wiring lock
+
+| Surface | Current wiring that must remain unchanged |
+| --- | --- |
+| `RoomCard` | Receives `room`, resolved `owner`, `currentUser`, derived `isOwner`/`isMember`, request status, `handleRequestJoin`, `handleCancelRequest`, and `layout="catalog"`. |
+| `RoomListFilter` | Controlled by `searchQuery`/`setSearchQuery` and `activeTab`/`setActiveTab`; receives the derived filtered room count. |
+| `CreateRoomModal` | Controlled by `isCreateModalOpen`; close sets it to `false`; submit calls `handleCreateRoom` with `{ name, type, visibility }`. |
+| `OnlineUsersSidebar` | Supplied as Home context content with no business props; it continues to own presence/user lookup and duplicate-session logout behavior. |
+| `handleCreateRoom` | Keeps owner fallback, `roomRepository.create`, prepend-to-list, and joined-room update exactly as-is. |
+| `handleRequestJoin` | Keeps unauthenticated login, public direct membership, private request creation, member-count increment, and request-status update exactly as-is. |
+| `handleCancelRequest` | Keeps joined/approved guard, pending-request lookup, repository cancel call, and local status reset exactly as-is. |
+
+Task 4 review gate: presentation may change, but the rows above must match the final diff before the pilot is committed.
+
+### Theme adjustment
+
+- BOSS requested a white canvas after reviewing the Home pilot.
+- `color-canvas` and the root background now use `#FFFFFF`; surface-subtle and semantic tokens remain unchanged so cards, borders, controls, and states keep contrast.
+
+### Task 4 verification
+
+- Mock auth was enabled only as a process environment variable after BOSS approved it; `.env.local` was not modified.
+- At 1440px, the Home pilot shows the persistent sidebar, 280px online-member rail, page header, filters, room catalog, and no horizontal overflow.
+- At 390px, the Home pilot uses one column, bottom navigation, a member drawer trigger, a bottom-sheet create-room dialog, focus on `room-name`, and no horizontal overflow.
+- Fixed a mobile notification popover overflow reproduced at 390px; its bounds now stay within the viewport.
+- Native drawer focus was verified: opening `Thêm` places focus on `Đóng menu`, and the dialog reports modal state.
+- Full regression: 69/69 tests pass; TypeScript passes with incremental output disabled; scoped ESLint has 0 errors and only the two pre-existing Home hook warnings.
+
 ## 6. Lợi ích
 
 - Tạo một visual language thống nhất và dễ maintain trước MVP.

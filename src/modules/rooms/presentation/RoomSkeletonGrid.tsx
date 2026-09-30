@@ -1,35 +1,31 @@
-import React from "react";
-
 const ROOM_SKELETON_ITEMS = [1, 2, 3, 4];
 
 export function RoomSkeletonGrid() {
   const skeletonCards = ROOM_SKELETON_ITEMS.map((item) => (
     <article
+      className="RoomSkeletonGrid__card flex min-h-64 flex-col gap-6 rounded-lg border border-border bg-surface p-6 motion-safe:animate-pulse"
       key={item}
-      className="RoomSkeletonGrid__card flex min-h-60 animate-pulse flex-col gap-6 rounded-2xl border border-neutral-border bg-white p-6 shadow-xs"
     >
-      <div className="RoomSkeletonGrid__badges flex items-center gap-2">
-        <span className="RoomSkeletonGrid__badge h-6 w-20 rounded-full bg-neutral-200" />
-        <span className="RoomSkeletonGrid__badge h-6 w-16 rounded-full bg-neutral-100" />
-      </div>
-
-      <div className="RoomSkeletonGrid__content flex flex-col gap-4">
-        <span className="RoomSkeletonGrid__title h-6 w-3/4 rounded-lg bg-neutral-200" />
-        <div className="RoomSkeletonGrid__metadata grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <span className="RoomSkeletonGrid__metadata-line h-4 w-1/2 rounded-md bg-neutral-100 sm:col-span-2" />
-          <span className="RoomSkeletonGrid__metadata-line h-4 w-24 rounded-md bg-neutral-100" />
-          <span className="RoomSkeletonGrid__metadata-line h-4 w-20 rounded-md bg-neutral-100" />
+      <div className="RoomSkeletonGrid__heading flex flex-col gap-4">
+        <span className="RoomSkeletonGrid__title h-6 w-3/4 rounded-md bg-neutral-soft" />
+        <div className="RoomSkeletonGrid__badges flex items-center gap-2">
+          <span className="RoomSkeletonGrid__badge h-8 w-24 rounded-full bg-primary-soft" />
+          <span className="RoomSkeletonGrid__badge h-8 w-20 rounded-full bg-neutral-soft" />
         </div>
       </div>
-
-      <span className="RoomSkeletonGrid__action mt-auto h-10 w-full rounded-xl bg-neutral-200" />
+      <div className="RoomSkeletonGrid__metadata flex flex-col gap-4">
+        <span className="RoomSkeletonGrid__metadata-line h-4 w-1/2 rounded bg-neutral-soft" />
+        <span className="RoomSkeletonGrid__metadata-line h-4 w-32 rounded bg-neutral-soft" />
+        <span className="RoomSkeletonGrid__metadata-line h-8 w-40 rounded-full bg-neutral-soft" />
+      </div>
+      <span className="RoomSkeletonGrid__action mt-auto h-12 w-full rounded-md bg-neutral-soft" />
     </article>
   ));
 
   return (
     <div
-      className="RoomSkeletonGrid grid grid-cols-1 gap-6 xl:grid-cols-2"
-      aria-label="Đang tải danh sách phòng..."
+      className="RoomSkeletonGrid grid grid-cols-1 gap-6 lg:grid-cols-2"
+      aria-label="Đang tải danh sách phòng"
       aria-live="polite"
     >
       {skeletonCards}

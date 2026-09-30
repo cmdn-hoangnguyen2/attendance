@@ -142,7 +142,7 @@ Forbidden visual defaults:
 
 | Token | Value | Purpose |
 | --- | --- | --- |
-| `color-canvas` | `#FFFDF8` | Page background |
+| `color-canvas` | `#FFFFFF` | Page background |
 | `color-surface` | `#FFFFFF` | Modal, dropdown, and elevated content |
 | `color-surface-subtle` | `#F5F7FB` | Grouping, table headers, and secondary regions |
 | `color-primary` | `#2F5BD3` | Primary action, active navigation, and selected state |
@@ -592,4 +592,3 @@ Every viewport checks overflow, navigation, primary action visibility, dialog/sh
 - Existing UI requirements: `docs/06-ui-mock-phase.md`
 - Architecture: `docs/02-architecture.md`
 - Auth and security: `docs/04-auth-security.md`
-

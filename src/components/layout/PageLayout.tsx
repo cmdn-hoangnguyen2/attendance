@@ -25,13 +25,13 @@ export function PageLayout({
   const mainClassName = cn(
     "PageLayout__main",
     "flex min-w-0 flex-col gap-8",
-    resolvedContextRail ? "2xl:col-span-9" : "2xl:col-span-12",
+    "w-full",
   );
   const legacyActionContent = actionButton ? (
     <div className="PageLayout__legacy-action flex justify-end">{actionButton}</div>
   ) : null;
   const contextContent = resolvedContextRail ? (
-    <aside className="PageLayout__context hidden 2xl:col-span-3 2xl:block">
+    <aside className="PageLayout__context min-w-0">
       <div className="PageLayout__context-sticky sticky top-20">{resolvedContextRail}</div>
     </aside>
   ) : null;
@@ -39,7 +39,7 @@ export function PageLayout({
   return (
     <div className={cn("PageLayout", "w-full bg-canvas", className)}>
       <div className="PageLayout__content mx-auto w-full max-w-[1600px] px-4 py-8 md:px-6 xl:px-8 2xl:px-12">
-        <div className="PageLayout__grid grid grid-cols-1 items-start gap-8 2xl:grid-cols-12">
+        <div className={cn("PageLayout__grid grid grid-cols-1 items-start gap-8", resolvedContextRail && "min-[1440px]:grid-cols-[minmax(0,1fr)_280px]")}>
           <main className={mainClassName}>
             {legacyActionContent}
             {children}

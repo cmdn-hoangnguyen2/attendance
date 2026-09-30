@@ -1,10 +1,9 @@
 "use client";
 
-import React from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Search01Icon } from "@hugeicons/core-free-icons";
-import { DropdownFilter, type DropdownFilterItem } from "@/components/ui/DropdownFilter";
+import { HugeiconsIcon } from "@hugeicons/react";
 
+import { DropdownFilter, type DropdownFilterItem } from "@/components/ui/DropdownFilter";
 import { RoomFilterTab } from "@/types/domain";
 
 export { RoomFilterTab };
@@ -31,39 +30,30 @@ export function RoomListFilter({
   filteredRoomsCount = 0,
 }: RoomListFilterProps) {
   return (
-    <section className="RoomListFilter flex flex-col gap-4" aria-labelledby="room-list-title">
-      <header className="RoomListFilter__header flex items-end justify-between gap-4">
-        <div className="RoomListFilter__heading flex min-w-0 flex-col gap-2">
-          <h1
-            className="RoomListFilter__title text-balance text-2xl font-extrabold tracking-tight text-neutral-dark"
-            id="room-list-title"
-          >
-            Danh sách phòng họp
-          </h1>
-          <p className="RoomListFilter__result-count text-sm text-neutral-muted" aria-live="polite">
-            Tìm thấy {filteredRoomsCount} phòng phù hợp
-          </p>
-        </div>
-      </header>
-
-      <div className="RoomListFilter__controls flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="RoomListFilter__search relative w-full md:max-w-lg">
-          <label className="RoomListFilter__search-label sr-only" htmlFor="room-search">
-            Tìm kiếm phòng họp theo tên
+    <section className="RoomListFilter flex flex-col gap-4 border-b border-border pb-6" aria-label="Tìm và lọc phòng">
+      <div className="RoomListFilter__controls flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="RoomListFilter__search flex w-full flex-col gap-2 md:max-w-xl">
+          <label className="RoomListFilter__search-label text-sm font-semibold text-text-primary" htmlFor="room-search">
+            Tìm phòng
           </label>
-          <span className="RoomListFilter__search-icon pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-neutral-400">
-            <HugeiconsIcon icon={Search01Icon} size={18} />
-          </span>
-          <input
-            className="RoomListFilter__search-input h-10 w-full rounded-full border border-neutral-border bg-white pr-4 pl-10 text-sm text-neutral-dark shadow-xs placeholder:text-neutral-muted focus:border-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-            id="room-search"
-            name="room-search"
-            type="search"
-            value={searchQuery}
-            placeholder="Tìm kiếm phòng họp theo tên..."
-            onChange={(event) => onSearchChange(event.target.value)}
-            autoComplete="off"
-          />
+          <div className="RoomListFilter__search-field relative">
+            <HugeiconsIcon
+              className="RoomListFilter__search-icon pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary"
+              icon={Search01Icon}
+              size={18}
+              aria-hidden
+            />
+            <input
+              className="RoomListFilter__search-input h-12 w-full rounded-md border border-border bg-surface pl-12 pr-4 text-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+              id="room-search"
+              name="room-search"
+              type="search"
+              value={searchQuery}
+              placeholder="Nhập tên phòng cần tìm"
+              onChange={(event) => onSearchChange(event.target.value)}
+              autoComplete="off"
+            />
+          </div>
         </div>
 
         <div className="RoomListFilter__visibility-filter flex shrink-0 items-center">
@@ -71,10 +61,14 @@ export function RoomListFilter({
             items={ROOM_FILTER_ITEMS}
             activeKey={activeTab}
             onChange={onTabChange}
-            label="Hiển thị"
+            label="Quyền truy cập"
           />
         </div>
       </div>
+
+      <p className="RoomListFilter__result-count text-sm text-text-secondary" aria-live="polite">
+        {filteredRoomsCount} phòng phù hợp
+      </p>
     </section>
   );
 }

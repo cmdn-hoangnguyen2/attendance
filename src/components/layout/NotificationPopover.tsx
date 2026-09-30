@@ -158,7 +158,7 @@ export function NotificationPopover() {
 
   const panelContent = isOpen ? (
     <section
-      className="NotificationPopover__panel absolute right-0 z-50 mt-2 w-[calc(100vw-32px)] max-w-[360px] overflow-hidden rounded-lg border border-border bg-surface shadow-lg"
+      className="NotificationPopover__panel fixed right-4 top-16 z-50 mt-2 w-[calc(100vw-32px)] max-w-[360px] overflow-hidden rounded-lg border border-border bg-surface shadow-lg md:absolute md:right-0 md:top-auto"
       id="notification-popover"
       aria-labelledby="notification-popover-title"
     >
@@ -186,7 +186,6 @@ export function NotificationPopover() {
         type="button"
         onClick={() => setIsOpen((currentOpen) => !currentOpen)}
         aria-label="Thông báo"
-        aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-controls="notification-popover"
       >

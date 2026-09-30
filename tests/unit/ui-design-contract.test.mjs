@@ -14,7 +14,7 @@ const readProjectFile = (relativePath) =>
 describe("Cobalt Commons design contract", () => {
   test("keeps every approved color token and value in the Tailwind theme", () => {
     const approvedTokens = [
-      "--color-canvas: #FFFDF8",
+      "--color-canvas: #FFFFFF",
       "--color-surface: #FFFFFF",
       "--color-surface-subtle: #F5F7FB",
       "--color-primary: #2F5BD3",
