@@ -66,3 +66,47 @@ body {
 @utility tabular-numbers {
   font-variant-numeric: tabular-nums;
 }
+
+/* Shared presentation recipes: one owner for page rhythm, rows and fields. */
+@layer components {
+  .ui-page-stack {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .ui-section-stack {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .ui-data-row {
+    min-width: 0;
+    padding-block: 24px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ui-data-row:last-child {
+    border-bottom: 0;
+  }
+
+  .ui-field {
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: 8px 16px;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 14px;
+    line-height: 24px;
+  }
+
+  .ui-field:disabled {
+    cursor: not-allowed;
+    background: var(--color-surface-subtle);
+  }
+}

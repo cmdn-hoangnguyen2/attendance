@@ -19,7 +19,7 @@ export function PageHeader({ id, title, description, action }: PageHeaderProps) 
 
   return (
     <header
-      className="PageHeader flex flex-col gap-6 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between"
+      className="PageHeader flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
       aria-labelledby={id}
     >
       <div className="PageHeader__content flex min-w-0 flex-col gap-2">

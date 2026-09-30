@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   Cancel01Icon,
   Login01Icon,
-  Logout01Icon,
   Menu01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -22,12 +21,11 @@ export interface AppHeaderProps {
 
 export function AppHeader({ isMenuOpen = false, onMenuToggle }: AppHeaderProps) {
   const pathname = usePathname();
-  const { currentUser, isAuthenticated, isAdmin, login, logout, isMockActive } = useAuthMock();
+  const { currentUser, isAuthenticated, isAdmin, login } = useAuthMock();
   const isLoginPage = pathname === "/login";
   const userInitial = currentUser?.displayName.charAt(0).toUpperCase() ?? "";
   const menuIcon = isMenuOpen ? Cancel01Icon : Menu01Icon;
 
-  const handleLogout = () => logout();
   const handleLogin = () => login();
 
   const adminBadge = isAdmin ? (
@@ -44,7 +42,7 @@ export function AppHeader({ isMenuOpen = false, onMenuToggle }: AppHeaderProps) 
         <div className="AppHeader__avatar flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-community text-sm font-bold text-text-primary">
           {userInitial}
         </div>
-        <div className="AppHeader__user-details hidden min-w-0 flex-col gap-1 lg:flex">
+        <div className="AppHeader__user-details hidden min-w-0 flex-col lg:flex">
           <div className="AppHeader__user-name-row flex items-center gap-2">
             <span className="AppHeader__user-name max-w-40 truncate text-sm font-semibold text-text-primary">
               {currentUser.displayName}
@@ -55,16 +53,6 @@ export function AppHeader({ isMenuOpen = false, onMenuToggle }: AppHeaderProps) 
             {currentUser.email}
           </span>
         </div>
-        <button
-          className="AppHeader__logout inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-subtle hover:text-text-primary focus-visible:outline-none"
-          type="button"
-          title={isMockActive ? "Đăng xuất khỏi phiên giả lập" : "Đăng xuất"}
-          onClick={handleLogout}
-          aria-label="Đăng xuất"
-        >
-          <HugeiconsIcon icon={Logout01Icon} size={18} aria-hidden />
-          <span className="AppHeader__logout-label hidden sm:inline">Thoát</span>
-        </button>
       </div>
     );
   }

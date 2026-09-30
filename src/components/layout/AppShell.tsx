@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { Logout01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { useAuthMock } from "@/context/AuthMockContext";
 
@@ -15,7 +17,7 @@ export interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
-  const { isAuthenticated, isAdmin } = useAuthMock();
+  const { isAuthenticated, isAdmin, logout } = useAuthMock();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const drawerRef = useRef<HTMLDialogElement>(null);
   const items = getAppNavigationItems({ isAuthenticated, isAdmin }) as AppNavigationItem[];
@@ -24,6 +26,19 @@ export function AppShell({ children }: AppShellProps) {
   const openMenu = () => setIsMenuOpen(true);
   const closeMenu = () => setIsMenuOpen(false);
   const toggleMenu = () => setIsMenuOpen((currentOpen) => !currentOpen);
+  const handleLogout = () => logout();
+  const accountAction = isAuthenticated ? (
+    <div className="AppShell__account mt-auto pt-8">
+      <button
+        className="AppShell__logout inline-flex min-h-12 w-full items-center gap-2 rounded-md px-4 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-subtle hover:text-text-primary"
+        type="button"
+        onClick={handleLogout}
+      >
+        <HugeiconsIcon icon={Logout01Icon} size={20} aria-hidden />
+        <span className="AppShell__logout-label">Đăng xuất</span>
+      </button>
+    </div>
+  ) : null;
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -76,6 +91,7 @@ export function AppShell({ children }: AppShellProps) {
           variant="sidebar"
           onNavigate={closeMenu}
         />
+        {accountAction}
       </aside>
     </dialog>
   ) : null;
@@ -85,8 +101,9 @@ export function AppShell({ children }: AppShellProps) {
       <AppHeader isMenuOpen={isMenuOpen} onMenuToggle={toggleMenu} />
       <div className="AppShell__workspace flex min-h-0 flex-1">
         <aside className="AppShell__sidebar hidden w-[240px] shrink-0 border-r border-border bg-surface p-6 xl:block">
-          <div className="AppShell__sidebar-sticky sticky top-20">
+          <div className="AppShell__sidebar-sticky sticky top-20 flex min-h-[calc(100dvh-112px)] flex-col">
             <AppNavigation items={items} pathname={pathname} variant="sidebar" />
+            {accountAction}
           </div>
         </aside>
         <div className="AppShell__content min-w-0 flex-1 pb-24 md:pb-0">{children}</div>
