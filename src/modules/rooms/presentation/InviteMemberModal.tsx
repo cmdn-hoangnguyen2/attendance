@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+"use client";
+
+import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Search01Icon, UserAdd01Icon } from "@hugeicons/core-free-icons";
+
+import { Button } from "@/components/ui/Button";
+import { ResponsiveDialog } from "@/components/ui/ResponsiveDialog";
 
 interface InviteMemberModalProps {
   isOpen: boolean;
@@ -8,64 +13,56 @@ interface InviteMemberModalProps {
 }
 
 export function InviteMemberModal({ isOpen, onClose }: InviteMemberModalProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  if (!isOpen) return null;
+  const [searchTerm, setSearchTerm] = useState("");
 
   const mockUsers = [
-    { id: '1', name: 'Nguyễn Văn A' },
-    { id: '2', name: 'Trần Thị B' },
+    { id: "1", name: "Nguyễn Văn A" },
+    { id: "2", name: "Trần Thị B" },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl flex flex-col max-h-[80vh]">
-        <div className="flex items-center justify-between p-6 border-b border-neutral-100 shrink-0">
-          <h2 className="text-xl font-extrabold text-neutral-900">Mời thành viên</h2>
-          <button 
-            onClick={onClose}
-            className="rounded-full p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-900 transition-colors"
-          >
-            <HugeiconsIcon icon={Cancel01Icon} size={20} />
-          </button>
-        </div>
-
-        <div className="p-6 pb-0 shrink-0">
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-neutral-400">
-              <HugeiconsIcon icon={Search01Icon} size={18} />
-            </div>
-            <input
-              type="text"
-              placeholder="Tìm kiếm người dùng..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-xl border border-neutral-300 bg-neutral-surface py-3 pl-10 pr-4 text-sm font-medium text-neutral-900 placeholder-neutral-400 focus:border-neutral-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 transition-all"
-            />
+    <ResponsiveDialog isOpen={isOpen} onClose={onClose} labelledBy="invite-member-title" size="sm">
+      <div className="InviteMemberModal ui-section-stack">
+        <div className="InviteMemberModal__heading flex items-start justify-between gap-4">
+          <div className="InviteMemberModal__heading-copy">
+            <p className="InviteMemberModal__eyebrow text-xs font-semibold uppercase tracking-wider text-text-tertiary">Thành viên phòng</p>
+            <h2 id="invite-member-title" className="InviteMemberModal__title mt-2 text-xl font-bold text-text-primary">Mời thành viên</h2>
+            <p className="InviteMemberModal__description mt-2 text-sm leading-6 text-text-secondary">Tìm người dùng và gửi lời mời tham gia phòng.</p>
           </div>
+          <Button className="InviteMemberModal__close shrink-0 px-2" variant="ghost" aria-label="Đóng cửa sổ" onClick={onClose}>
+            <HugeiconsIcon icon={Cancel01Icon} size={20} aria-hidden />
+          </Button>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-          <div className="space-y-4">
-            {mockUsers.map(user => (
-              <div key={user.id} className="flex items-center justify-between p-4 rounded-xl border border-neutral-100 hover:border-neutral-200 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center font-bold text-neutral-600">
-                    {user.name.charAt(0)}
-                  </div>
-                  <span className="font-semibold text-sm text-neutral-900">{user.name}</span>
-                </div>
-                <button 
-                  className="rounded-full bg-primary px-4 py-2 text-xs font-bold text-neutral-900 hover:bg-primary-hover transition-colors"
-                  onClick={() => alert(`Đã gửi lời mời đến ${user.name}`)}
-                >
-                  Mời
-                </button>
+        <label className="InviteMemberModal__search relative block">
+          <span className="InviteMemberModal__search-label sr-only">Tìm kiếm người dùng</span>
+          <HugeiconsIcon className="InviteMemberModal__search-icon pointer-events-none absolute left-4 top-4 text-text-tertiary" icon={Search01Icon} size={16} aria-hidden />
+          <input
+            type="search"
+            placeholder="Tìm kiếm người dùng"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            className="InviteMemberModal__search-input ui-field pl-10"
+          />
+        </label>
+
+        <div className="InviteMemberModal__user-list border-y border-border">
+          {mockUsers.map((user) => (
+            <div className="InviteMemberModal__user ui-data-row flex items-center justify-between gap-4" key={user.id}>
+              <div className="InviteMemberModal__person flex min-w-0 items-center gap-4">
+                <span className="InviteMemberModal__avatar flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+                  {user.name.charAt(0)}
+                </span>
+                <span className="InviteMemberModal__name truncate text-sm font-semibold text-text-primary">{user.name}</span>
               </div>
-            ))}
-          </div>
+              <Button size="compact" onClick={() => alert(`Đã gửi lời mời đến ${user.name}`)}>
+                <HugeiconsIcon icon={UserAdd01Icon} size={16} aria-hidden />
+                Mời
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
+    </ResponsiveDialog>
   );
 }

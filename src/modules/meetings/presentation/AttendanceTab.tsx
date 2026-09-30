@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   AttendanceStatus,
   type AttendanceRecord,
@@ -18,7 +17,10 @@ import {
   Clock01Icon,
   LockIcon,
 } from "@hugeicons/core-free-icons";
+
+import { Button } from "@/components/ui/Button";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import { StatusBadge, type StatusBadgeProps } from "@/components/ui/StatusBadge";
 
 export interface AttendanceTabProps {
   meetingSession?: MeetingSession;
@@ -30,6 +32,15 @@ export interface AttendanceTabProps {
   onSelfCheckIn: (status: AttendanceStatus) => void;
   onOwnerOverride: (userId: string, status: AttendanceStatus) => void;
   onCreateFundFromCandidate: (candidate: FundCandidate) => void;
+}
+
+function getAttendancePresentation(status: AttendanceStatus): {
+  label: string;
+  tone: StatusBadgeProps["tone"];
+} {
+  if (status === AttendanceStatus.PRESENT) return { label: "Có mặt", tone: "success" };
+  if (status === AttendanceStatus.LEAVE) return { label: "Xin phép", tone: "info" };
+  return { label: "Vắng", tone: "danger" };
 }
 
 export function AttendanceTab({
@@ -70,258 +81,183 @@ export function AttendanceTab({
         }))
     : fundCandidates;
 
+  const deadlineText = meetingSession
+    ? `${new Date(meetingSession.startsAt).toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })} · ${new Date(meetingSession.startsAt).toLocaleDateString("vi-VN")}`
+    : "Đúng thời điểm bắt đầu cuộc họp";
+  const myStatusPresentation = getAttendancePresentation(myStatus);
+
   return (
-    <div className="space-y-8">
-      {/* SECTION 1: Header Phiên họp & Bộ giả lập Deadline */}
-      <section className="rounded-2xl border border-neutral-border bg-white p-6 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-100 pb-6 mb-6">
-          <div className="flex items-center gap-3">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-surface text-primary-dark">
-              <HugeiconsIcon icon={Calendar01Icon} size={24} />
+    <div className="AttendanceTab ui-page-stack">
+      <section className="AttendanceTab__session ui-section-stack" aria-labelledby="attendance-session-title">
+        <div className="AttendanceTab__session-header flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="AttendanceTab__heading flex min-w-0 items-start gap-4">
+            <span className="AttendanceTab__heading-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+              <HugeiconsIcon icon={Calendar01Icon} size={24} aria-hidden />
             </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-neutral-dark">
-                  Phiên họp: {meetingSession ? "Cuộc họp định kỳ" : "Chưa có phiên họp"}
-                </h2>
-                <span className="rounded bg-neutral-surface px-2 py-0.5 text-xs font-bold text-primary-dark border border-neutral-border">
-                  {isPastDeadline ? "Đã qua giờ bắt đầu" : "Sắp diễn ra"}
-                </span>
-              </div>
-              <p className="text-xs text-neutral-muted mt-0.5 flex items-center gap-1.5">
-                <HugeiconsIcon icon={Clock01Icon} size={14} />
-                <span>
-                  {meetingSession
-                    ? `Hạn chót tự điểm danh: ${new Date(meetingSession.startsAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} ngày ${new Date(meetingSession.startsAt).toLocaleDateString("vi-VN")}. Sau mốc này hệ thống tự khóa.`
-                    : "Hạn chót tự điểm danh: Đúng thời điểm bắt đầu cuộc họp. Sau mốc này hệ thống tự khóa."}
-                </span>
+            <div className="AttendanceTab__heading-copy min-w-0">
+              <p className="AttendanceTab__eyebrow text-xs font-semibold uppercase tracking-wider text-text-tertiary">
+                Phiên điểm danh
+              </p>
+              <h2 id="attendance-session-title" className="AttendanceTab__title mt-2 text-xl font-bold text-text-primary">
+                {meetingSession ? "Cuộc họp định kỳ" : "Chưa có phiên họp"}
+              </h2>
+              <p className="AttendanceTab__deadline mt-2 flex items-start gap-2 text-sm leading-6 text-text-secondary">
+                <HugeiconsIcon className="AttendanceTab__deadline-icon mt-1 shrink-0" icon={Clock01Icon} size={16} aria-hidden />
+                <span>Hạn chót tự điểm danh: {deadlineText}. Sau mốc này hệ thống tự khóa.</span>
               </p>
             </div>
           </div>
+          <StatusBadge tone={isPastDeadline ? "neutral" : "info"}>
+            {isPastDeadline ? "Đã khóa" : "Đang mở"}
+          </StatusBadge>
         </div>
 
-        {/* Cụm Tự điểm danh của Current User (Chỉ khả dụng trước giờ G) */}
         {!isPastDeadline ? (
-          <div className="rounded-xl border border-primary bg-neutral-surface/50 p-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-primary-dark">
-                  Tự điểm danh cá nhân
-                </span>
-                <p className="text-sm font-semibold text-neutral-dark mt-0.5">
-                  Bạn có tham gia phiên họp này không? (Trạng thái hiện tại:{" "}
-                  <strong className="text-primary-dark">
-                    {myStatus === AttendanceStatus.PRESENT
-                      ? "Có mặt"
-                      : myStatus === AttendanceStatus.LEAVE
-                      ? "Xin phép nghỉ"
-                      : "Vắng mặt"}
-                  </strong>
-                  )
+          <div className="AttendanceTab__self-check rounded-lg bg-surface-subtle p-4 md:p-6">
+            <div className="AttendanceTab__self-check-content flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="AttendanceTab__self-copy">
+                <p className="AttendanceTab__self-label text-sm font-semibold text-text-primary">
+                  Trạng thái của bạn
+                </p>
+                <p className="AttendanceTab__self-description mt-2 text-sm text-text-secondary">
+                  Hiện tại: <strong className="text-text-primary">{myStatusPresentation.label}</strong>. Bạn có thể cập nhật trước hạn chót.
                 </p>
               </div>
-
-              {/* Nút bấm chuyển trạng thái: gap 8px (gap-2), padding px-4 py-2 */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
+              <div className="AttendanceTab__self-actions grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <Button
+                  variant={myStatus === AttendanceStatus.PRESENT ? "primary" : "secondary"}
                   onClick={() => onSelfCheckIn(AttendanceStatus.PRESENT)}
-                  className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                    myStatus === AttendanceStatus.PRESENT
-                      ? "bg-primary-dark text-white shadow-xs"
-                      : "bg-white text-neutral-dark border border-neutral-border hover:bg-neutral-surface"
-                  }`}
                 >
-                  <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} />
-                  <span>Có mặt</span>
-                </button>
-                <button
-                  type="button"
+                  <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} aria-hidden />
+                  Có mặt
+                </Button>
+                <Button
+                  variant={myStatus === AttendanceStatus.LEAVE ? "primary" : "secondary"}
                   onClick={() => onSelfCheckIn(AttendanceStatus.LEAVE)}
-                  className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                    myStatus === AttendanceStatus.LEAVE
-                      ? "bg-blue-600 text-white shadow-xs"
-                      : "bg-white text-neutral-dark border border-neutral-200 hover:bg-neutral-50"
-                  }`}
                 >
-                  <HugeiconsIcon icon={HelpCircleIcon} size={16} />
-                  <span>Xin phép</span>
-                </button>
-                <button
-                  type="button"
+                  <HugeiconsIcon icon={HelpCircleIcon} size={16} aria-hidden />
+                  Xin phép
+                </Button>
+                <Button
+                  variant={myStatus === AttendanceStatus.ABSENT ? "primary" : "secondary"}
                   onClick={() => onSelfCheckIn(AttendanceStatus.ABSENT)}
-                  className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                    myStatus === AttendanceStatus.ABSENT
-                      ? "bg-rose-600 text-white shadow-xs"
-                      : "bg-white text-neutral-dark border border-neutral-200 hover:bg-neutral-50"
-                  }`}
                 >
-                  <HugeiconsIcon icon={Cancel01Icon} size={16} />
-                  <span>Vắng</span>
-                </button>
+                  <HugeiconsIcon icon={Cancel01Icon} size={16} aria-hidden />
+                  Vắng
+                </Button>
               </div>
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-neutral-100/60 p-4 text-xs text-neutral-muted">
-            <HugeiconsIcon icon={LockIcon} size={16} className="shrink-0 text-neutral-500" />
-            <span>
-              <strong>Đã khóa tự điểm danh:</strong> Đã quá thời hạn bắt đầu cuộc họp. Mọi thay đổi
-              điểm danh hiện tại chỉ có thể được thực hiện bởi Chủ phòng hoặc Admin.
-            </span>
+          <div className="AttendanceTab__locked flex items-start gap-2 rounded-lg bg-neutral-soft p-4 text-sm leading-6 text-text-secondary">
+            <HugeiconsIcon className="AttendanceTab__locked-icon mt-1 shrink-0" icon={LockIcon} size={16} aria-hidden />
+            <p className="AttendanceTab__locked-copy">
+              <strong className="text-text-primary">Đã khóa tự điểm danh.</strong> Chỉ Chủ phòng hoặc Admin có thể điều chỉnh trạng thái sau hạn chót.
+            </p>
           </div>
         )}
       </section>
 
-      {/* SECTION 2: Fund Candidate List (Ứng viên đóng quỹ sau deadline) */}
       {isPastDeadline ? (
-        <section aria-labelledby="fund-candidates-title" className="rounded-2xl border border-amber-200 bg-amber-50/40 p-6 shadow-xs animate-in fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-800">
-                <HugeiconsIcon icon={Coins01Icon} size={18} />
-              </span>
-              <div>
-                <h2 id="fund-candidates-title" className="text-base font-bold text-neutral-dark">
-                  Danh sách ứng viên đóng quỹ (Fund Candidate List)
-                </h2>
-                <p className="text-xs text-neutral-muted">
-                  Snapshot thành viên vắng mặt tại thời điểm deadline (Chưa tự động sinh nghĩa vụ tiền)
-                </p>
-              </div>
+        <section className="AttendanceTab__candidates ui-section-stack rounded-lg bg-warning-soft p-4 md:p-6" aria-labelledby="fund-candidates-title">
+          <div className="AttendanceTab__section-header flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="AttendanceTab__section-copy">
+              <h2 id="fund-candidates-title" className="AttendanceTab__section-title flex items-center gap-2 text-lg font-bold text-text-primary">
+                <HugeiconsIcon icon={Coins01Icon} size={20} aria-hidden />
+                Ứng viên đóng quỹ
+              </h2>
+              <p className="AttendanceTab__section-description mt-2 text-sm leading-6 text-text-secondary">
+                Snapshot thành viên vắng mặt tại deadline; chưa tự động sinh nghĩa vụ tiền.
+              </p>
             </div>
-            <span className="text-xs font-semibold text-amber-800 bg-amber-100 px-2.5 py-1 rounded-full">
-              {activeCandidates.length} thành viên vắng
-            </span>
+            <StatusBadge tone="warning">{activeCandidates.length} thành viên vắng</StatusBadge>
           </div>
 
-          {activeCandidates.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {activeCandidates.map((cand) => (
-                <div
-                  key={cand.userId}
-                  className="flex items-center justify-between rounded-xl border border-amber-200 bg-white p-4 shadow-xs"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-100 text-rose-700 font-bold text-xs">
-                      {cand.userDisplayName.charAt(0)}
-                    </div>
-                    <div>
-                      <span className="font-bold text-sm text-neutral-dark block">
-                        {cand.userDisplayName}
-                      </span>
-                      <span className="text-xs text-rose-600 font-medium">Vắng không phép</span>
+          <div className="AttendanceTab__candidate-list">
+            {activeCandidates.length > 0 ? (
+              activeCandidates.map((candidate) => (
+                <div className="AttendanceTab__candidate ui-data-row flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" key={candidate.userId}>
+                  <div className="AttendanceTab__candidate-person flex min-w-0 items-center gap-4">
+                    <span className="AttendanceTab__avatar flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger-soft text-sm font-bold text-danger">
+                      {candidate.userDisplayName.charAt(0)}
+                    </span>
+                    <div className="AttendanceTab__candidate-copy min-w-0">
+                      <p className="AttendanceTab__candidate-name truncate text-sm font-semibold text-text-primary">{candidate.userDisplayName}</p>
+                      <p className="AttendanceTab__candidate-email truncate text-sm text-text-secondary">{candidate.userEmail}</p>
                     </div>
                   </div>
-
                   {isOwnerOrAdmin ? (
-                    <button
-                      type="button"
-                      onClick={() => onCreateFundFromCandidate(cand)}
-                      className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-neutral-dark hover:bg-primary-hover hover:text-white transition-colors"
-                    >
-                      <HugeiconsIcon icon={Coins01Icon} size={14} />
-                      <span>Tạo quỹ</span>
-                    </button>
+                    <Button className="AttendanceTab__candidate-action sm:shrink-0" size="compact" onClick={() => onCreateFundFromCandidate(candidate)}>
+                      <HugeiconsIcon icon={Coins01Icon} size={16} aria-hidden />
+                      Tạo quỹ
+                    </Button>
                   ) : null}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-neutral-muted py-2">
-              Không có thành viên nào vắng mặt trong danh sách ứng viên đóng quỹ.
-            </p>
-          )}
+              ))
+            ) : (
+              <p className="AttendanceTab__candidate-empty py-4 text-sm text-text-secondary">
+                Không có thành viên nào vắng mặt trong danh sách ứng viên đóng quỹ.
+              </p>
+            )}
+          </div>
         </section>
       ) : null}
 
-      {/* SECTION 3: Bảng Danh Sách Điểm Danh Toàn Bộ Phòng */}
-      <section aria-labelledby="all-attendance-title" className="rounded-2xl border border-neutral-border bg-white p-6 shadow-xs">
-        <h2 id="all-attendance-title" className="text-lg font-bold text-neutral-dark mb-1">
-          Bảng điểm danh chi tiết ({members.length} thành viên)
-        </h2>
-        <p className="text-xs text-neutral-muted mb-6">
-          Ghi nhận thời gian và người cập nhật trạng thái điểm danh
-        </p>
+      <section className="AttendanceTab__records ui-section-stack" aria-labelledby="all-attendance-title">
+        <div className="AttendanceTab__section-copy">
+          <h2 id="all-attendance-title" className="AttendanceTab__section-title text-xl font-bold text-text-primary">
+            Danh sách điểm danh
+          </h2>
+          <p className="AttendanceTab__section-description mt-2 text-sm text-text-secondary">
+            {members.length} thành viên · ghi nhận trạng thái và thời gian cập nhật.
+          </p>
+        </div>
 
-        {/* Table layout chuẩn 8pt grid */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-neutral-200 text-xs font-bold uppercase text-neutral-muted bg-neutral-50/50">
-              <tr>
-                <th className="py-3 px-4">Thành viên</th>
-                <th className="py-3 px-4">Trạng thái</th>
-                <th className="py-3 px-4">Cập nhật lúc</th>
-                {isOwnerOrAdmin ? <th className="py-3 px-4 text-right">Điều chỉnh (Owner/Admin)</th> : null}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {members.map((member) => {
-                const record = attendanceRecords.find((r) => r.userId === member.id);
-                const status: AttendanceStatus = record?.status ?? AttendanceStatus.ABSENT;
+        <div className="AttendanceTab__record-list border-y border-border">
+          {members.map((member) => {
+            const record = attendanceRecords.find((r) => r.userId === member.id);
+            const status: AttendanceStatus = record?.status ?? AttendanceStatus.ABSENT;
+            const statusPresentation = getAttendancePresentation(status);
 
-                return (
-                  <tr key={member.id} className="hover:bg-neutral-50/50">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-surface text-primary-dark font-bold text-xs">
-                          {member.displayName.charAt(0)}
-                        </div>
-                        <div>
-                          <span className="font-bold text-neutral-dark block">{member.displayName}</span>
-                          <span className="text-xs text-neutral-muted">{member.email}</span>
-                        </div>
-                      </div>
-                    </td>
+            return (
+              <article className="AttendanceTab__record ui-data-row grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center" key={member.id}>
+                <div className="AttendanceTab__person flex min-w-0 items-center gap-4">
+                  <span className="AttendanceTab__avatar flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+                    {member.displayName.charAt(0)}
+                  </span>
+                  <div className="AttendanceTab__person-copy min-w-0">
+                    <h3 className="AttendanceTab__person-name truncate text-sm font-semibold text-text-primary">{member.displayName}</h3>
+                    <p className="AttendanceTab__person-email truncate text-sm text-text-secondary">{member.email}</p>
+                  </div>
+                </div>
 
-                    <td className="py-3 px-4">
-                      {status === AttendanceStatus.PRESENT ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-neutral-surface px-2.5 py-1 text-xs font-bold text-primary-dark">
-                          <HugeiconsIcon icon={CheckmarkCircle01Icon} size={14} />
-                          <span>Có mặt</span>
-                        </span>
-                      ) : status === AttendanceStatus.LEAVE ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-600">
-                          <HugeiconsIcon icon={HelpCircleIcon} size={14} />
-                          <span>Xin phép</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-600">
-                          <HugeiconsIcon icon={Cancel01Icon} size={14} />
-                          <span>Vắng</span>
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="py-3 px-4 text-xs text-neutral-muted">
+                <div className="AttendanceTab__record-controls flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between md:justify-end">
+                  <div className="AttendanceTab__record-state flex items-center gap-2">
+                    <StatusBadge tone={statusPresentation.tone}>{statusPresentation.label}</StatusBadge>
+                    <span className="AttendanceTab__updated-at text-xs text-text-tertiary">
                       {record ? new Date(record.updatedAt).toLocaleTimeString("vi-VN") : "Mặc định"}
-                    </td>
-
-                    {/* Owner/Admin Override Dropdown */}
-                    {isOwnerOrAdmin ? (
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex justify-end">
-                          <SelectDropdown
-                            value={status}
-                            onChange={(val) =>
-                              onOwnerOverride(member.id, val as AttendanceStatus)
-                            }
-                            options={[
-                              { value: AttendanceStatus.PRESENT, label: "Có mặt" },
-                              { value: AttendanceStatus.LEAVE, label: "Xin phép" },
-                              { value: AttendanceStatus.ABSENT, label: "Vắng" },
-                            ]}
-                            className="w-32 text-left"
-                            ariaLabel={`Điều chỉnh điểm danh cho ${member.displayName}`}
-                          />
-                        </div>
-                      </td>
-                    ) : null}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </span>
+                  </div>
+                  {isOwnerOrAdmin ? (
+                    <SelectDropdown
+                      value={status}
+                      onChange={(value) => onOwnerOverride(member.id, value as AttendanceStatus)}
+                      options={[
+                        { value: AttendanceStatus.PRESENT, label: "Có mặt" },
+                        { value: AttendanceStatus.LEAVE, label: "Xin phép" },
+                        { value: AttendanceStatus.ABSENT, label: "Vắng" },
+                      ]}
+                      className="AttendanceTab__override w-full sm:w-32"
+                      ariaLabel={`Điều chỉnh điểm danh cho ${member.displayName}`}
+                    />
+                  ) : null}
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
     </div>

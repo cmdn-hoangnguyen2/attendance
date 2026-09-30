@@ -120,6 +120,31 @@ Task 4 review gate: presentation may change, but the rows above must match the f
 - Runtime evidence: desktop, tablet portrait và mobile không có horizontal document overflow; payment dialog nhận focus, đóng bằng Escape và trả focus về nút mở.
 - Automated evidence: TypeScript exit 0, scoped ESLint exit 0, full business suite 69/69 pass; protected repository, realtime, API, domain, migration và existing test files không thay đổi.
 
+### Task 6 — Room workspace wiring lock
+
+| Surface | Contract phải giữ nguyên trong redesign |
+| --- | --- |
+| `MeetingHeader` | Giữ nguyên toàn bộ props, `RoomStatus.ARCHIVED` chỉ hiển thị Funds, callbacks mở archive/transfer/payment QR/leave và local state của `RoomSettingsModal`. |
+| `AttendanceTab` | Giữ nguyên cách tính `isPastDeadline`, `myRecord`/`myStatus`, snapshot `activeCandidates`, ba giá trị `PRESENT`/`LEAVE`/`ABSENT`, và arguments của ba callbacks. |
+| `MembersTab` | Giữ nguyên pending-request filter, search theo name/email, approve/reject/remove callbacks, outstanding-debt lookup và local open/selected state của hai modal. |
+| `AccessRevokedModal` | Non-dismissible; chỉ cho phép quay về Home và giữ callback `onBackToHome`. |
+| `LeaveRoomModal` | Giữ `room`, `onClose`, `onConfirmLeave` và nội dung bảo lưu nghĩa vụ quỹ. |
+| `RemoveMemberModal` | Giữ exact phrase `ConfirmationPhrase.REMOVE_MEMBER_WITH_DEBT`, điều kiện `isConfirmed`, reset input khi đóng và callback với `member.id`. |
+| `InviteMemberModal` | Giữ props, local search state, mock-user dataset và action gửi lời mời hiện tại; chỉ thay dialog/presentation. |
+| Meeting page | Không sửa handler bodies, repository/API/realtime hooks, permission checks, enum values hoặc conditional render theo archive/type/tab. |
+
+Task 6 review gate: diff chỉ được thay composition, style và accessible dialog behavior; bảng contract trên phải khớp trước khi commit.
+
+### Task 6 verification
+
+- Room workspace desktop rendered with the new identity/context header, permission action, scannable tabs and structured member rows; the existing marquee remains intentionally deferred to Task 7.
+- Tablet `768x1024` and mobile `390x844` rendered with the responsive shell and bottom navigation; mobile DOM measurement reported `scrollWidth = 390` and `bodyScrollWidth = 390` (no horizontal overflow).
+- Member role runtime showed the leave action; Leave dialog opened as a native modal, focused `Hủy bỏ`, closed with Escape, and returned focus to `Rời phòng` without overflow.
+- Admin runtime showed pending requests, debt status and remove actions; Remove dialog focused the exact debt confirmation input, kept `Xác nhận xóa` disabled until the required phrase, and Escape returned focus to the selected remove action.
+- Invite dialog opened as a native modal, focused `Đóng cửa sổ`, had zero horizontal overflow, and Escape returned focus to `Mời thành viên`.
+- Attendance tab rendered the session/deadline state, current-user actions, status list and owner override selector; tab switching remained presentation-only.
+- Static/regression evidence: membership lifecycle 7/7 pass; full suite 69/69 pass; TypeScript exit 0; scoped ESLint exit 0 with only the two pre-existing meeting-page warnings; `git diff --check` pass; no protected path diff.
+
 ## 6. Lợi ích
 
 - Tạo một visual language thống nhất và dễ maintain trước MVP.
