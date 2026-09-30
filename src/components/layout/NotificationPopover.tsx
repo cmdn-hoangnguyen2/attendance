@@ -1,18 +1,19 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { HugeiconsIcon } from "@hugeicons/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Notification01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
-import { useAuthMock } from "@/context/AuthMockContext";
-import { notificationRepository } from "@/lib/repository/notificationRepository";
-import { AppNotification } from "@/types/domain";
-import { useUserRealtime } from "@/lib/realtime/useUserRealtime";
+import { HugeiconsIcon } from "@hugeicons/react";
 
-// Format time diff manually for simple display
+import { useAuthMock } from "@/context/AuthMockContext";
+import { useUserRealtime } from "@/lib/realtime/useUserRealtime";
+import { notificationRepository } from "@/lib/repository/notificationRepository";
+import { cn } from "@/lib/utils";
+import type { AppNotification } from "@/types/domain";
+
 function timeAgo(dateString: string) {
   const diff = Date.now() - new Date(dateString).getTime();
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'Vừa xong';
+  if (minutes < 1) return "Vừa xong";
   if (minutes < 60) return `${minutes} phút trước`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours} giờ trước`;
@@ -26,37 +27,52 @@ export function NotificationPopover() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  // Subscribe to real-time changes
+  const fetchNotifications = useCallback(async (userId: string) => {
+    const data = await notificationRepository.listByUserId(userId);
+    setNotifications(data);
+  }, []);
+
   useUserRealtime({
     userId: currentUser?.id ?? "",
     onDataChange: () => {
       if (currentUser) fetchNotifications(currentUser.id);
     },
-    enabled: !!currentUser,
+    enabled: Boolean(currentUser),
   });
 
-  const fetchNotifications = async (userId: string) => {
-    const data = await notificationRepository.listByUserId(userId);
-    setNotifications(data);
-  };
-
   useEffect(() => {
-    if (currentUser) {
-      fetchNotifications(currentUser.id);
-    }
-  }, [currentUser]);
+    if (!currentUser) return;
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+    let isCurrentRequest = true;
+    void notificationRepository.listByUserId(currentUser.id).then((data) => {
+      if (isCurrentRequest) setNotifications(data);
+    });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [currentUser]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
+      const clickedOutside =
+        popoverRef.current && !popoverRef.current.contains(event.target as Node);
+      if (clickedOutside) setIsOpen(false);
     }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsOpen(false);
+    }
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleEscape);
+    };
   }, []);
+
+  const unreadCount = notifications.filter((notification) => !notification.isRead).length;
 
   const markAllAsRead = async () => {
     if (currentUser) {
@@ -65,72 +81,119 @@ export function NotificationPopover() {
     }
   };
 
-  const handleNotifClick = async (id: string, isRead: boolean) => {
+  const handleNotificationClick = async (id: string, isRead: boolean) => {
     if (!isRead) {
       await notificationRepository.markAsRead(id);
       if (currentUser) fetchNotifications(currentUser.id);
     }
   };
 
-  return (
-    <div className="relative" ref={popoverRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative flex h-8 w-8 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 transition-colors"
-        aria-label="Thông báo"
-      >
-        <HugeiconsIcon icon={Notification01Icon} size={20} />
-        {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-white">
-            {unreadCount}
-          </span>
-        )}
-      </button>
+  const notificationElements = notifications.map((notification) => {
+    const notificationTime = timeAgo(notification.createdAt);
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-[320px] md:w-[360px] origin-top-right rounded-2xl bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-          <div className="flex items-center justify-between p-4 border-b border-neutral-200">
-            <h3 className="text-base font-bold text-neutral-900">Thông báo</h3>
-            {unreadCount > 0 && (
-              <button 
-                onClick={markAllAsRead}
-                className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-dark transition-colors"
-              >
-                <HugeiconsIcon icon={Tick01Icon} size={14} />
-                Đánh dấu đã đọc
-              </button>
-            )}
-          </div>
-          <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-            {notifications.length > 0 ? (
-              <div className="flex flex-col">
-                {notifications.map((notif) => (
-                  <div 
-                    key={notif.id} 
-                    onClick={() => handleNotifClick(notif.id, notif.isRead)}
-                    className={`p-4 border-b border-neutral-100 last:border-0 hover:bg-neutral-surface transition-colors cursor-pointer ${!notif.isRead ? 'bg-blue-50/30' : ''}`}
-                  >
-                    <div className="flex justify-between items-start gap-2">
-                      <p className={`text-sm ${!notif.isRead ? 'font-bold text-neutral-900' : 'font-semibold text-neutral-700'}`}>
-                        {notif.title}
-                      </p>
-                      <span className="text-xs text-neutral-400 whitespace-nowrap">{timeAgo(notif.createdAt)}</span>
-                    </div>
-                    <p className="mt-1 text-sm text-neutral-600 line-clamp-2">
-                      {notif.content}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-8 text-center text-neutral-500">
-                <p className="text-sm font-medium">Bạn không có thông báo nào</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+    return (
+      <li className="NotificationPopover__item border-b border-border last:border-b-0" key={notification.id}>
+        <button
+          className={cn(
+            "NotificationPopover__item-button",
+            "flex w-full flex-col gap-2 p-4 text-left transition-colors hover:bg-surface-subtle",
+            !notification.isRead && "NotificationPopover__item-button--unread bg-primary-soft/50",
+          )}
+          type="button"
+          onClick={() => handleNotificationClick(notification.id, notification.isRead)}
+        >
+          <span className="NotificationPopover__item-heading flex w-full items-start justify-between gap-4">
+            <span
+              className={cn(
+                "NotificationPopover__item-title text-sm leading-6 text-text-primary",
+                notification.isRead ? "font-medium" : "font-semibold",
+              )}
+            >
+              {notification.title}
+            </span>
+            <time
+              className="NotificationPopover__item-time shrink-0 text-xs leading-4 text-text-tertiary"
+              dateTime={notification.createdAt}
+            >
+              {notificationTime}
+            </time>
+          </span>
+          <span className="NotificationPopover__item-content line-clamp-2 text-sm leading-6 text-text-secondary">
+            {notification.content}
+          </span>
+        </button>
+      </li>
+    );
+  });
+
+  const listContent = notifications.length > 0 ? (
+    <ul className="NotificationPopover__list max-h-96 overflow-y-auto">{notificationElements}</ul>
+  ) : (
+    <div className="NotificationPopover__empty p-8 text-center">
+      <p className="NotificationPopover__empty-copy text-sm leading-6 text-text-secondary">
+        Bạn chưa có thông báo nào.
+      </p>
+    </div>
+  );
+
+  const markAllControl = unreadCount > 0 ? (
+    <button
+      className="NotificationPopover__mark-all inline-flex min-h-10 items-center gap-2 rounded-md px-4 text-xs font-semibold text-primary transition-colors hover:bg-primary-soft focus-visible:outline-none"
+      type="button"
+      onClick={markAllAsRead}
+    >
+      <HugeiconsIcon icon={Tick01Icon} size={16} aria-hidden />
+      <span className="NotificationPopover__mark-all-label">Đánh dấu đã đọc</span>
+    </button>
+  ) : null;
+
+  const unreadBadge = unreadCount > 0 ? (
+    <span
+      className="NotificationPopover__count absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-xs font-bold text-white"
+      aria-live="polite"
+    >
+      {unreadCount}
+    </span>
+  ) : null;
+
+  const panelContent = isOpen ? (
+    <section
+      className="NotificationPopover__panel absolute right-0 z-50 mt-2 w-[calc(100vw-32px)] max-w-[360px] overflow-hidden rounded-lg border border-border bg-surface shadow-lg"
+      id="notification-popover"
+      aria-labelledby="notification-popover-title"
+    >
+      <header className="NotificationPopover__header flex items-center justify-between gap-4 border-b border-border p-4">
+        <h2
+          className="NotificationPopover__title text-base font-semibold leading-6 text-text-primary"
+          id="notification-popover-title"
+        >
+          Thông báo
+        </h2>
+        {markAllControl}
+      </header>
+      {listContent}
+    </section>
+  ) : null;
+
+  return (
+    <div className="NotificationPopover relative" ref={popoverRef}>
+      <button
+        className={cn(
+          "NotificationPopover__trigger",
+          "relative flex h-10 w-10 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-surface-subtle hover:text-text-primary focus-visible:outline-none",
+          isOpen && "NotificationPopover__trigger--open bg-primary-soft text-primary",
+        )}
+        type="button"
+        onClick={() => setIsOpen((currentOpen) => !currentOpen)}
+        aria-label="Thông báo"
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
+        aria-controls="notification-popover"
+      >
+        <HugeiconsIcon icon={Notification01Icon} size={20} aria-hidden />
+        {unreadBadge}
+      </button>
+      {panelContent}
     </div>
   );
 }

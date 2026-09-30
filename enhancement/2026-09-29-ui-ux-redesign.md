@@ -64,6 +64,16 @@
 - Worktree dependencies được dựng từ `pnpm install --offline --frozen-lockfile`; lockfile không thay đổi và không có package mới.
 - Live Refero research: unavailable (`NO_SUBSCRIPTION`); approved spec remains the locked design authority.
 
+### Task 3 — Responsive application shell
+
+- Replaced the duplicate header/subnavigation composition with one role-aware application shell.
+- Desktop uses a persistent sidebar; tablet uses a top-bar drawer; mobile uses bottom navigation plus a complete `Thêm` drawer.
+- Preserved `AuthMockProvider > RoleSwitcherBanner > AppShell` provider order and the existing login/logout callbacks.
+- Notification repository actions and realtime refresh remain unchanged; only presentation and accessible interaction states were restyled.
+- `PageLayout` now owns content/context composition. Temporary deprecated aliases keep intermediate screens compiling until their approved migration tasks.
+- Verification: navigation contract 3/3, full suite 69/69, TypeScript pass, scoped ESLint pass.
+- Visual limitation: the real Auth0 login route was smoke-tested with no horizontal overflow. Member/admin visual states require explicit mock-auth authorization and were not bypassed.
+
 ## 6. Lợi ích
 
 - Tạo một visual language thống nhất và dễ maintain trước MVP.

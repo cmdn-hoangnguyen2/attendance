@@ -1,39 +1,50 @@
 "use client";
 
-import React from "react";
+import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { GlobalSubNavigation } from "./GlobalSubNavigation";
-
-interface PageLayoutProps {
-  children: React.ReactNode;
-  sidebar?: React.ReactNode;
-  actionButton?: React.ReactNode;
+export interface PageLayoutProps {
+  children: ReactNode;
+  contextRail?: ReactNode;
+  className?: string;
+  /** @deprecated Migrate to contextRail in the owning screen task. */
+  sidebar?: ReactNode;
+  /** @deprecated Migrate to PageHeader action in the owning screen task. */
+  actionButton?: ReactNode;
 }
 
-export function PageLayout({ children, sidebar, actionButton }: PageLayoutProps) {
+export function PageLayout({
+  children,
+  contextRail,
+  className,
+  sidebar,
+  actionButton,
+}: PageLayoutProps) {
+  const resolvedContextRail = contextRail ?? sidebar;
   const mainClassName = cn(
     "PageLayout__main",
-    "flex flex-col gap-6",
-    sidebar ? "lg:col-span-9" : "lg:col-span-12",
+    "flex min-w-0 flex-col gap-8",
+    resolvedContextRail ? "2xl:col-span-9" : "2xl:col-span-12",
   );
+  const legacyActionContent = actionButton ? (
+    <div className="PageLayout__legacy-action flex justify-end">{actionButton}</div>
+  ) : null;
+  const contextContent = resolvedContextRail ? (
+    <aside className="PageLayout__context hidden 2xl:col-span-3 2xl:block">
+      <div className="PageLayout__context-sticky sticky top-20">{resolvedContextRail}</div>
+    </aside>
+  ) : null;
 
   return (
-    <div className="PageLayout flex w-full flex-1 flex-col bg-neutral-50/50">
-      {/* Sub Nav */}
-      <GlobalSubNavigation actionButton={actionButton} />
-
-      {/* Content Area */}
-      <div className="PageLayout__content mx-auto w-full max-w-7xl px-6 pb-12">
-        <div className="PageLayout__grid grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-          <main className={mainClassName}>{children}</main>
-
-          {sidebar && (
-            <aside className="PageLayout__sidebar sticky top-20 lg:col-span-3">
-              {sidebar}
-            </aside>
-          )}
+    <div className={cn("PageLayout", "w-full bg-canvas", className)}>
+      <div className="PageLayout__content mx-auto w-full max-w-[1600px] px-4 py-8 md:px-6 xl:px-8 2xl:px-12">
+        <div className="PageLayout__grid grid grid-cols-1 items-start gap-8 2xl:grid-cols-12">
+          <main className={mainClassName}>
+            {legacyActionContent}
+            {children}
+          </main>
+          {contextContent}
         </div>
       </div>
     </div>

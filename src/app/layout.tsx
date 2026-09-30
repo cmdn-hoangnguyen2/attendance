@@ -3,7 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthMockProvider } from "@/context/AuthMockContext";
 import { RoleSwitcherBanner } from "@/components/layout/RoleSwitcherBanner";
-import { AppHeader } from "@/components/layout/AppHeader";
+import { AppShell } from "@/components/layout/AppShell";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin", "vietnamese"],
@@ -26,8 +26,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col bg-canvas font-sans text-text-primary">
         <AuthMockProvider>
           <RoleSwitcherBanner />
-          <AppHeader />
-          <div className="flex-1 flex flex-col">{children}</div>
+          <AppShell>{children}</AppShell>
         </AuthMockProvider>
       </body>
     </html>
