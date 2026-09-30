@@ -111,6 +111,15 @@ Task 4 review gate: presentation may change, but the rows above must match the f
 - Layout contract: ưu tiên `PageHeader -> context/filter -> primary content -> secondary context`; dùng structured rows/content panels thay vì lặp nhiều floating cards.
 - Tasks 3-9 phải review desktop/tablet/mobile side by side và ghi lại old-layout regression, header order, logout location, border count, spacing consistency, card repetition và primary-action visibility.
 
+### Common style implementation
+
+- Header chỉ còn notification và user information; logout được chuyển vào account section của sidebar và mobile `Thêm` drawer, giữ nguyên callback `logout()`.
+- Bỏ divider trang trí khỏi `PageHeader`; khai báo một nhóm recipe dùng chung cho page stack, section stack, data row và form field bằng semantic tokens hiện có.
+- My Rooms bỏ fixed-height `600px`, sử dụng structured rows, PageHeader, segmented tabs, search có label, loading/empty/search states và pagination hiện hữu.
+- My Funds thay ba KPI cards bằng một summary region, đặt nghĩa vụ chưa nộp trước lịch sử thanh toán và chuyển `PaymentInfoModal` sang native `ResponsiveDialog`.
+- Runtime evidence: desktop, tablet portrait và mobile không có horizontal document overflow; payment dialog nhận focus, đóng bằng Escape và trả focus về nút mở.
+- Automated evidence: TypeScript exit 0, scoped ESLint exit 0, full business suite 69/69 pass; protected repository, realtime, API, domain, migration và existing test files không thay đổi.
+
 ## 6. Lợi ích
 
 - Tạo một visual language thống nhất và dễ maintain trước MVP.

@@ -13,16 +13,11 @@ import {
   roomRepository,
   userRepository,
 } from "@/lib/repository";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Coins01Icon,
-  CheckmarkCircle01Icon,
-  Clock01Icon,
-  CreditCardIcon,
-  Building01Icon,
-} from "@hugeicons/core-free-icons";
+import { Coins01Icon } from "@hugeicons/core-free-icons";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useUserRealtime } from "@/lib/realtime/useUserRealtime";
 import { DropdownFilter, type DropdownFilterItem } from "@/components/ui/DropdownFilter";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -187,239 +182,122 @@ export default function PersonalFundsPage() {
 
   const activePaymentImage = modalPaymentImageUrl || activeRoom?.paymentImageUrl || null;
 
-  // Nếu người dùng chưa đăng nhập hoặc đang kiểm tra phiên
-  if (isAuthLoading || !isAuthenticated || !currentUser) {
-    return (
-      <PageLayout>
-        <div className="flex flex-col gap-6 animate-pulse">
-          <div className="h-12 w-64 rounded-xl bg-neutral-200" />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="h-32 rounded-2xl bg-neutral-100" />
-            <div className="h-32 rounded-2xl bg-neutral-100" />
-            <div className="h-32 rounded-2xl bg-neutral-100" />
-          </div>
-          <div className="h-64 rounded-2xl bg-neutral-100" />
-        </div>
-      </PageLayout>
-    );
-  }
-
   const tabItems: DropdownFilterItem<FundFilterTab>[] = [
     { key: FundFilterTab.ALL, label: "Tất cả" },
     { key: FundFilterTab.OUTSTANDING, label: "Cần thanh toán" },
     { key: FundFilterTab.PAID, label: "Đã thanh toán" },
   ];
+  const outstandingAmount = formatVND(stats.totalOutstandingAmount);
+  const paidAmount = formatVND(stats.totalPaidAmount);
+  const totalAmount = formatVND(stats.totalOutstandingAmount + stats.totalPaidAmount);
+  const closePayment = () => setSelectedContribution(null);
+  const emptyDescription = statusFilter === FundFilterTab.OUTSTANDING
+    ? "Bạn không còn khoản quỹ nào cần thanh toán."
+    : "Chưa có khoản đóng góp quỹ trong danh mục đã chọn.";
 
+  const renderContribution = (contribution: FundContribution) => {
+    const room = roomsMap.get(contribution.roomId);
+    const isOutstanding = contribution.status === FundContributionStatus.OUTSTANDING;
+    const roomName = room?.name ?? "Phòng họp";
+    const amount = formatVND(contribution.amount);
+    const createdDate = new Date(contribution.createdAt).toLocaleDateString("vi-VN");
+    const payment = paymentsMap.get(contribution.id);
+    const paidDate = payment?.paidAt ? new Date(payment.paidAt).toLocaleDateString("vi-VN") : "Đã xác nhận";
+    const archivedBadge = room?.status === RoomStatus.ARCHIVED
+      ? <StatusBadge tone="neutral">Phòng đã lưu trữ</StatusBadge> : null;
+    const reasonDetails = contribution.reasonDetails
+      ? <p className="MyFunds__details break-words text-sm text-text-secondary">{contribution.reasonDetails}</p> : null;
+    const action = isOutstanding ? (
+      <Button className="MyFunds__payment-action w-full sm:w-auto" size="touch" variant="secondary" onClick={() => setSelectedContribution(contribution)}>Xem QR thanh toán</Button>
+    ) : <span className="MyFunds__paid-date text-xs text-text-tertiary">{paidDate}</span>;
+    const tone = isOutstanding ? "warning" : "success";
+    const statusLabel = isOutstanding ? "Chưa nộp" : "Đã thanh toán";
+    return (
+      <li className="MyFunds__row ui-data-row grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]" key={contribution.id}>
+        <div className="MyFunds__identity flex min-w-0 flex-col gap-2">
+          <div className="MyFunds__room-line flex flex-wrap items-center gap-2">
+            <h3 className="MyFunds__room-name break-words text-base font-semibold text-text-primary">{roomName}</h3>
+            {archivedBadge}
+          </div>
+          <p className="MyFunds__reason break-words text-sm text-text-secondary">{contribution.reason}</p>
+          {reasonDetails}
+          <time className="MyFunds__created-date text-xs text-text-tertiary" dateTime={contribution.createdAt}>{createdDate}</time>
+        </div>
+        <div className="MyFunds__payment flex flex-col items-start gap-4 sm:flex-row sm:items-center lg:justify-end">
+          <div className="MyFunds__amount-status flex flex-col items-start gap-2 lg:items-end">
+            <p className="MyFunds__amount tabular-numbers text-xl font-semibold text-text-primary">{amount}</p>
+            <StatusBadge tone={tone}>{statusLabel}</StatusBadge>
+          </div>
+          {action}
+        </div>
+      </li>
+    );
+  };
+  const outstandingRows = filteredContributions.filter((item) => item.status === FundContributionStatus.OUTSTANDING).map(renderContribution);
+  const paidRows = filteredContributions.filter((item) => item.status !== FundContributionStatus.OUTSTANDING).map(renderContribution);
+  const outstandingSection = outstandingRows.length ? (
+    <section className="MyFunds__outstanding" aria-labelledby="outstanding-title">
+      <h2 className="MyFunds__section-title text-lg font-semibold text-text-primary" id="outstanding-title">Cần thanh toán</h2>
+      <ul className="MyFunds__list">{outstandingRows}</ul>
+    </section>
+  ) : null;
+  const paidSection = paidRows.length ? (
+    <section className="MyFunds__history" aria-labelledby="paid-title">
+      <h2 className="MyFunds__section-title text-lg font-semibold text-text-primary" id="paid-title">Lịch sử thanh toán</h2>
+      <ul className="MyFunds__list">{paidRows}</ul>
+    </section>
+  ) : null;
+  const skeletons = [1, 2, 3].map((item) => <div className="MyFunds__skeleton h-24 rounded-lg bg-surface-subtle" key={item} />);
+  let results = <div className="MyFunds__groups ui-page-stack">{outstandingSection}{paidSection}</div>;
+  if (!filteredContributions.length) {
+    results = <EmptyState icon={Coins01Icon} title="Không có khoản quỹ nào" description={emptyDescription} />;
+  }
+  if (isLoading) {
+    results = <div className="MyFunds__loading ui-section-stack animate-pulse" role="status" aria-label="Đang tải quỹ">{skeletons}</div>;
+  }
+  const paymentDialog = selectedContribution ? (
+    <PaymentInfoModal
+      isOpen={Boolean(selectedContribution)}
+      onClose={closePayment}
+      roomName={activeRoom?.name ?? "Phòng họp"}
+      ownerName={activeOwner?.displayName ?? "Chủ phòng"}
+      amount={selectedContribution.amount}
+      reason={selectedContribution.reason}
+      paymentImageUrl={activePaymentImage}
+      isRoomArchived={activeRoom?.status === RoomStatus.ARCHIVED}
+    />
+  ) : null;
+  if (isAuthLoading || !isAuthenticated || !currentUser) {
+    return <PageLayout><div className="MyFunds__loading ui-section-stack animate-pulse" role="status" aria-label="Đang kiểm tra phiên đăng nhập">{skeletons}</div></PageLayout>;
+  }
   return (
     <PageLayout>
-      <div className="flex flex-col gap-8">
-        {/* Header Trang: Tiêu đề súc tích */}
-        <section aria-labelledby="funds-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 id="funds-title" className="text-2xl font-extrabold tracking-tight text-neutral-900">
-              Quỹ cá nhân
-            </h1>
-            <p className="text-sm text-neutral-500 mt-1">
-              Theo dõi các khoản quỹ cần đóng và lịch sử thanh toán.
-            </p>
+      <div className="MyFunds ui-page-stack">
+        <PageHeader id="funds-title" title="Quỹ của tôi" description="Các khoản cần đóng và lịch sử thanh toán của bạn." />
+        <section className="MyFunds__summary flex flex-col gap-6 rounded-lg bg-surface-subtle p-6 lg:flex-row lg:items-center lg:justify-between" aria-label="Tổng hợp quỹ">
+          <div className="MyFunds__balance flex flex-col gap-2">
+            <h2 className="MyFunds__balance-label text-sm font-semibold text-text-secondary">Cần thanh toán</h2>
+            <p className="MyFunds__balance-value tabular-numbers text-2xl font-bold leading-8 text-text-primary">{outstandingAmount}</p>
+            <p className="MyFunds__balance-count text-sm text-text-secondary">{stats.outstandingCount} khoản chưa nộp</p>
           </div>
+          <dl className="MyFunds__totals flex flex-wrap gap-x-8 gap-y-4 text-sm">
+            <div className="MyFunds__total flex flex-col gap-2">
+              <dt className="MyFunds__total-label text-text-secondary">Đã thanh toán · {stats.paidCount} khoản</dt>
+              <dd className="MyFunds__total-value tabular-numbers font-semibold text-text-primary">{paidAmount}</dd>
+            </div>
+            <div className="MyFunds__total flex flex-col gap-2">
+              <dt className="MyFunds__total-label text-text-secondary">Tổng phát sinh · {contributions.length} khoản</dt>
+              <dd className="MyFunds__total-value tabular-numbers font-semibold text-text-primary">{totalAmount}</dd>
+            </div>
+          </dl>
         </section>
-
-        {/* KPI Cards: Bento 3 cột (Neutral borders, amber only for outstanding state) */}
-        <section aria-label="Thống kê nghĩa vụ quỹ" className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {/* Card 1: Tổng tiền cần thanh toán (Status Amber) */}
-          <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-6 shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-800">
-                Cần thanh toán
-              </span>
-              <span className="rounded-full bg-amber-100 p-2 text-amber-700">
-                <HugeiconsIcon icon={Clock01Icon} size={20} />
-              </span>
-            </div>
-            <div className="mt-4">
-              <div className="text-2xl lg:text-3xl font-extrabold text-amber-900">
-                {formatVND(stats.totalOutstandingAmount)}
-              </div>
-              <p className="text-xs text-amber-700 mt-1">
-                {stats.outstandingCount} khoản nghĩa vụ chưa nộp
-              </p>
-            </div>
+        <section className="MyFunds__content ui-section-stack" aria-label="Danh sách khoản quỹ">
+          <div className="MyFunds__filters">
+            <DropdownFilter items={tabItems} activeKey={statusFilter} onChange={setStatusFilter} />
           </div>
-
-          {/* Card 2: Đã hoàn thành (Neutral Gray Border) */}
-          <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-neutral-600">
-                Đã thanh toán
-              </span>
-              <span className="rounded-full bg-neutral-100 p-2 text-neutral-700">
-                <HugeiconsIcon icon={CheckmarkCircle01Icon} size={20} />
-              </span>
-            </div>
-            <div className="mt-4">
-              <div className="text-2xl lg:text-3xl font-extrabold text-neutral-900">
-                {formatVND(stats.totalPaidAmount)}
-              </div>
-              <p className="text-xs text-neutral-500 mt-1">
-                {stats.paidCount} khoản đã hoàn thành
-              </p>
-            </div>
-          </div>
-
-          {/* Card 3: Tổng số khoản ghi nhận (Neutral Gray Border) */}
-          <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-neutral-600">
-                Tổng phát sinh
-              </span>
-              <span className="rounded-full bg-neutral-100 p-2 text-neutral-700">
-                <HugeiconsIcon icon={Coins01Icon} size={20} />
-              </span>
-            </div>
-            <div className="mt-4">
-              <div className="text-2xl lg:text-3xl font-extrabold text-neutral-900">
-                {formatVND(stats.totalOutstandingAmount + stats.totalPaidAmount)}
-              </div>
-              <p className="text-xs text-neutral-500 mt-1">
-                {contributions.length} lượt phát sinh nghĩa vụ
-              </p>
-            </div>
-          </div>
+          {results}
         </section>
-
-        {/* Filter Dropdown */}
-        <section aria-label="Bộ lọc trạng thái quỹ" className="flex items-center justify-between">
-          <DropdownFilter
-            items={tabItems}
-            activeKey={statusFilter}
-            onChange={setStatusFilter}
-          />
-        </section>
-
-        {/* Danh sách khoản đóng góp: Grid 4 cột desktop */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-56 rounded-2xl bg-neutral-200" />
-            ))}
-          </div>
-        ) : filteredContributions.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredContributions.map((contribution) => {
-              const room = roomsMap.get(contribution.roomId);
-              const isOutstanding = contribution.status === FundContributionStatus.OUTSTANDING;
-              const isRoomArchived = room?.status === RoomStatus.ARCHIVED;
-
-              return (
-                <article
-                  key={contribution.id}
-                  className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs transition-all hover:border-neutral-400 flex flex-col justify-between"
-                >
-                  {/* Top content */}
-                  <div>
-                    {/* Room Name, Date & Archived Badge */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-800 truncate">
-                        <HugeiconsIcon icon={Building01Icon} size={15} className="text-neutral-400 shrink-0" />
-                        <span className="truncate">{room?.name ?? "Phòng họp"}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {isRoomArchived && (
-                          <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-bold text-neutral-600 border border-neutral-200">
-                            Phòng đã lưu trữ
-                          </span>
-                        )}
-                        <span className="text-[11px] text-neutral-400">
-                          {new Date(contribution.createdAt).toLocaleDateString("vi-VN")}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Amount */}
-                    <div className="text-2xl font-extrabold text-neutral-900 mb-2">
-                      {formatVND(contribution.amount)}
-                    </div>
-
-                    {/* Reason */}
-                    <div className="space-y-1 mb-4">
-                      <span className="inline-block rounded-md bg-neutral-100 px-2.5 py-0.5 text-[11px] font-semibold text-neutral-700">
-                        {contribution.reason}
-                      </span>
-                      {contribution.reasonDetails && (
-                        <p className="text-xs text-neutral-500 line-clamp-2 italic">
-                          &ldquo;{contribution.reasonDetails}&rdquo;
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Footer Action Card */}
-                  <div className="mt-4 pt-4 border-t border-neutral-100 flex items-center justify-between gap-2">
-                    {isOutstanding ? (
-                      <>
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 border border-amber-200">
-                          <HugeiconsIcon icon={Clock01Icon} size={13} />
-                          <span>Chưa nộp</span>
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={() => setSelectedContribution(contribution)}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-bold text-neutral-900 shadow-xs hover:bg-primary-hover hover:text-white transition-all"
-                        >
-                          <HugeiconsIcon icon={CreditCardIcon} size={14} />
-                          <span>Xem QR Thanh toán</span>
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200/60">
-                          <HugeiconsIcon icon={CheckmarkCircle01Icon} size={13} />
-                          <span>Đã hoàn thành</span>
-                        </span>
-
-                        <span className="text-[11px] text-neutral-400">
-                          {(() => {
-                            const payment = paymentsMap.get(contribution.id);
-                            return payment?.paidAt
-                              ? new Date(payment.paidAt).toLocaleDateString("vi-VN")
-                              : "Đã xác nhận";
-                          })()}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        ) : (
-          /* Reusable Empty State Component */
-          <EmptyState
-            icon={Coins01Icon}
-            title="Không có khoản nghĩa vụ nào"
-            description={
-              statusFilter === FundFilterTab.OUTSTANDING
-                ? "Tuyệt vời! Bạn không còn khoản nợ quỹ nào cần thanh toán."
-                : "Hiện chưa có khoản đóng góp quỹ nào trong danh mục đã chọn."
-            }
-          />
-        )}
-
-        {/* Modal Thông tin Chuyển khoản / QR Code */}
-        {selectedContribution && (
-          <PaymentInfoModal
-            isOpen={Boolean(selectedContribution)}
-            onClose={() => setSelectedContribution(null)}
-            roomName={activeRoom?.name ?? "Phòng họp"}
-            ownerName={activeOwner?.displayName ?? "Chủ phòng"}
-            amount={selectedContribution.amount}
-            reason={selectedContribution.reason}
-            paymentImageUrl={activePaymentImage}
-            isRoomArchived={activeRoom?.status === RoomStatus.ARCHIVED}
-          />
-        )}
+        {paymentDialog}
       </div>
     </PageLayout>
   );
