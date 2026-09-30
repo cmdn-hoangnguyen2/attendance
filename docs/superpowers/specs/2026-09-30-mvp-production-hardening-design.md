@@ -3,7 +3,7 @@
 ## Document status
 
 - Date: 2026-09-30
-- Status: Self-reviewed, ready for BOSS review
+- Status: Approved by BOSS; detailed implementation plans prepared separately
 - Scope: Product behavior, Backend, realtime, security boundary, test coverage, mock removal, and limited UI correctness
 - UI constraint: Do not start another visual redesign
 - Data decision: Existing local and linked development data may be deleted; production data must never be targeted
@@ -160,7 +160,7 @@ The phase is incomplete if any shipped route can obtain identity, room, member, 
 
 ### 8.2 Home
 
-- Browse visible Meeting and Channel rooms.
+- Browse discoverable Meeting rooms and only authorized Channel rooms; Channel remains invite-only and hidden from outsiders.
 - Search, type filter, visibility-aware empty states, and real pagination.
 - Create a room through an authorized atomic command.
 - Join public rooms; request/cancel access for private rooms.
@@ -189,7 +189,7 @@ The phase is incomplete if any shipped route can obtain identity, room, member, 
 
 - Real peer-debt ledger; no local fake balances.
 - Create debt/expense with participants, amount, reason, and timestamp.
-- Partial/full settlement where product rules allow it.
+- Full settlement in integer VND; partial payment is outside the existing MVP rules.
 - Personal payment QR upload/read/delete through private Storage.
 - Immutable ledger/history and compensating corrections instead of destructive financial edits.
 - Participant-scoped notifications and realtime invalidation.
@@ -198,7 +198,7 @@ The phase is incomplete if any shipped route can obtain identity, room, member, 
 
 - Outstanding obligations first, followed by payment history.
 - Aggregate read model without one request per contribution.
-- Confirmed, pending, corrected, overdue, and archived-room states.
+- Outstanding, confirmed, corrected, and archived-room states; no due date or overdue state is introduced.
 - Private payment evidence access with expiring signed URLs and hard-reload readback.
 - Scoped realtime refresh after contribution/payment/correction changes.
 
@@ -235,8 +235,9 @@ The phase is incomplete if any shipped route can obtain identity, room, member, 
 - Several tables have broadly readable policies, while mutation policies are service-role oriented.
 - Channel-room read policy is service-role restricted.
 - Current public Presence allows client-provided identity and room metadata.
+- Source helper `is_service_role()` uses `current_user = 'postgres'` inside `SECURITY DEFINER`. Under a postgres-owned function this can evaluate true for non-service callers. Live function owner/grants have not been inspected, so deployed exploitability is unknown; the new baseline must eliminate this bypass and prove anonymous writes are denied.
 
-This creates two incompatible failure modes: real browser mutations may be rejected, while some sensitive reads may be overexposed.
+Depending on deployed function ownership/grants, real browser mutations may be rejected or overauthorized; sensitive reads may also be overexposed. The live RLS matrix, not the policy names, determines the actual boundary.
 
 ### 9.2 Target model
 
@@ -388,6 +389,8 @@ The detailed implementation plans will be written as separate reviewable package
 
 Packages may be implemented sequentially with small independently reviewable commits. Package B is a dependency for all real-data feature packages. Destructive reset belongs only to Package A after its environment guard proves the target.
 
+Execution dependency clarification: A removes dead fixtures and seeds and establishes the reset guard; B removes mock authentication, C replaces mock invitations, and F replaces mock debts. The zero-runtime-mock release gate is enforced after F and again in H. Temporarily disabling an unfinished action must show an explicit unavailable state, never fake success or fake data.
+
 ## 16. Definition of done
 
 - Development reset ran only against a proven non-production target and left no seed/business records.
@@ -417,3 +420,4 @@ Packages may be implemented sequentially with small independently reviewable com
 - [Auth0 Next.js SDK `getAccessToken`](https://auth0.github.io/nextjs-auth0/functions/client.getAccessToken.html)
 - [WCAG 2.2 contrast minimum](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
 - [WCAG 2.2 non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html)
+- [PostgreSQL current_user and SECURITY DEFINER](https://www.postgresql.org/docs/current/functions-info.html)

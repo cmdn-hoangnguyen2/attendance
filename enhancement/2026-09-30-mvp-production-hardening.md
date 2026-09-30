@@ -3,7 +3,7 @@
 ## 1. Thời gian
 
 - Bắt đầu: 2026-09-30 (Asia/Ho_Chi_Minh)
-- Trạng thái: Architectural design đã self-review và đang chờ BOSS review
+- Trạng thái: Architectural spec được BOSS duyệt; implementation plans A-H đã self-review, chờ review implementation plan
 
 ## 2. Feature
 
@@ -28,7 +28,15 @@
 - Giữ schema reproducible, reset không seed và tạo dữ liệu mới qua authenticated product flows.
 - Dùng Auth0 third-party token cho Supabase RLS-protected read/realtime; dùng server command hoặc transactional function cho privileged/multi-record mutations.
 - Realtime đóng vai trò invalidation signal và refetch authoritative state; Presence không dùng cho authorization.
-- Viết các implementation plan nhỏ theo Package A-H sau khi BOSS duyệt spec.
+- Master plan: `docs/superpowers/plans/2026-09-30-mvp-hardening.md`.
+- Các implementation plans A-H có target files, interfaces, failing-test cases, implementation steps, verification và acceptance gates.
+- Execution đã chọn trước đó: Native; tiếp tục trong worktree `codex/ui-ux-redesign`.
+- Zero-mock closure theo dependency: A xóa dead fixtures/seeds, B xóa mock auth, C thay mock invite, F thay mock debt; F/H chạy gate cuối.
+- Giữ rule cũ: Channel invite-only, full integer-VND payment, không due date/partial-payment flow.
+- Self-review đã khóa shared SQL command signature, Idempotency-Key, transaction lock order, package dependencies, zero-mock gate và audit coverage Tasks 1-7.
+- Bổ sung RLS risk: `current_user='postgres'` trong SECURITY DEFINER có thể vượt policy khi function owner là postgres; deployed owner/grants chưa được kiểm tra. A/B phải loại bỏ shortcut này và chứng minh anon writes bị deny.
+- Research từ official Supabase/Auth0/WCAG docs được gắn trong owning plans; actual tenant config/CLI/test credentials là execution prerequisites, chưa được claim hoàn tất.
+- Lượt này chỉ thay documentation; không chạy reset, không sửa source code và không chạy lại application build/tests vì chưa có code change.
 
 ## 5. Scope ảnh hưởng
 
