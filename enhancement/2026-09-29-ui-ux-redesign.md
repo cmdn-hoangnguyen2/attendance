@@ -102,6 +102,15 @@ Task 4 review gate: presentation may change, but the rows above must match the f
 - Native drawer focus was verified: opening `Thêm` places focus on `Đóng menu`, and the dialog reports modal state.
 - Full regression: 69/69 tests pass; TypeScript passes with incremental output disabled; scoped ESLint has 0 errors and only the two pre-existing Home hook warnings.
 
+## Common style guardrails — BOSS follow-up
+
+- BOSS yêu cầu khóa common style để tránh quay lại layout cũ, border không nhất quán, quá nhiều border, spacing dư thừa và card-heavy composition.
+- Header contract: chỉ giữ notification và user information trên header; logout phải nằm trong sidebar account section hoặc mobile `Thêm` drawer. Đây chỉ là thay đổi vị trí presentation; logout callback, auth behavior và role logic phải giữ nguyên.
+- Border contract: default `1px solid #DDE2EA`; strong `1px solid #B8C0CE` chỉ cho focus/selected/high-value separation; không dùng nested hoặc double borders và không dùng semantic/community colors làm border trang trí.
+- Density contract: `8/16px` cho nội bộ, `24px` cho block liên quan, `32px` cho major sections, `48px` chỉ cho page-level separation; peer sections phải dùng cùng gap token.
+- Layout contract: ưu tiên `PageHeader -> context/filter -> primary content -> secondary context`; dùng structured rows/content panels thay vì lặp nhiều floating cards.
+- Tasks 3-9 phải review desktop/tablet/mobile side by side và ghi lại old-layout regression, header order, logout location, border count, spacing consistency, card repetition và primary-action visibility.
+
 ## 6. Lợi ích
 
 - Tạo một visual language thống nhất và dễ maintain trước MVP.

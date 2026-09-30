@@ -122,6 +122,66 @@ When a file contains both presentation and business behavior, only markup, prese
 - Every component considers default, hover, focus, active, disabled, loading, empty, error, and success states where applicable.
 - Every animation must communicate hierarchy, feedback, or state change.
 
+### 6.1 Common style guardrails
+
+These rules are mandatory for every screen and component in Tasks 3-9. They are
+the visual regression contract for preventing the redesign from drifting back to
+the current layout.
+
+#### Structure and density
+
+- Do not copy the current page composition, header order, card grid, or spacing
+  rhythm into a redesigned screen.
+- Every screen follows one visible hierarchy: page header -> context or filter
+  controls -> primary content -> secondary context. A screen must not present
+  competing primary regions at the same visual weight.
+- Use the 8-point grid as a rhythm, not as permission to stack large gaps. Use
+  `8-16px` inside a component, `24px` between related blocks, and `32px` between
+  major sections. Use `48px` only for a deliberate page-level separation.
+- Adjacent sections in the same workspace must use the same gap token. Do not
+  combine arbitrary `32px`, `40px`, and `48px` gaps between peer sections.
+- Internal spacing must remain smaller than the surrounding section spacing.
+  If a section looks detached from the next section, reduce the gap before
+  adding another card or border.
+- Prefer one structured list, data row, or content panel over several equal
+  floating cards. A card is allowed only when it communicates an actionable
+  object, a meaningful boundary, or real elevation.
+
+#### Border and surface policy
+
+- Default boundaries use exactly `1px solid #DDE2EA`.
+- Strong boundaries use exactly `1px solid #B8C0CE` and are reserved for focus,
+  selected emphasis, or a high-value separation.
+- Do not mix multiple border colors or weights within one component hierarchy.
+- Do not add borders to every nested element. Use one boundary per component,
+  or a single row divider for a structured list; use spacing and surface contrast
+  for all other grouping.
+- Avoid double borders between adjacent panels, rows, and dialogs. Shared edges
+  must collapse into one visible boundary or no boundary.
+- `color-community` and semantic colors must never be used as decorative border
+  colors.
+
+#### Header and navigation hierarchy
+
+- The application header exposes only notification access and user information.
+- Logout is not a header action. It lives in the sidebar account section on
+  desktop/tablet and inside the sidebar/More drawer on mobile.
+- User information remains a profile/account affordance; moving logout does not
+  change the existing logout handler, auth behavior, or permission logic.
+- The header must not contain a second copy of primary navigation, redundant
+  breadcrumbs, or competing action clusters.
+
+#### Anti-regression review
+
+- Reject a screen if it visually resembles the old layout, has inconsistent
+  border treatment, relies on card repetition, or leaves unexplained whitespace
+  between peer sections.
+- Review desktop, tablet, and mobile screenshots side by side before marking a
+  task complete. Confirm header control order, logout location, section gaps,
+  border count, primary-action visibility, and content density.
+- Any intentional exception must be recorded in the enhancement log with the
+  reason, affected viewport, and the alternative considered.
+
 Forbidden visual defaults:
 
 - Glassmorphism.

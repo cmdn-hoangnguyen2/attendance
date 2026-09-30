@@ -18,6 +18,9 @@
 - Use Cobalt Commons: canvas `#FFFFFF`, surface `#FFFFFF`, primary `#2F5BD3`, hover `#2446A8`, active `#1D3987`, primary soft `#E9EEFF`, community `#F59E42`, text `#172033`/`#596275`/`#667085`.
 - Use Plus Jakarta Sans through `next/font/google` with Vietnamese subset support and `display: "swap"`.
 - Use the existing 8-point grid. Standard control radii are `8px`, panels `16px`, large overlays `24px`.
+- Apply the common style guardrails in this plan: no legacy layout reuse, one boundary per component hierarchy, default border `1px solid #DDE2EA`, strong border `1px solid #B8C0CE` only when justified, and balanced `8/16/24/32px` spacing rhythm.
+- Keep the application header limited to notification and user information. Logout belongs in the sidebar account section or mobile More drawer; preserve the existing logout handler and auth behavior.
+- Prefer structured rows and content panels over repeated floating cards. Every screen must have one dominant task and a clear `PageHeader -> context/filter -> primary content` hierarchy.
 - Hugeicons remains the only application icon family.
 - Light theme only. Do not add glassmorphism, decorative gradients, glow, marquee, infinite animation, or an animation library.
 - Do not add a UI component library or browser-test dependency.
@@ -33,6 +36,47 @@
 3. Realtime updates must not reset focus, close an open overlay, or move the active action unexpectedly. Verify in Tasks 4, 6, and 7.
 4. Mobile destructive dialogs must keep the impact list, exact phrase input, and submit action reachable at 200% text zoom. Verify in Tasks 7 and 8, with the existing member-removal phrase test unchanged.
 5. Private, pending, archived, empty, loading, permission, and request-error states must remain recognizable at every breakpoint. Exercise the owning state in Tasks 4-8.
+6. The redesigned shell must not regress to the old header order: verify notification and user information are the only header actions, and logout is reachable from the sidebar/account drawer.
+7. Border treatment must remain consistent: verify `#DDE2EA` default boundaries, `#B8C0CE` strong boundaries only where justified, no nested border stacking, and no semantic color used as decoration.
+8. Section density must remain intentional: verify peer sections use the same spacing token, internal spacing is smaller than external spacing, and no unexplained whitespace appears between the three primary room sections.
+
+## Common Style Guardrails
+
+Every implementation task inherits this contract. A task is not complete when
+the functionality works but the screen has drifted toward the old composition.
+
+### Layout and density
+
+- Use the hierarchy `PageHeader -> context/filter -> primary content -> secondary context`.
+- Use `8px` or `16px` for internal spacing, `24px` between related blocks, and `32px` between major sections. Use `48px` only for deliberate page-level separation.
+- Use the same gap token between peer sections. Do not stack arbitrary `32px`, `40px`, and `48px` gaps in one workspace.
+- Prefer one structured list, data row, or content panel over repeated equal cards. A card requires an actionable object, meaningful boundary, or real elevation.
+
+### Border and surface
+
+- Default boundary: exactly `1px solid #DDE2EA`.
+- Strong boundary: exactly `1px solid #B8C0CE`, only for focus, selected emphasis, or high-value separation.
+- Do not mix border colors/weights within one component hierarchy.
+- Do not border every nested element. Avoid double borders on shared edges; use spacing or surface contrast for grouping.
+- Never use community or semantic colors as decorative borders.
+
+### Header and logout placement
+
+- Header actions are limited to notification and user information.
+- Logout is rendered in the sidebar account section on desktop/tablet and in the sidebar/More drawer on mobile.
+- Preserve the existing logout callback, auth behavior, and role logic; this is a presentation relocation only.
+
+### Required task review
+
+At every task review, inspect desktop, tablet, and mobile side by side and record:
+
+- old-layout regression check;
+- header action order and logout location;
+- border token and nested-border check;
+- section gap consistency and unexplained whitespace;
+- card repetition and primary-action visibility.
+
+Intentional exceptions must be recorded in `enhancement/2026-09-29-ui-ux-redesign.md` with the reason and affected viewport.
 
 ---
 
@@ -277,6 +321,11 @@ Create `appNavigationItems.mjs` with the exact labels/routes and no UI dependenc
 
 `AppShell` reads pathname and the existing auth context, hides application navigation on `/login`, renders the `AppHeader`, desktop sidebar navigation, mobile top bar, mobile bottom navigation, and main content slot. Do not change login/logout functions or auth provider order.
 
+The header renders notification and user information only. Render logout in the
+sidebar account section on desktop/tablet and inside the mobile sidebar/More
+drawer. Preserve the existing logout callback and auth behavior; do not add a
+second logout action to the header.
+
 - [ ] **Step 5: Convert PageLayout to content/context composition**
 
 Remove the subnavigation responsibility. Use approved gutters and grid. Render `contextRail` as a wide-desktop rail while allowing the supplied context component to expose its own drawer/sheet trigger below that breakpoint.
@@ -296,7 +345,7 @@ Expected: navigation test PASS, static checks exit 0, unchanged business suite p
 
 - [ ] **Step 7: Verify navigation by role and viewport**
 
-Check guest, member, and admin at `1440x900`, `1024x768`, `768x1024`, `390x844`, and `360x800`. Confirm active state, notification access, profile/logout access, no covered content, and no duplicate navigation landmarks.
+Check guest, member, and admin at `1440x900`, `1024x768`, `768x1024`, `390x844`, and `360x800`. Confirm active state, notification access, user information, logout in the sidebar/account drawer (not the header), no covered content, no duplicate navigation landmarks, consistent border treatment, and balanced shell/content spacing.
 
 - [ ] **Step 8: Commit the shell**
 
@@ -330,6 +379,10 @@ Record in the enhancement log the current prop wiring for `RoomCard`, `RoomListF
 
 Add the approved PageHeader, one Tạo phòng action, search/filter region, room catalog, result count, loading/empty/error presentation, pagination region, and responsive online-member context. Do not change domain state transitions, effect dependencies, repository calls, or handler bodies. A local presentation-only error value may mirror an existing catch outcome without changing the request or retry contract.
 
+Apply the common density rule: one clear page flow, one primary action in the
+header, one consistent gap between filter/catalog/pagination regions, and no
+extra nested cards or decorative borders.
+
 - [ ] **Step 3: Redesign room presentation states**
 
 Keep `layout="catalog"` and every existing prop. Present room name, visibility, owner, member count, relationship state, and one primary action in that order. Ensure public, private, member, owner, pending, rejected, cancel, and retry states remain distinguishable without relying on color alone.
@@ -352,7 +405,7 @@ Expected: all commands exit 0; no protected files changed.
 
 - [ ] **Step 6: Verify the Home role/state/viewport matrix**
 
-Verify authenticated member and owner states at all approved viewports, including long room names, public join, private request, pending, cancel, rejected/re-submit, empty filter, loading skeleton, create-modal keyboard behavior, and a simulated realtime refresh that does not reset focus.
+Verify authenticated member and owner states at all approved viewports, including long room names, public join, private request, pending, cancel, rejected/re-submit, empty filter, loading skeleton, create-modal keyboard behavior, and a simulated realtime refresh that does not reset focus. Also check that Home does not resemble the old layout, peer sections share the same spacing token, and room cards do not become repetitive floating panels.
 
 - [ ] **Step 7: Review the pilot before continuing**
 
@@ -405,7 +458,7 @@ Expected: all commands exit 0; no repository, realtime, type, or test file diff.
 
 - [ ] **Step 5: Verify states and viewports**
 
-Verify owned/joined/empty/search states and outstanding/paid/archived/QR states at all approved viewports. At `360x800`, confirm long Vietnamese labels do not hide the primary action.
+Verify owned/joined/empty/search states and outstanding/paid/archived/QR states at all approved viewports. At `360x800`, confirm long Vietnamese labels do not hide the primary action. Check that My Rooms uses structured room items instead of a repeated card wall, My Funds uses consistent section gaps, and borders follow the common token policy.
 
 - [ ] **Step 6: Commit the member surfaces**
 
@@ -468,7 +521,7 @@ Expected: membership tests and full suite pass; static checks exit 0.
 
 - [ ] **Step 7: Verify room roles, realtime, and mobile dialogs**
 
-Verify member, owner, and admin at all approved viewports; before/after deadline; present/leave/absent; pending requests; permission denial; member removal with/without debt; 200% text zoom; and a realtime update while focus remains inside the active control/dialog.
+Verify member, owner, and admin at all approved viewports; before/after deadline; present/leave/absent; pending requests; permission denial; member removal with/without debt; 200% text zoom; and a realtime update while focus remains inside the active control/dialog. Confirm the room header has only its intended identity/context/actions, tabs remain scannable, peer sections use a balanced spacing rhythm, and no nested border/card treatment creates visual noise.
 
 - [ ] **Step 8: Commit Attendance and Members**
 
@@ -527,7 +580,7 @@ Expected: targeted tests and full suite pass; static checks exit 0.
 
 - [ ] **Step 6: Verify funds and destructive states**
 
-Verify outstanding/paid, confirm/revert, candidate/manual creation, QR upload/readback, archived room, archive phrase, transfer ownership, long impact lists, 200% zoom, and all approved viewports. Confirm realtime refresh does not close an active dialog.
+Verify outstanding/paid, confirm/revert, candidate/manual creation, QR upload/readback, archived room, archive phrase, transfer ownership, long impact lists, 200% zoom, and all approved viewports. Confirm realtime refresh does not close an active dialog. Check that funds sections are ordered by user priority, use one consistent panel/row language, avoid excessive borders, and do not leave large unexplained gaps between sections.
 
 - [ ] **Step 7: Commit Room Funds and overlays**
 
@@ -581,7 +634,7 @@ Expected: static checks exit 0; unchanged business suite passes.
 
 - [ ] **Step 6: Verify admin states**
 
-Verify non-admin denial, mock-role switch, active/archived users, active/archived rooms, restore, archive, replacement admin, long impacted-room list, exact phrase, mobile reachability, 200% zoom, and all approved viewports.
+Verify non-admin denial, mock-role switch, active/archived users, active/archived rooms, restore, archive, replacement admin, long impacted-room list, exact phrase, mobile reachability, 200% zoom, and all approved viewports. Confirm Settings follows the common header hierarchy, desktop rows do not become dense multi-border tables, and mobile rows preserve a clear primary action without card clutter.
 
 - [ ] **Step 7: Commit the admin workspace**
 
@@ -669,4 +722,4 @@ git commit -m "docs: finalize UI redesign system and verification"
 
 - [ ] **Step 10: Perform final scope audit**
 
-Compare the finished branch against the spec and confirm every acceptance criterion has evidence. Report any unrelated existing worktree changes separately rather than fixing them.
+Compare the finished branch against the spec and confirm every acceptance criterion has evidence. Explicitly audit the common style guardrails: no old-layout regression, header contains notification/user information only, logout is in sidebar/More, border tokens are consistent, nested borders are absent, peer-section gaps are balanced, and repeated cards have a documented reason. Report any unrelated existing worktree changes separately rather than fixing them.
