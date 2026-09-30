@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useEffect } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Settings01Icon,
-  Cancel01Icon,
-  QrCode01Icon,
-  CrownIcon,
   Archive01Icon,
   ArrowRight01Icon,
+  Cancel01Icon,
+  CrownIcon,
+  QrCode01Icon,
+  Settings01Icon,
 } from "@hugeicons/core-free-icons";
+
+import { Button } from "@/components/ui/Button";
+import { ResponsiveDialog } from "@/components/ui/ResponsiveDialog";
 
 export interface RoomSettingsModalProps {
   isOpen: boolean;
@@ -20,12 +22,6 @@ export interface RoomSettingsModalProps {
   onOpenArchiveModal?: () => void;
 }
 
-/**
- * Settings Modal for Room Owner / Admin.
- * Consolidates Room Actions (Payment QR, Transfer Ownership, Archive Room)
- * into a clean vertical list column flex layout.
- * Strictly adheres to 8pt-grid-spacing and zhon-conventions.
- */
 export function RoomSettingsModal({
   isOpen,
   onClose,
@@ -34,151 +30,59 @@ export function RoomSettingsModal({
   onOpenTransferModal,
   onOpenArchiveModal,
 }: RoomSettingsModalProps) {
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
   const handleAction = (callback?: () => void) => {
     onClose();
-    if (callback) callback();
+    callback?.();
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="room-settings-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in"
-      onClick={onClose}
-    >
-      {/* Modal Container: Bo góc 24px (rounded-3xl), padding 32px (p-8), max-w-lg */}
-      <div
-        className="w-full max-w-lg rounded-3xl border border-neutral-border bg-white p-8 shadow-2xl space-y-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header Modal */}
-        <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-surface text-primary-dark">
-              <HugeiconsIcon icon={Settings01Icon} size={20} />
-            </span>
-            <div>
-              <h2
-                id="room-settings-modal-title"
-                className="text-base font-bold text-neutral-dark"
-              >
-                Cài đặt phòng họp
-              </h2>
-              <p className="text-xs text-neutral-muted">
-                Quản lý các thao tác hành chính cho phòng &ldquo;{roomName}&rdquo;
-              </p>
-            </div>
+    <ResponsiveDialog isOpen={isOpen} onClose={onClose} labelledBy="room-settings-modal-title" size="sm">
+      <div className="RoomSettingsModal ui-section-stack">
+        <div className="RoomSettingsModal__heading flex items-start gap-4">
+          <span className="RoomSettingsModal__icon flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+            <HugeiconsIcon icon={Settings01Icon} size={24} aria-hidden />
+          </span>
+          <div className="RoomSettingsModal__heading-copy min-w-0">
+            <h2 id="room-settings-modal-title" className="RoomSettingsModal__title text-xl font-bold text-text-primary">Cài đặt phòng họp</h2>
+            <p className="RoomSettingsModal__description mt-2 text-sm leading-6 text-text-secondary">Quản lý thao tác hành chính cho phòng &ldquo;{roomName}&rdquo;.</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng cửa sổ"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
-          >
-            <HugeiconsIcon icon={Cancel01Icon} size={18} />
-          </button>
+          <Button className="RoomSettingsModal__close shrink-0 px-2" variant="ghost" autoFocus aria-label="Đóng cửa sổ" onClick={onClose}>
+            <HugeiconsIcon icon={Cancel01Icon} size={20} aria-hidden />
+          </Button>
         </div>
 
-        {/* Action List: Column Flex Cards (gap 16px = gap-4) */}
-        <div className="flex flex-col gap-3">
-          {/* Action 1: QR thanh toán */}
-          {onOpenPaymentQrModal && (
-            <button
-              type="button"
-              onClick={() => handleAction(onOpenPaymentQrModal)}
-              className="flex items-center justify-between rounded-2xl border border-neutral-border bg-white p-4 text-left shadow-2xs transition-all hover:border-primary hover:bg-neutral-surface/40"
-            >
-              <div className="flex items-center gap-3.5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-surface text-primary-dark">
-                  <HugeiconsIcon icon={QrCode01Icon} size={20} />
-                </span>
-                <div>
-                  <h3 className="text-sm font-bold text-neutral-dark">
-                    Mã QR thanh toán phòng
-                  </h3>
-                  <p className="text-xs text-neutral-muted mt-0.5">
-                    Tải lên hoặc cập nhật ảnh QR tài khoản ngân hàng nhận quỹ
-                  </p>
-                </div>
-              </div>
-              <HugeiconsIcon
-                icon={ArrowRight01Icon}
-                size={18}
-                className="text-neutral-muted shrink-0"
-              />
-            </button>
-          )}
+        <div className="RoomSettingsModal__actions border-y border-border">
+          {onOpenPaymentQrModal ? (
+            <Button variant="ghost" className="RoomSettingsModal__action ui-data-row h-auto min-h-16 w-full justify-between rounded-none py-4 text-left" onClick={() => handleAction(onOpenPaymentQrModal)}>
+              <span className="RoomSettingsModal__action-copy flex min-w-0 items-center gap-4">
+                <span className="RoomSettingsModal__action-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary"><HugeiconsIcon icon={QrCode01Icon} size={20} aria-hidden /></span>
+                <span className="min-w-0"><span className="block text-sm font-semibold text-text-primary">Mã QR thanh toán phòng</span><span className="mt-1 block text-sm leading-6 text-text-secondary">Tải lên hoặc cập nhật ảnh QR nhận quỹ.</span></span>
+              </span>
+              <HugeiconsIcon className="shrink-0 text-text-tertiary" icon={ArrowRight01Icon} size={18} aria-hidden />
+            </Button>
+          ) : null}
 
-          {/* Action 2: Chuyển quyền chủ phòng */}
-          {onOpenTransferModal && (
-            <button
-              type="button"
-              onClick={() => handleAction(onOpenTransferModal)}
-              className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white p-4 text-left shadow-2xs transition-all hover:border-neutral-400 hover:bg-neutral-50"
-            >
-              <div className="flex items-center gap-3.5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                  <HugeiconsIcon icon={CrownIcon} size={20} />
-                </span>
-                <div>
-                  <h3 className="text-sm font-bold text-neutral-dark">
-                    Chuyển quyền chủ phòng
-                  </h3>
-                  <p className="text-xs text-neutral-muted mt-0.5">
-                    Bàn giao quyền quản trị cao nhất cho một thành viên khác
-                  </p>
-                </div>
-              </div>
-              <HugeiconsIcon
-                icon={ArrowRight01Icon}
-                size={18}
-                className="text-neutral-muted shrink-0"
-              />
-            </button>
-          )}
+          {onOpenTransferModal ? (
+            <Button variant="ghost" className="RoomSettingsModal__action ui-data-row h-auto min-h-16 w-full justify-between rounded-none py-4 text-left" onClick={() => handleAction(onOpenTransferModal)}>
+              <span className="RoomSettingsModal__action-copy flex min-w-0 items-center gap-4">
+                <span className="RoomSettingsModal__action-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-info-soft text-info"><HugeiconsIcon icon={CrownIcon} size={20} aria-hidden /></span>
+                <span className="min-w-0"><span className="block text-sm font-semibold text-text-primary">Chuyển quyền chủ phòng</span><span className="mt-1 block text-sm leading-6 text-text-secondary">Bàn giao quyền quản trị cho thành viên khác.</span></span>
+              </span>
+              <HugeiconsIcon className="shrink-0 text-text-tertiary" icon={ArrowRight01Icon} size={18} aria-hidden />
+            </Button>
+          ) : null}
 
-          {/* Action 3: Lưu trữ phòng */}
-          {onOpenArchiveModal && (
-            <button
-              type="button"
-              onClick={() => handleAction(onOpenArchiveModal)}
-              className="flex items-center justify-between rounded-2xl border border-rose-200 bg-white p-4 text-left shadow-2xs transition-all hover:border-rose-400 hover:bg-rose-50/50"
-            >
-              <div className="flex items-center gap-3.5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
-                  <HugeiconsIcon icon={Archive01Icon} size={20} />
-                </span>
-                <div>
-                  <h3 className="text-sm font-bold text-neutral-dark">
-                    Lưu trữ phòng họp
-                  </h3>
-                  <p className="text-xs text-neutral-muted mt-0.5">
-                    Đóng phòng họp và chuyển toàn bộ dữ liệu vào chế độ chỉ đọc
-                  </p>
-                </div>
-              </div>
-              <HugeiconsIcon
-                icon={ArrowRight01Icon}
-                size={18}
-                className="text-neutral-muted shrink-0"
-              />
-            </button>
-          )}
+          {onOpenArchiveModal ? (
+            <Button variant="ghost" className="RoomSettingsModal__action ui-data-row h-auto min-h-16 w-full justify-between rounded-none py-4 text-left" onClick={() => handleAction(onOpenArchiveModal)}>
+              <span className="RoomSettingsModal__action-copy flex min-w-0 items-center gap-4">
+                <span className="RoomSettingsModal__action-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-danger-soft text-danger"><HugeiconsIcon icon={Archive01Icon} size={20} aria-hidden /></span>
+                <span className="min-w-0"><span className="block text-sm font-semibold text-text-primary">Lưu trữ phòng họp</span><span className="mt-1 block text-sm leading-6 text-text-secondary">Đóng phòng và chuyển dữ liệu sang chỉ đọc.</span></span>
+              </span>
+              <HugeiconsIcon className="shrink-0 text-text-tertiary" icon={ArrowRight01Icon} size={18} aria-hidden />
+            </Button>
+          ) : null}
         </div>
       </div>
-    </div>
+    </ResponsiveDialog>
   );
 }

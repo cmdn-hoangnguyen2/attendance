@@ -1,16 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Cancel01Icon,
-  Upload01Icon,
-  Delete02Icon,
-  CheckmarkCircle01Icon,
   AlertCircleIcon,
+  Cancel01Icon,
+  CheckmarkCircle01Icon,
+  Delete02Icon,
   QrCode01Icon,
+  Upload01Icon,
 } from "@hugeicons/core-free-icons";
+
+import { Button } from "@/components/ui/Button";
+import { ResponsiveDialog } from "@/components/ui/ResponsiveDialog";
 
 export interface UploadPaymentQrModalProps {
   isOpen: boolean;
@@ -44,9 +47,7 @@ export function UploadPaymentQrModal({
   const handleClose = () => {
     if (isUploading || isDeleting) return;
     setSelectedFile(null);
-    if (previewUrl && previewUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setErrorMsg(null);
     setIsUploading(false);
@@ -54,51 +55,30 @@ export function UploadPaymentQrModal({
     onClose();
   };
 
-  // Keyboard accessibility: ESC key to close
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isUploading && !isDeleting) {
-        handleClose();
-      }
-    };
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, isUploading, isDeleting, previewUrl]);
-
-  // Clean up preview object URL on unmount or file change
   useEffect(() => {
     return () => {
-      if (previewUrl && previewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(previewUrl);
-      }
+      if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
 
-  if (!isOpen) return null;
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     setErrorMsg(null);
-    const files = e.target.files;
+    const files = event.target.files;
     if (!files || files.length === 0) return;
 
     const file = files[0];
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-
     if (!allowedTypes.includes(file.type)) {
       setErrorMsg("Định dạng không được hỗ trợ. Chỉ chấp nhận ảnh PNG, JPEG hoặc WebP.");
       return;
     }
-
     if (file.size > 5242880) {
       setErrorMsg("Dung lượng tệp vượt quá 5 MB. Vui lòng chọn tệp nhỏ hơn.");
       return;
     }
 
     setSelectedFile(file);
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
   const handleConfirmUpload = async () => {
@@ -109,167 +89,105 @@ export function UploadPaymentQrModal({
 
     setIsUploading(true);
     setErrorMsg(null);
-
     try {
       const result = await uploadHandler(selectedFile);
       onUploadSuccess(result.signedUrl);
       handleClose();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Đã xảy ra lỗi khi tải ảnh lên.";
-      setErrorMsg(message);
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : "Đã xảy ra lỗi khi tải ảnh lên.");
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleDeleteImage = async () => {
-    if (!confirm("Bạn có chắc chắn muốn xóa mã QR thanh toán của phòng họp này?")) {
-      return;
-    }
+    if (!confirm("Bạn có chắc chắn muốn xóa mã QR thanh toán của phòng họp này?")) return;
 
     setIsDeleting(true);
     setErrorMsg(null);
-
     try {
       await deleteHandler();
       onDeleteSuccess();
       handleClose();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Đã xảy ra lỗi khi xóa ảnh QR.";
-      setErrorMsg(message);
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : "Đã xảy ra lỗi khi xóa ảnh QR.");
     } finally {
       setIsDeleting(false);
     }
   };
 
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="upload-qr-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6 backdrop-blur-xs"
-    >
-      <div className="relative w-full max-w-lg rounded-3xl border border-neutral-border bg-white p-6 sm:p-8 shadow-2xl">
-        {/* Header (24px padding internal) */}
-        <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-surface text-primary-dark">
-              <HugeiconsIcon icon={QrCode01Icon} size={20} />
-            </div>
-            <div>
-              <h2 id="upload-qr-title" className="text-base font-bold text-neutral-dark">
-                Mã QR Thanh Toán Phòng
-              </h2>
-              <p className="text-xs text-neutral-muted line-clamp-1">{roomName}</p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isUploading || isDeleting}
-            className="rounded-xl p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition-colors disabled:opacity-50"
-            aria-label="Đóng cửa sổ"
-          >
-            <HugeiconsIcon icon={Cancel01Icon} size={18} />
-          </button>
-        </div>
-
-        {/* Content Body (Gap 16px internal, margin 16px) */}
-        <div className="mt-4 space-y-4">
-          {errorMsg && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
-              <HugeiconsIcon icon={AlertCircleIcon} size={16} className="shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {/* Current or Preview Image Section */}
-          {(previewUrl || currentImageUrl) ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50/50 p-4 text-center">
-              <div className="relative h-48 w-48 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xs">
-                <Image
-                  src={previewUrl || currentImageUrl || ""}
-                  alt="Mã QR thanh toán"
-                  fill
-                  className="object-contain p-2"
-                  unoptimized
-                />
-              </div>
-              <p className="mt-2 text-xs font-semibold text-neutral-muted">
-                {previewUrl ? "Ảnh chuẩn bị tải lên" : "Mã QR hiện tại của phòng"}
-              </p>
-            </div>
-          ) : null}
-
-          {/* Upload input button area */}
-          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-border bg-neutral-surface/20 p-6 text-center">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={handleFileSelect}
-              className="hidden"
-              id="qr-file-upload-input"
-            />
-
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-surface text-primary-dark mb-2">
-              <HugeiconsIcon icon={Upload01Icon} size={24} />
-            </div>
-
-            <label
-              htmlFor="qr-file-upload-input"
-              className="cursor-pointer rounded-xl bg-primary-dark px-4 py-2 text-xs font-bold text-white hover:bg-primary-hover transition-colors shadow-2xs"
-            >
-              {previewUrl || currentImageUrl ? "Chọn ảnh khác" : "Chọn ảnh QR từ máy"}
-            </label>
-
-            <p className="mt-2 text-[11px] text-neutral-muted">
-              Định dạng PNG, JPEG, WebP. Dung lượng tối đa 5 MB.
-            </p>
-          </div>
-        </div>
-
-        {/* Action Footer (Margin top 24px) */}
-        <div className="mt-6 flex items-center justify-between border-t border-neutral-100 pt-4">
-          <div>
-            {currentImageUrl && !previewUrl && (
-              <button
-                type="button"
-                onClick={handleDeleteImage}
-                disabled={isDeleting || isUploading}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/50 px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50"
-              >
-                <HugeiconsIcon icon={Delete02Icon} size={14} />
-                <span>{isDeleting ? "Đang xóa..." : "Xóa mã QR"}</span>
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={isUploading || isDeleting}
-              className="rounded-xl border border-neutral-200 px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-50"
-            >
-              Đóng
-            </button>
-
-            {previewUrl && (
-              <button
-                type="button"
-                onClick={handleConfirmUpload}
-                disabled={isUploading || isDeleting}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-primary-dark px-4 py-2 text-xs font-bold text-white hover:bg-primary-hover transition-colors shadow-2xs disabled:opacity-50"
-              >
-                <HugeiconsIcon icon={CheckmarkCircle01Icon} size={14} />
-                <span>{isUploading ? "Đang tải lên..." : "Lưu mã QR"}</span>
-              </button>
-            )}
-          </div>
-        </div>
+  const footer = (
+    <div className="UploadPaymentQrModal__actions flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="UploadPaymentQrModal__delete-action">
+        {currentImageUrl && !previewUrl ? (
+          <Button variant="ghost" size="compact" onClick={handleDeleteImage} disabled={isDeleting || isUploading}>
+            <HugeiconsIcon icon={Delete02Icon} size={16} aria-hidden />
+            {isDeleting ? "Đang xóa..." : "Xóa mã QR"}
+          </Button>
+        ) : null}
+      </div>
+      <div className="UploadPaymentQrModal__primary-actions grid grid-cols-1 gap-2 sm:flex">
+        <Button variant="secondary" size="touch" onClick={handleClose} disabled={isUploading || isDeleting}>Đóng</Button>
+        {previewUrl ? (
+          <Button size="touch" onClick={handleConfirmUpload} disabled={isUploading || isDeleting}>
+            <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} aria-hidden />
+            {isUploading ? "Đang tải lên..." : "Lưu mã QR"}
+          </Button>
+        ) : null}
       </div>
     </div>
+  );
+
+  return (
+    <ResponsiveDialog
+      isOpen={isOpen}
+      onClose={handleClose}
+      labelledBy="upload-qr-title"
+      preventClose={isUploading || isDeleting}
+      size="sm"
+      footer={footer}
+    >
+      <div className="UploadPaymentQrModal ui-section-stack">
+        <div className="UploadPaymentQrModal__heading flex items-start gap-4">
+          <span className="UploadPaymentQrModal__icon flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+            <HugeiconsIcon icon={QrCode01Icon} size={24} aria-hidden />
+          </span>
+          <div className="UploadPaymentQrModal__heading-copy min-w-0">
+            <h2 id="upload-qr-title" className="UploadPaymentQrModal__title text-xl font-bold text-text-primary">Mã QR thanh toán phòng</h2>
+            <p className="UploadPaymentQrModal__room-name mt-2 truncate text-sm text-text-secondary">{roomName}</p>
+          </div>
+          <Button className="UploadPaymentQrModal__close shrink-0 px-2" variant="ghost" autoFocus aria-label="Đóng cửa sổ" onClick={handleClose} disabled={isUploading || isDeleting}>
+            <HugeiconsIcon icon={Cancel01Icon} size={20} aria-hidden />
+          </Button>
+        </div>
+
+        {errorMsg ? (
+          <div className="UploadPaymentQrModal__error flex items-start gap-2 rounded-lg bg-danger-soft p-4 text-sm leading-6 text-danger" role="alert">
+            <HugeiconsIcon className="UploadPaymentQrModal__error-icon mt-1 shrink-0" icon={AlertCircleIcon} size={16} aria-hidden />
+            <span>{errorMsg}</span>
+          </div>
+        ) : null}
+
+        {(previewUrl || currentImageUrl) ? (
+          <div className="UploadPaymentQrModal__preview flex flex-col items-center bg-surface-subtle p-4 text-center">
+            <div className="UploadPaymentQrModal__preview-image relative h-48 w-48 overflow-hidden rounded-md bg-surface">
+              <Image src={previewUrl || currentImageUrl || ""} alt="Mã QR thanh toán" fill className="object-contain p-2" unoptimized />
+            </div>
+            <p className="UploadPaymentQrModal__preview-label mt-2 text-sm text-text-secondary">{previewUrl ? "Ảnh chuẩn bị tải lên" : "Mã QR hiện tại của phòng"}</p>
+          </div>
+        ) : null}
+
+        <div className="UploadPaymentQrModal__upload flex flex-col items-center bg-surface-subtle p-6 text-center">
+          <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={handleFileSelect} className="hidden" id="qr-file-upload-input" />
+          <span className="UploadPaymentQrModal__upload-icon flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary">
+            <HugeiconsIcon icon={Upload01Icon} size={24} aria-hidden />
+          </span>
+          <label htmlFor="qr-file-upload-input" className="UploadPaymentQrModal__upload-trigger mt-4 inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-hover">
+            {previewUrl || currentImageUrl ? "Chọn ảnh khác" : "Chọn ảnh QR từ máy"}
+          </label>
+          <p className="UploadPaymentQrModal__upload-help mt-2 text-xs text-text-tertiary">PNG, JPEG hoặc WebP · tối đa 5 MB.</p>
+        </div>
+      </div>
+    </ResponsiveDialog>
   );
 }

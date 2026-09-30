@@ -1,15 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { type FormEvent, useState } from "react";
 import type { Room, User } from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  UserSwitchIcon,
-  Cancel01Icon,
-  CheckmarkCircle01Icon,
-  CrownIcon,
-  UserIcon,
-} from "@hugeicons/core-free-icons";
+import { Cancel01Icon, CheckmarkCircle01Icon, CrownIcon, UserIcon, UserSwitchIcon } from "@hugeicons/core-free-icons";
+
+import { Button } from "@/components/ui/Button";
+import { ResponsiveDialog } from "@/components/ui/ResponsiveDialog";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
 
 export interface TransferOwnershipModalProps {
@@ -29,30 +26,16 @@ export function TransferOwnershipModal({
   eligibleMembers,
   onConfirmTransfer,
 }: TransferOwnershipModalProps) {
-  const [selectedMemberId, setSelectedMemberId] = useState<string>(() =>
-    eligibleMembers.length > 0 ? eligibleMembers[0].id : "",
-  );
-  const [error, setError] = useState<string>("");
+  const [selectedMemberId, setSelectedMemberId] = useState<string>(() => eligibleMembers.length > 0 ? eligibleMembers[0].id : "");
+  const [error, setError] = useState("");
 
   const handleClose = () => {
     setError("");
     onClose();
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
-    };
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!selectedMemberId) {
       setError("Vui lòng chọn một thành viên để chuyển quyền chủ phòng.");
       return;
@@ -61,138 +44,56 @@ export function TransferOwnershipModal({
     handleClose();
   };
 
-  const selectedMember = eligibleMembers.find((m) => m.id === selectedMemberId);
+  const selectedMember = eligibleMembers.find((member) => member.id === selectedMemberId);
+  const footer = (
+    <div className="TransferOwnershipModal__actions grid grid-cols-1 gap-2 sm:flex sm:justify-end">
+      <Button variant="secondary" size="touch" onClick={handleClose}>Hủy bỏ</Button>
+      <Button type="submit" form="transfer-ownership-form" size="touch" disabled={eligibleMembers.length === 0}>
+        <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} aria-hidden />
+        Xác nhận chuyển quyền
+      </Button>
+    </div>
+  );
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="transfer-ownership-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-in fade-in"
-      onClick={onClose}
-    >
-      {/* Container: Bo góc 24px (rounded-3xl), padding 32px (p-8, space-5) */}
-      <div
-        className="w-full max-w-lg rounded-3xl border border-neutral-border bg-white p-8 shadow-2xl space-y-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header Modal */}
-        <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-surface text-primary-dark">
-              <HugeiconsIcon icon={UserSwitchIcon} size={20} />
-            </span>
-            <div>
-              <h2
-                id="transfer-ownership-modal-title"
-                className="text-base font-bold text-neutral-dark"
-              >
-                Chuyển giao quyền chủ phòng
-              </h2>
-              <p className="text-xs text-neutral-muted">
-                Trao quyền quản trị phòng họp cho thành viên khác
-              </p>
-            </div>
+    <ResponsiveDialog isOpen={isOpen} onClose={handleClose} labelledBy="transfer-ownership-modal-title" size="sm" footer={footer}>
+      <div className="TransferOwnershipModal ui-section-stack">
+        <div className="TransferOwnershipModal__heading flex items-start gap-4">
+          <span className="TransferOwnershipModal__icon flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-info-soft text-info"><HugeiconsIcon icon={UserSwitchIcon} size={24} aria-hidden /></span>
+          <div className="TransferOwnershipModal__heading-copy min-w-0">
+            <h2 id="transfer-ownership-modal-title" className="TransferOwnershipModal__title text-xl font-bold text-text-primary">Chuyển giao quyền chủ phòng</h2>
+            <p className="TransferOwnershipModal__description mt-2 text-sm leading-6 text-text-secondary">Trao quyền quản trị phòng họp cho thành viên khác.</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng cửa sổ"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
-          >
-            <HugeiconsIcon icon={Cancel01Icon} size={18} />
-          </button>
+          <Button className="TransferOwnershipModal__close shrink-0 px-2" variant="ghost" autoFocus aria-label="Đóng cửa sổ" onClick={handleClose}>
+            <HugeiconsIcon icon={Cancel01Icon} size={20} aria-hidden />
+          </Button>
         </div>
 
-        {/* Thông báo quy định chuyển giao */}
-        <div className="rounded-2xl bg-neutral-50 p-4 border border-neutral-200 text-xs text-neutral-muted space-y-2">
-          <div className="flex items-center gap-2 font-semibold text-neutral-dark">
-            <HugeiconsIcon icon={CrownIcon} size={16} />
-            <span>Phòng họp: {room.name}</span>
-          </div>
-          <p>
-            Chủ phòng hiện tại:{" "}
-            <strong className="text-neutral-dark">
-              {currentOwner?.displayName ?? "Chưa xác định"}
-            </strong>
-          </p>
-          <p className="text-[11px] text-neutral-500">
-            * Sau khi chuyển giao thành công, bạn vẫn tiếp tục là thành viên hoạt động trong phòng họp này.
-          </p>
+        <div className="TransferOwnershipModal__context rounded-lg bg-surface-subtle p-4 text-sm leading-6 text-text-secondary">
+          <p className="flex items-center gap-2 font-semibold text-text-primary"><HugeiconsIcon icon={CrownIcon} size={16} aria-hidden />Phòng họp: {room.name}</p>
+          <p className="mt-2">Chủ phòng hiện tại: <strong className="text-text-primary">{currentOwner?.displayName ?? "Chưa xác định"}</strong></p>
+          <p className="mt-2 text-xs text-text-tertiary">Sau khi chuyển giao thành công, bạn vẫn là thành viên hoạt động trong phòng.</p>
         </div>
 
-        {/* Chọn thành viên kế nhiệm */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="new-owner-select"
-              className="block text-xs font-semibold text-neutral-dark"
-            >
-              Chọn thành viên tiếp nhận quyền chủ phòng:
-            </label>
-
+        <form id="transfer-ownership-form" onSubmit={handleSubmit} className="TransferOwnershipModal__form ui-section-stack">
+          <div className="TransferOwnershipModal__field flex flex-col gap-2">
+            <label htmlFor="new-owner-select" className="text-sm font-semibold text-text-primary">Chọn thành viên tiếp nhận quyền chủ phòng</label>
             {eligibleMembers.length > 0 ? (
-              <SelectDropdown
-                id="new-owner-select"
-                value={selectedMemberId}
-                onChange={(val) => {
-                  setSelectedMemberId(val);
-                  if (error) setError("");
-                }}
-                options={eligibleMembers.map((member) => ({
-                  value: member.id,
-                  label: `${member.displayName} (${member.email})`,
-                }))}
-              />
+              <SelectDropdown id="new-owner-select" value={selectedMemberId} onChange={(value) => { setSelectedMemberId(value); if (error) setError(""); }} options={eligibleMembers.map((member) => ({ value: member.id, label: `${member.displayName} (${member.email})` }))} />
             ) : (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                Phòng này hiện chưa có thành viên nào khác để chuyển giao quyền chủ phòng.
-              </div>
+              <p className="rounded-lg bg-warning-soft p-4 text-sm leading-6 text-text-secondary">Phòng hiện chưa có thành viên khác để chuyển giao quyền chủ phòng.</p>
             )}
-
-            {error && (
-              <p className="text-[11px] font-medium text-rose-600">{error}</p>
-            )}
+            {error ? <p className="TransferOwnershipModal__error text-sm font-medium text-danger" role="alert">{error}</p> : null}
           </div>
 
-          {/* Xem trước thành viên được chọn */}
-          {selectedMember && (
-            <div className="rounded-xl border border-neutral-border bg-neutral-surface/40 p-3 flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/30 text-primary-dark">
-                <HugeiconsIcon icon={UserIcon} size={18} />
-              </span>
-              <div>
-                <p className="text-xs font-bold text-neutral-dark">
-                  {selectedMember.displayName}
-                </p>
-                <p className="text-[11px] text-neutral-muted">
-                  Sẽ trở thành Chủ phòng mới của &ldquo;{room.name}&rdquo;
-                </p>
-              </div>
+          {selectedMember ? (
+            <div className="TransferOwnershipModal__preview flex items-center gap-4 rounded-lg bg-primary-soft p-4">
+              <span className="TransferOwnershipModal__preview-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface text-primary"><HugeiconsIcon icon={UserIcon} size={18} aria-hidden /></span>
+              <div className="min-w-0"><p className="truncate text-sm font-semibold text-text-primary">{selectedMember.displayName}</p><p className="mt-1 text-sm text-text-secondary">Sẽ trở thành Chủ phòng mới của &ldquo;{room.name}&rdquo;.</p></div>
             </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl border border-neutral-300 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
-            >
-              Hủy bỏ
-            </button>
-
-            <button
-              type="submit"
-              disabled={eligibleMembers.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-primary-dark px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-primary-dark/90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} />
-              <span>Xác nhận chuyển quyền</span>
-            </button>
-          </div>
+          ) : null}
         </form>
       </div>
-    </div>
+    </ResponsiveDialog>
   );
 }

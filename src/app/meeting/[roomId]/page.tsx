@@ -38,7 +38,6 @@ import { UploadPaymentQrModal } from "@/modules/funds/presentation/UploadPayment
 import { AccessRevokedModal } from "@/modules/meetings/presentation/AccessRevokedModal";
 import { LeaveRoomModal } from "@/modules/meetings/presentation/LeaveRoomModal";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { NeoMarquee } from "@/components/ui/NeoMarquee";
 import { PeerDebtDashboard } from "@/modules/rooms/presentation/PeerDebtDashboard";
 import { useRoomRealtime } from "@/lib/realtime/useRoomRealtime";
 import {
@@ -87,7 +86,6 @@ export default function MeetingDetailPage() {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [fundCandidates, setFundCandidates] = useState<FundCandidate[]>([]);
   const [contributions, setContributions] = useState<FundContribution[]>([]);
-  const [marqueeReferenceTime, setMarqueeReferenceTime] = useState(0);
 
   // State cho các modal Archive, Transfer Ownership, QR Code và Rời phòng
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
@@ -151,7 +149,6 @@ export default function MeetingDetailPage() {
         setMemberships(fetchedMembers);
         setJoinRequests(fetchedRequests);
         setContributions(fetchedFunds);
-        setMarqueeReferenceTime(Date.now());
 
         if (fetchedSessions.length > 0) {
           const currentSession = fetchedSessions[0];
@@ -539,44 +536,6 @@ export default function MeetingDetailPage() {
     }
   };
 
-  const marqueeMessages = useMemo(() => {
-    const msgs: string[] = [];
-    const ONE_DAY = 24 * 60 * 60 * 1000;
-
-    if (contributions.length > 0) {
-      contributions.forEach((c) => {
-        const u = usersMap.get(c.contributorId);
-        const name = u?.displayName || "Ai đó";
-        const isPaid = c.status === FundContributionStatus.PAID;
-        const createdTimeDiff = marqueeReferenceTime - new Date(c.createdAt).getTime();
-        const updatedTimeDiff = marqueeReferenceTime - new Date(c.updatedAt).getTime();
-
-        // 1. Nếu còn nợ -> Show vĩnh viễn (đến khi trả)
-        if (!isPaid) {
-          msgs.push(`${name} ĐANG NỢ QUỸ ${c.amount.toLocaleString("vi-VN")}Đ VÌ ${c.reasonDetails || c.reason}`);
-        }
-
-        // 2. Nếu đi trễ trong vòng 24h (dựa vào reason và createdAt)
-        if ((c.reason === "Đi trễ" || (c.reasonDetails || "").toLowerCase().includes("trễ")) && createdTimeDiff <= ONE_DAY) {
-          msgs.push(`${name} VỪA ĐI TRỄ HÔM NAY!`);
-        }
-
-        // 3. Nếu đã thanh toán trong vòng 24h
-        if (isPaid && updatedTimeDiff <= ONE_DAY) {
-          msgs.push(`${name} VỪA THANH TOÁN ${c.amount.toLocaleString("vi-VN")}Đ`);
-        }
-      });
-    }
-
-    const uniqueMsgs = Array.from(new Set(msgs)).slice(0, 10);
-
-    if (uniqueMsgs.length === 0) {
-      uniqueMsgs.push("CHÀO MỪNG ĐẾN VỚI PHÒNG HỌP");
-    }
-
-    return uniqueMsgs.map(msg => msg.toUpperCase());
-  }, [contributions, marqueeReferenceTime, usersMap]);
-
   if (isLoading || isAuthLoading || !isAuthenticated) {
     return (
       <main className="mx-auto max-w-7xl px-6 py-12">
@@ -737,8 +696,6 @@ export default function MeetingDetailPage() {
         onOpenPaymentQrModal={() => setIsPaymentQrModalOpen(true)}
         onOpenLeaveModal={() => setIsLeaveModalOpen(true)}
       />
-
-      <NeoMarquee messages={marqueeMessages} />
 
       {/* Tab 1: Thành viên & Duyệt tham gia (Chỉ khả dụng khi phòng chưa archive) */}
       {room.status !== RoomStatus.ARCHIVED && activeTab === RoomDetailTab.MEMBERS && (

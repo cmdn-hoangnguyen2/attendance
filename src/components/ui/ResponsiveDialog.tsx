@@ -39,6 +39,10 @@ export function ResponsiveDialog({
     if (isOpen && !dialog.open) {
       openerRef.current = document.activeElement as HTMLElement | null;
       dialog.showModal();
+      const firstFocusable = dialog.querySelector<HTMLElement>(
+        "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])",
+      );
+      firstFocusable?.focus();
       return;
     }
 

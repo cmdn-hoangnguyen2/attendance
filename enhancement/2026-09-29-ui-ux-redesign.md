@@ -145,6 +145,25 @@ Task 6 review gate: diff chỉ được thay composition, style và accessible d
 - Attendance tab rendered the session/deadline state, current-user actions, status list and owner override selector; tab switching remained presentation-only.
 - Static/regression evidence: membership lifecycle 7/7 pass; full suite 69/69 pass; TypeScript exit 0; scoped ESLint exit 0 with only the two pre-existing meeting-page warnings; `git diff --check` pass; no protected path diff.
 
+### Task 7 — Room funds and management overlay wiring lock
+
+| Surface | Contract phải giữ nguyên trong redesign |
+| --- | --- |
+| `RoomFundsTab` | Giữ props, `FundContributionStatus` totals, `onCreateContribution` payload, confirm/revert IDs, QR dialog props, archived read-only context và signed payment image value. |
+| `CreateFundContributionModal` | Giữ member/candidate/preselected initialization, integer VND rounding, preset amounts, reason validation, exact `OTHER` detail rule và callback payload. |
+| `UploadPaymentQrModal` | Giữ file type/5MB guards, preview object URL cleanup, upload/delete handlers, success callbacks, confirm prompt và prevent-close trong async state. |
+| Room management overlays | Giữ `RoomSettingsModal` action order/callbacks, `ArchiveRoomModal` exact phrase and room ID, `TransferOwnershipModal` eligible-member selection and callback. |
+| `NeoMarquee` | Decorative-only import, derived messages, state timestamp and render were removed; no notification/realtime/repository handler was changed. |
+| `PeerDebtDashboard` | Active conditional consumer was confirmed by source wiring; mock tabs and local paid action remain presentation-compatible, with no new business integration. |
+
+### Task 7 verification
+
+- Removed `NeoMarquee` file/import/render and `marqueeMessages`/timestamp presentation state; `rg` confirms no remaining source reference.
+- Room Funds at mobile `390x844` showed summary, outstanding-first rows, paid history and action controls with `scrollWidth = 390` and zero overflow.
+- QR info, Create Fund, Room Settings, Transfer Ownership, Archive Room and Upload QR dialogs all opened via `ResponsiveDialog`; the shared primitive now focuses the first enabled control on open and returns focus on Escape/close.
+- Archive exact phrase remained disabled until valid input; upload/delete remain guarded by existing async flags and callback sequence.
+- Static/regression evidence: membership + payment QR targeted tests 14/14 pass; full suite 69/69 pass; TypeScript exit 0; scoped ESLint exit 0 with only the two pre-existing meeting-page warnings; `git diff --check` pass.
+
 ## 6. Lợi ích
 
 - Tạo một visual language thống nhất và dễ maintain trước MVP.
