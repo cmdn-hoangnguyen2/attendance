@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthMockProvider } from "@/context/AuthMockContext";
 import { RoleSwitcherBanner } from "@/components/layout/RoleSwitcherBanner";
 import { AppHeader } from "@/components/layout/AppHeader";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-plus-jakarta",
   display: "swap",
 });
 
@@ -22,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${inter.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-neutral-white font-sans text-neutral-dark">
+    <html lang="vi" className={`${plusJakartaSans.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col bg-canvas font-sans text-text-primary">
         <AuthMockProvider>
           <RoleSwitcherBanner />
           <AppHeader />
