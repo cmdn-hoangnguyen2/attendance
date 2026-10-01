@@ -13,6 +13,10 @@
 - Scout: gpt-5.6-sol/high; Architect: gpt-6-astra/high.
 - Builder: gpt-6.1-sol/high; Challenger: gpt-6-astra/medium.
 - Chỉ Builder sửa implementation; controller giữ Git/shared files/infrastructure.
+- Update được BOSS duyệt: hai code writers chỉ khi disjoint files/dependencies.
+  Fresh/reloaded Sol6.1 thứ hai bị actual thread limit; BOSS cho phép reuse Astra6
+  Medium config-review agent làm endpoint writer tạm. Challenger Astra khác review;
+  không đổi permanent TOML/model mapping và không claim profile sandbox được load.
 
 ## 3. Lý do change
 

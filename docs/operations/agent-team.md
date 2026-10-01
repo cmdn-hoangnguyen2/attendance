@@ -49,6 +49,16 @@ facts/unknowns, exact commands/results, deviations and remaining evidence gates.
 No tokens, cookies, keys, personal-account data or full environment output in reports.
 
 One writer per file. Builder owns implementation; Challenger never writes fixes.
+BOSS approved two concurrent Builders for disjoint milestones. Overlap authoring
+only when files and load-bearing dependencies are independent; reserve the third
+child slot for Scout/Architect or a ready slice's Challenger. Run covering checks
+and acceptance per slice, then combined checks at integration. Do not run two
+writers on shared files or accept an integration before its dependencies pass.
+Temporary session exception approved by BOSS: if fresh/reloaded Sol 6.1 Builder
+allocation returns thread limit, reuse the existing Astra 6 Medium config-review
+agent as endpoint writer only. Keep its model unchanged and disclose the exception;
+another Astra Challenger reviews that implementation. Do not modify permanent
+profile mappings or claim native Builder sandbox activation.
 Controller alone manages Git, shared config/interfaces/docs, Docker, test targets,
 resets and external configuration unless the human explicitly changes authority.
 If Builder writes stall, stop the pending writer before controller applies a
