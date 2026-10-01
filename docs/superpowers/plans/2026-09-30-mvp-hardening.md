@@ -88,14 +88,36 @@ Existing-file shorthand in package tasks resolves as follows: Home=`src/app/page
 | Task/package | Implementation/review | Verified now | Open gate |
 | --- | --- | --- | --- |
 | A1/A2 | Guard, seed-free baseline, Storage executor independently approved | Real isolated-local reset, all15tables0/privatebucket0; pgTAP276PASS | Remote reset/live old owners require authorized remote link/credentials; not performed |
-| A3 | Scanner/harness and missing-table follow-up reviewed/approved | Regression6/6, fullunit136PASS; inventory12 remaining; dedicated serviceGET0/anon-denied | Atomic A checkpoint commit; final zero-mock belongs F/H |
-| B1 | Saved source approved; docs clarified | Anonymous401/no-store, native Home->login, genuine Auth0 callback/hardreload on3000 and one active profile/no duplicate | Logout/archived/failure journeys and multi-role HTTP sessions |
-| B2 | Parallel SQL/RLS and token/client authoring, exclusive files | No acceptance claim yet | SQL matrix, real issued-token DataAPI/Realtime/Storage and external tenant setup |
+| A3 | Scanner/harness and missing-table follow-up reviewed/approved; checkpoint `cc282f2` | Regression6/6, fullunit136PASS; inventory12 remaining; dedicated serviceGET0/anon-denied | Final zero-mock belongs F/H |
+| B1 | Source approved; checkpoint `44a2a4f` | Anonymous401/no-store, native Home->login, genuine Auth0 callback/hardreload/logout on3000 and one active profile/no duplicate | Archived/failure journeys and multi-role HTTP sessions |
+| B2 | M1-profile implemented and independently reviewed; token cache is the next bounded slice; M2/M3 not started | Profile helper5/5, fullunit141/141, TypeScript/scopedlint exit0 | Remaining M1 cache/SQL helpers, full SQL matrix and real issued-token DataAPI/Realtime/Storage |
 | B3/C-H | Not implemented | None claimed | Foundation dependency gates |
 
 H1 native finding: login Google primary button uses dark normal text on cobalt, approximately3.03:1 at14px; fix common-button foreground and validate normal/hover/focus/disabled/loading in the owning task. See QA evidence; no opportunistic second redesign.
 
 ### Parallel execution contract (approved by BOSS)
+
+#### Small milestone batches — BOSS request, 2026-10-01
+
+Operational change only: preserve the approved feature scope and package dependencies. Do not dispatch an entire package as one long worker assignment. Current capacity is three workers plus the controller, not six concurrent workers.
+
+| Batch | Bounded outputs | Exit gate |
+| --- | --- | --- |
+| B2-M1 | Profile provisioning without redundant writes; memory-only token cache; active-subject/global-role SQL helpers and focused tests | Each output has saved RED/GREEN evidence, independent spec/quality review, and combined regression checks |
+| B2-M2 | Session token endpoint/client/realtime integration; complete restrictive RLS and safe read DTOs | HTTP contracts and real local SQL authorization matrix pass; no overlapping file writers |
+| B2-M3 | Real issued-token Data API/Realtime/private Storage verification | Real-token evidence or explicit external configuration blocker; never substitute synthetic claims for this gate |
+| Later packages | Split each approved task into test/helper, integration, and runtime acceptance batches where needed | Previous load-bearing output reviewed before dependent authoring; package completion still requires its original acceptance |
+
+- A dispatch names one bounded deliverable, exclusive files, tests, a report path and a stop point. At most three independent implementers run; the controller handles infrastructure, aggregation and progress.
+- Save the failing test first. Report the first concrete result or blocker promptly; send a progress message at least every three minutes while running. A long pending tool call must be identified, not presented as active implementation.
+- After five minutes without an artifact or progress, the controller requests a checkpoint. After ten minutes without evidence, inspect status/files, interrupt if needed, preserve saved work, and reduce the assignment before resuming. These are escalation thresholds, not a promise that every task finishes within ten minutes.
+- Stop after the assigned output and hand off for review. No automatic expansion into the next milestone, no worker infrastructure/reset/Git operations, and no extra agents.
+- Review workers do not review their own code. Only the controller advances batch state after review and covering checks. Record partial completion separately from runtime acceptance.
+- Current role routing follows `docs/operations/agent-team.md`: one Builder code writer, conditional read-only Scout/Architect, independent read-only Challenger. The earlier parallel-authoring capacity is a ceiling, not a requirement to launch three writers.
+
+Recovery snapshot: foundation commits `cc282f2` (A) and `44a2a4f` (B1) are retained. Three workers were observed `interrupted` after turn interruption; no B2 implementation files were saved at recovery. This observation does not establish a root cause for the reported apparent hang. B1 native logout is verified; real archived/failure/multi-role acceptance remains open. H1 authoring is held until the first bounded B2 batch is reviewed.
+
+M1 operational fallback: subsequent diagnostics confirmed child patch calls were pending for over five minutes without a write result; one child additionally waited on an escalation request. Checkpoint messages could not be answered inside those pending calls. The underlying tool/permission cause is not yet established. Stop child write calls; serialize the first profile slice with controller-applied worker-authored patches and two read-only reviewers. Ordinary tools must respect permissions; no bypass of a denied approval. Token and SQL implementation wait until this smaller slice clears review. Saved artifacts, not `running` status, determine progress.
 
 - Split only independent deliverables. A1 guard, A2 schema, and A3 scanner/harness authoring may run concurrently; A2 destructive execution waits for A1 review, and database acceptance waits for the baseline.
 - One writer per file. Controller owns `package.json`, `.env.example`, `.gitignore`, enhancement/progress docs and shared interfaces. Workers report shared-file changes instead of editing them.

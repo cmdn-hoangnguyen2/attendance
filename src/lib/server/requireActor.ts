@@ -2,6 +2,7 @@ import "server-only";
 import { auth0 } from "@/lib/auth0";
 import { isActiveProfile, resolveGlobalRole, resolveProvisioningIdentity } from "@/lib/authClaims.mjs";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { provisionProfile } from "@/lib/server/provisionProfile.mjs";
 import { SupabaseUserRepository } from "@/modules/admin/infrastructure/supabase-admin-repository";
 
 export class ActorError extends Error {
@@ -13,7 +14,7 @@ export async function resolveActorProfile() {
   const identity = resolveProvisioningIdentity(session.user);
   const repository = new SupabaseUserRepository(createServerSupabaseClient());
   // Authentication never writes lifecycle fields or the deprecated DB role.
-  const profile = await repository.createOrSync(identity);
+  const profile = await provisionProfile(repository, identity);
   if (!isActiveProfile(profile)) throw new ActorError(403, "ACCOUNT_ARCHIVED");
   const globalRole = resolveGlobalRole(session.user);
   return { profile: { ...profile, role: globalRole }, globalRole };

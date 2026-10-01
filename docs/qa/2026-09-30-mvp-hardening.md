@@ -6,7 +6,7 @@ Evidence date: 2026-10-01 (Asia/Ho_Chi_Minh). Package A and concurrent B1 implem
 
 | Check | Actual outcome | Remaining gate |
 | --- | --- | --- |
-| Full unit suite, `node --test 'tests/unit/**/*.test.mjs'` | Latest 136 passed, 0 failed, 0 skipped after preflight regression | Authenticated runtime and domain integration are separate |
+| Full unit suite, `node --test 'tests/unit/**/*.test.mjs'` | Latest 141 passed, 0 failed, 0 skipped after bounded profile provisioning slice | Authenticated runtime and domain integration are separate |
 | TypeScript, direct installed compiler with `--noEmit --incremental false` | Exit 0 | Re-run after further changes |
 | `git diff --check` | Exit 0 | Re-run at commit |
 | Verified local reset | Completed 2026-09-30T17:57:17Z; project `diemdanh-mvp-hardening`, API `http://127.0.0.1:54321`, CLI 2.118.0 `db reset --local --no-seed` | Remote development reset has NOT run |
@@ -16,11 +16,14 @@ Evidence date: 2026-10-01 (Asia/Ho_Chi_Minh). Package A and concurrent B1 implem
 | Real local Data API read, process-only dedicated credentials | Service-role zero-row GET count0; anonymous GET denied | Connectivity/default-deny proof only, not B authorization matrix |
 | Native browser B1 anonymous journey on actual worktree preview3100 | `/api/me` 401 with `private, no-store`; `/login` 200; hydrated Home redirected to `/login`; login UI contains only real Google action, no role switcher | Real login/reload/logout/archived/provisioning-failure contracts still need real sessions |
 | Actual preflight missing-table regression | RED5/6 (old HEAD falsely printed PASS); GREEN6/6 after zero-row GET/exact nonnegative count; independent review approved | Transport substitute is child-test-only; not live domain evidence |
-| Native Auth0 on port3000 | Existing Google session completed genuine callback; profile remained after hard reload; actual local DB count1/active1, no duplicate provisioning | Logout/archived/failure cases and multi-role HTTP sessions still pending |
+| Native Auth0 on port3000 | Existing Google session completed genuine callback; profile remained after hard reload; actual local DB count1/active1, no duplicate provisioning; real sidebar logout removed profile and subsequent Home settled on login | Archived/failure cases and multi-role HTTP sessions still pending |
+| B2-M1 profile slice | Actual imported helper RED0/5 (missing module) -> GREEN5/5; TypeScript/scoped ESLint exit0; two independent read-only reviews approved | No live concurrent-create/archive race or realtime refresh evidence; token-cache/SQL helpers pending |
 
 Independent A1/A2/A3 reviews approved the implementation; the executor's missing-table GET regression and explicit no-production declaration received a scoped re-review before reset. Old deployed function owners/grants remain unverified without authorized remote database access. This is an explicit remote gate, not local baseline evidence.
 
 Preview3100 initially hit Auth0 Callback URL mismatch, which is confirmed by native Auth0 error page. BOSS explicitly requested freeing port3000. Controller stopped only Docker container `ols-front-webserver` (`f218e0b009db`), kept its volumes/container and all other OLS/Supabase containers, and restarted the controller-created Next preview on configured origin `http://localhost:3000`. Auth0 callback then succeeded without tenant changes. Restore OLS with `docker start ols-front-webserver` after stopping CMDN preview3000. No `.env.local` or secret values changed. Post-login database now legitimately contains one provisioned real profile; the zero-record reset evidence above is the immediate post-reset snapshot, not a permanent zero-data assertion.
+
+Checkpoint commits: A `cc282f2` (31 files), B1 `44a2a4f` (24 files), neither pushed. B1 scoped ESLint exit0 with four pre-existing warnings in Home/Meeting (unused MeetingTab and hook dependencies); those are tracked for owning feature tasks, not opportunistically changed. Native direct navigation to `/api/me` after logout was blocked by the browser client, so that attempt is NOT cookie-bearing HTTP-status evidence; the verified outcome is SDK logout/profile removal/Home-to-login UI.
 
 ## Commands and outcomes
 

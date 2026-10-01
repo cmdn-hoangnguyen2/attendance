@@ -32,6 +32,8 @@
 - Các implementation plans A-H có target files, interfaces, failing-test cases, implementation steps, verification và acceptance gates.
 - Execution: BOSS chuyển sang coordinated subagents ngày 2026-10-01; tiếp tục trong worktree `codex/ui-ux-redesign`, Native browser verification.
 - A1/A2/A3 có exclusive file ownership; controller giữ shared files, Git commits, infrastructure và destructive reset. Review và dependency gates không bị bỏ qua khi chạy song song.
+- BOSS yêu cầu milestone nhỏ: M1 helpers/tests, M2 integration/RLS, M3 real-token runtime. Child patch calls bị kẹt hơn 5 phút (một call chờ escalation), không lưu source; controller ngắt và chuyển sang controller áp dụng worker-authored patch, agents review read-only. Không bypass permission, không giao cả package dài.
+- M1-profile đã lưu và được hai reviewers duyệt: tránh UPSERT profile không đổi/archived, chỉ sync safe identity fields; lookup lỗi không bị coi là missing. Focused RED0/5 -> GREEN5/5; fullunit141/141PASS0skipped, TypeScript/scopedlint exit0, được kiểm tra lại ngày2026-10-01 trước checkpoint. SQL/token/realtime/concurrentDB acceptance vẫn pending. UI không đổi.
 - Zero-mock closure theo dependency: A xóa dead fixtures/seeds, B xóa mock auth, C thay mock invite, F thay mock debt; F/H chạy gate cuối.
 - Giữ rule cũ: Channel invite-only, full integer-VND payment, không due date/partial-payment flow.
 - Self-review đã khóa shared SQL command signature, Idempotency-Key, transaction lock order, package dependencies, zero-mock gate và audit coverage Tasks 1-7.
@@ -53,6 +55,8 @@
 - Native QA phát hiện Google login button chữ tối trên nền cobalt, contrast normal khoảng 3.03:1 (14px), chưa đạt 4.5:1. Đã ghi H1 để sửa shared primary-button style và kiểm tra đầy đủ states; chưa claim fix.
 - A3 preflight follow-up RED5/6 -> GREEN6/6: actual CLI/installed SDK regression chặn HEAD missing-table false-PASS, invalid/null/negative counts; scoped independent review duyệt. Latest combined unit suite136/136PASS,0skip.
 - Theo yêu cầu BOSS, dừng riêng `ols-front-webserver` để giải phóng3000; không xoá container/volume, không dừng Docker daemon hoặc container khác. Next preview chuyển3000 theo APP_BASE_URL có sẵn; callback Auth0 thật và hardreload thành công, localDB có1activeprofile không trùng. Port3100 callback mismatch không được khắc phục bằng mock hay tenantchange.
+- Checkpoint A `cc282f2`, B1 `44a2a4f`, chưa push. Native logout qua sidebar và Home về login đã xác minh. B1 lint0errors/4pre-existingwarnings Home/Meeting; giữ nguyên để owning feature tasks xử lý.
+- B2 chia3ownership: SQL/RLS, token/client, profile provisioning prerequisite. Source B1 luôn UPSERT ở `/api/me` tạo risk vòng users-update -> realtime-refresh -> UPSERT; bổ sung read-first/no-write khi identity không đổi và explicit lookup error. Chưa claim risk này đã xảy ra ở runtime hoặc đã được fix.
 
 ## 5. Scope ảnh hưởng
 
