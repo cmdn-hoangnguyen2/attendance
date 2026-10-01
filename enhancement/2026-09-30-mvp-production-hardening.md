@@ -61,6 +61,8 @@
 
 ## 5. Scope ảnh hưởng
 
+Latest 2026-10-01 bounded M1-SQL: only migration20260930000002_auth_rls.sql and authorization.test.sql, identitydefiner/admininvoker with fixedschema/ACL, no tablegrants/policies. Actual RED64/17fail->GREEN212PASS; postrollback1activegenuineprofile,0testusers/rooms. Independent Challenger spec/qualityPASS. M2endpoint adds route/helper/unit scopedfiles; actualRED39/1fail38skip->GREEN39PASS, fullunit2030skip,tsc/lint0; anonymousHTTP401/crossOrigin403no-store; endpointreview stillpending. NotfullB2/notMVPcompletion; whiteUI unchanged/no newdeps. Two disjointwriters approved; temporaryAstra6Mediumendpointwriter explicitly permitted after actualthreadlimit, permanentmodelconfigunchanged.
+
 - Auth, RLS, migrations, server commands, repositories, realtime hooks, notifications, Storage và feature modules.
 - Unit/integration/RLS/realtime/E2E/accessibility/responsive tests.
 - Shared UI primitives và route presentation chỉ khi cần sửa functional state, contrast hoặc accessibility.

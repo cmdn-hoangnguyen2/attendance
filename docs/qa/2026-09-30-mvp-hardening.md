@@ -6,7 +6,7 @@ Evidence date: 2026-10-01 (Asia/Ho_Chi_Minh). Package A and concurrent B1 implem
 
 | Check | Actual outcome | Remaining gate |
 | --- | --- | --- |
-| Full unit suite, `node --test 'tests/unit/**/*.test.mjs'` | Latest 164 passed, 0 failed, 0 skipped after bounded memory-only token cache slice | Authenticated runtime and domain integration are separate; native TS import emits MODULE_TYPELESS_PACKAGE_JSON tooling warning |
+| Full unit suite, `node --test 'tests/unit/**/*.test.mjs'` | Latest 203 passed, 0 failed, 0 skipped after bounded token endpoint slice | Authenticated runtime and domain integration are separate; native TS import emits MODULE_TYPELESS_PACKAGE_JSON tooling warning |
 | TypeScript, direct installed compiler with `--noEmit --incremental false` | Exit 0 | Re-run after further changes |
 | `git diff --check` | Exit 0 | Re-run at commit |
 | Verified local reset | Completed 2026-09-30T17:57:17Z; project `diemdanh-mvp-hardening`, API `http://127.0.0.1:54321`, CLI 2.118.0 `db reset --local --no-seed` | Remote development reset has NOT run |
@@ -17,8 +17,11 @@ Evidence date: 2026-10-01 (Asia/Ho_Chi_Minh). Package A and concurrent B1 implem
 | Native browser B1 anonymous journey on actual worktree preview3100 | `/api/me` 401 with `private, no-store`; `/login` 200; hydrated Home redirected to `/login`; login UI contains only real Google action, no role switcher | Real login/reload/logout/archived/provisioning-failure contracts still need real sessions |
 | Actual preflight missing-table regression | RED5/6 (old HEAD falsely printed PASS); GREEN6/6 after zero-row GET/exact nonnegative count; independent review approved | Transport substitute is child-test-only; not live domain evidence |
 | Native Auth0 on port3000 | Existing Google session completed genuine callback; profile remained after hard reload; actual local DB count1/active1, no duplicate provisioning; real sidebar logout removed profile and subsequent Home settled on login | Archived/failure cases and multi-role HTTP sessions still pending |
-| B2-M1 profile slice | Actual imported helper RED0/5 (missing module) -> GREEN5/5; TypeScript/scoped ESLint exit0; two independent read-only reviews approved | No live concurrent-create/archive race or realtime refresh evidence; token-cache/SQL helpers pending |
+| B2-M1 profile slice | Actual imported helper RED0/5 (missing module) -> GREEN5/5; TypeScript/scoped ESLint exit0; two independent read-only reviews approved; checkpoint633f443 | No live concurrent-create/archive race or realtime refresh evidence |
 | B2-M1 token cache | Actual absent-module contract RED1fail/22skip -> GREEN23/23,0skip; fullunit164/164; TypeScript/scoped ESLint exit0; Challenger spec/quality PASS | Module-type tooling warning is LOW; endpoint/logout/client/fullRLS/real-issued-token acceptance remain M2/M3 |
+| B2-M1 SQL helpers | Actual local PG17.6 RED64tests/17fail -> GREEN212/212; only migration20260930000002 applied; Challenger spec/quality PASS | Synthetic claims test semantics only; fullRLS and real-token gate remain pending |
+| SQL fixture rollback | Post-test users1/active1/testusers0/testrooms0; publicpolicies0; exact postgres owners/search_path/securitymodes | No reset or profile deletion; historical baseline empty/noSECDEF assertions not valid unchanged after B2 |
+| B2-M2 endpoint slice | Actual refined contract RED1fail/38skip -> GREEN39/39; fullunit203/2030skip; tsc/scopedlint0; real localhost GET anonymous401 and conflictingOrigin403, both private/no-store | Independent review pending; genuine-cookie/issuedtoken/fullM2/M3 not claimed |
 
 Independent A1/A2/A3 reviews approved the implementation; the executor's missing-table GET regression and explicit no-production declaration received a scoped re-review before reset. Old deployed function owners/grants remain unverified without authorized remote database access. This is an explicit remote gate, not local baseline evidence.
 
