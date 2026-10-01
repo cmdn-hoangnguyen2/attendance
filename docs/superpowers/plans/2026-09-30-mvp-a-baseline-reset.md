@@ -39,6 +39,8 @@
 
 **Acceptance:** Reject unsafe targets deterministically; a manifest names exact affected business tables/buckets and command, without secrets.
 
+Approved clarification (2026-10-01): BOSS confirmed no production project exists. An explicit literal `PRODUCTION_PROJECT_REF=none` records that declaration; empty/null remains rejected. All linked/development/URL equality and acknowledgement checks remain required. Remote CLI credentials/linking are independent prerequisites.
+
 ### Task A2: Establish a seed-free baseline and execute the guarded reset
 
 **Files:** Replace the seven current `supabase/migrations/*.sql` with `supabase/migrations/20260930000001_baseline.sql`; create `supabase/config.toml` and `tests/database/baseline.test.sql`; delete `src/mocks/fixtures.ts`, `src/mocks/repository.ts`, `src/mocks/index.ts`, `public/design-system.html`; modify `scripts/devReset.mjs`, `src/types/database.ts`, `docs/operations/development-reset.md`.

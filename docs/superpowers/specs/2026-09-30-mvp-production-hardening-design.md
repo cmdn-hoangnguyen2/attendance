@@ -52,6 +52,8 @@ It closes gaps that the UI-only Tasks 1-7 intentionally did not change:
 
 The user has confirmed that current development data is disposable. This approval does not authorize deleting production data.
 
+2026-10-01 clarification: BOSS confirmed that no production project exists. A linked reset may use an explicit `PRODUCTION_PROJECT_REF=none` declaration for that situation; an absent/blank value still blocks reset. The development/linked/URL references and exact acknowledgement remain mandatory. If production is later created, replace `none` with its real reference before any reset.
+
 Before any destructive command:
 
 1. Resolve the exact Supabase project reference and environment.

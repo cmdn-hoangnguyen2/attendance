@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Execution method: Native in the existing `codex/ui-ux-redesign` worktree.
+- Execution method: BOSS switched to coordinated subagents on 2026-10-01 in the existing `codex/ui-ux-redesign` worktree. Native browser verification remains required; no browser subagents.
 - UI constraint: Do not start another visual redesign.
 - Preserve the white Cobalt Commons theme, Vietnamese-first UI, Hugeicons, spacing recipes, header notification/user controls, and sidebar logout.
 - Auth0 namespaced claims remain the source of truth for the global `admin`/`user` role.
@@ -82,6 +82,27 @@ Existing-file shorthand in package tasks resolves as follows: Home=`src/app/page
 | Development deletion instead of migration | A1-A2 |
 
 ## Progress rules
+
+### Controller checkpoint — 2026-10-01
+
+| Task/package | Implementation/review | Verified now | Open gate |
+| --- | --- | --- | --- |
+| A1/A2 | Guard, seed-free baseline, Storage executor independently approved | Real isolated-local reset, all15tables0/privatebucket0; pgTAP276PASS | Remote reset/live old owners require authorized remote link/credentials; not performed |
+| A3 | Scanner/harness and missing-table follow-up reviewed/approved | Regression6/6, fullunit136PASS; inventory12 remaining; dedicated serviceGET0/anon-denied | Atomic A checkpoint commit; final zero-mock belongs F/H |
+| B1 | Saved source approved; docs clarified | Anonymous401/no-store, native Home->login, genuine Auth0 callback/hardreload on3000 and one active profile/no duplicate | Logout/archived/failure journeys and multi-role HTTP sessions |
+| B2 | Parallel SQL/RLS and token/client authoring, exclusive files | No acceptance claim yet | SQL matrix, real issued-token DataAPI/Realtime/Storage and external tenant setup |
+| B3/C-H | Not implemented | None claimed | Foundation dependency gates |
+
+H1 native finding: login Google primary button uses dark normal text on cobalt, approximately3.03:1 at14px; fix common-button foreground and validate normal/hover/focus/disabled/loading in the owning task. See QA evidence; no opportunistic second redesign.
+
+### Parallel execution contract (approved by BOSS)
+
+- Split only independent deliverables. A1 guard, A2 schema, and A3 scanner/harness authoring may run concurrently; A2 destructive execution waits for A1 review, and database acceptance waits for the baseline.
+- One writer per file. Controller owns `package.json`, `.env.example`, `.gitignore`, enhancement/progress docs and shared interfaces. Workers report shared-file changes instead of editing them.
+- Controller alone stages/commits and manages Docker, test targets, reset, Storage deletion and external configuration. No worker resets data, changes infrastructure, touches another worker's files or spawns further agents.
+- A completed worker hands off a file list, RED/GREEN evidence and explicit pending infrastructure gates. A fresh task reviewer checks spec compliance and code quality before dependent work starts.
+- After review, controller runs combined regression/type/lint checks and commits explicit paths only. Auth/RLS/command foundation must be accepted before feature packages use it; authoring in parallel never bypasses dependency gates.
+- Keep approval separate from verification: disposable development reset is already approved, but exact target must still be proven. Missing remote production exclusion/configuration blocks remote reset only; isolated local implementation/testing can proceed.
 
 All task checkboxes begin incomplete. Do not mark a package complete from source inspection or historical 69/69 unit results. Separate implementation, automated verification, and authenticated runtime evidence. The original UI Tasks 8-9 remain pending; H incorporates their functional/contrast verification but does not silently mark their full visual scope complete.
 

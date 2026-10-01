@@ -201,7 +201,7 @@ export interface Database {
         Insert: {
           id?: string;
           room_id: string;
-          title?: string;
+          title: string;
           starts_at: string;
           attendance_deadline: string;
           closes_at: string;
@@ -265,7 +265,7 @@ export interface Database {
           id?: string;
           meeting_session_id: string;
           user_id: string;
-          suggested_amount: number;
+          suggested_amount?: number;
           is_manual?: boolean;
           created_at?: string;
         };
@@ -414,6 +414,105 @@ export interface Database {
           target_id?: string;
           metadata?: Json | null;
           occurred_at?: string;
+        };
+        Relationships: [];
+      };
+      peer_debts: {
+        Row: {
+          id: string;
+          room_id: string;
+          creditor_id: string;
+          debtor_id: string;
+          amount: number;
+          reason: string | null;
+          status: "outstanding" | "paid";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          room_id: string;
+          creditor_id: string;
+          debtor_id: string;
+          amount: number;
+          reason?: string | null;
+          status?: "outstanding" | "paid";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          room_id?: string;
+          creditor_id?: string;
+          debtor_id?: string;
+          amount?: number;
+          reason?: string | null;
+          status?: "outstanding" | "paid";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      peer_payments: {
+        Row: {
+          id: string;
+          peer_debt_id: string;
+          amount: number;
+          paid_at: string;
+          confirmed_by: string;
+          confirmed_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          peer_debt_id: string;
+          amount: number;
+          paid_at?: string;
+          confirmed_by: string;
+          confirmed_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          peer_debt_id?: string;
+          amount?: number;
+          paid_at?: string;
+          confirmed_by?: string;
+          confirmed_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      user_payment_images: {
+        Row: {
+          id: string;
+          user_id: string;
+          storage_path: string;
+          mime_type: "image/jpeg" | "image/png" | "image/webp";
+          file_size: number;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          storage_path: string;
+          mime_type: "image/jpeg" | "image/png" | "image/webp";
+          file_size: number;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          storage_path?: string;
+          mime_type?: "image/jpeg" | "image/png" | "image/webp";
+          file_size?: number;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };
