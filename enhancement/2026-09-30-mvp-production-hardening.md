@@ -61,6 +61,8 @@
 
 ## 5. Scope ảnh hưởng
 
+Latest correction: SQLcheckpoint5e07c77; endpoint Challenger caught MEDIUM expiry-during-actor race. Builder added actual regressionRED39pass2fail0skip and one postawaitguard; GREEN41/41, fullunit205/2050skip,tsc/scopedlint0. Independent re-reviewPASS addressedfinding/no newbreakage. Two bounded parallel slices accepted, not fullB2. No dependency/UI/globalconfig/remote changes.
+
 Latest 2026-10-01 bounded M1-SQL: only migration20260930000002_auth_rls.sql and authorization.test.sql, identitydefiner/admininvoker with fixedschema/ACL, no tablegrants/policies. Actual RED64/17fail->GREEN212PASS; postrollback1activegenuineprofile,0testusers/rooms. Independent Challenger spec/qualityPASS. M2endpoint adds route/helper/unit scopedfiles; actualRED39/1fail38skip->GREEN39PASS, fullunit2030skip,tsc/lint0; anonymousHTTP401/crossOrigin403no-store; endpointreview stillpending. NotfullB2/notMVPcompletion; whiteUI unchanged/no newdeps. Two disjointwriters approved; temporaryAstra6Mediumendpointwriter explicitly permitted after actualthreadlimit, permanentmodelconfigunchanged.
 
 - Auth, RLS, migrations, server commands, repositories, realtime hooks, notifications, Storage và feature modules.

@@ -6,7 +6,7 @@ Evidence date: 2026-10-01 (Asia/Ho_Chi_Minh). Package A and concurrent B1 implem
 
 | Check | Actual outcome | Remaining gate |
 | --- | --- | --- |
-| Full unit suite, `node --test 'tests/unit/**/*.test.mjs'` | Latest 203 passed, 0 failed, 0 skipped after bounded token endpoint slice | Authenticated runtime and domain integration are separate; native TS import emits MODULE_TYPELESS_PACKAGE_JSON tooling warning |
+| Full unit suite, `node --test 'tests/unit/**/*.test.mjs'` | Latest 205 passed, 0 failed, 0 skipped after endpoint expiry-race correction | Authenticated runtime and domain integration are separate; native TS import emits MODULE_TYPELESS_PACKAGE_JSON tooling warning |
 | TypeScript, direct installed compiler with `--noEmit --incremental false` | Exit 0 | Re-run after further changes |
 | `git diff --check` | Exit 0 | Re-run at commit |
 | Verified local reset | Completed 2026-09-30T17:57:17Z; project `diemdanh-mvp-hardening`, API `http://127.0.0.1:54321`, CLI 2.118.0 `db reset --local --no-seed` | Remote development reset has NOT run |
@@ -21,7 +21,7 @@ Evidence date: 2026-10-01 (Asia/Ho_Chi_Minh). Package A and concurrent B1 implem
 | B2-M1 token cache | Actual absent-module contract RED1fail/22skip -> GREEN23/23,0skip; fullunit164/164; TypeScript/scoped ESLint exit0; Challenger spec/quality PASS | Module-type tooling warning is LOW; endpoint/logout/client/fullRLS/real-issued-token acceptance remain M2/M3 |
 | B2-M1 SQL helpers | Actual local PG17.6 RED64tests/17fail -> GREEN212/212; only migration20260930000002 applied; Challenger spec/quality PASS | Synthetic claims test semantics only; fullRLS and real-token gate remain pending |
 | SQL fixture rollback | Post-test users1/active1/testusers0/testrooms0; publicpolicies0; exact postgres owners/search_path/securitymodes | No reset or profile deletion; historical baseline empty/noSECDEF assertions not valid unchanged after B2 |
-| B2-M2 endpoint slice | Actual refined contract RED1fail/38skip -> GREEN39/39; fullunit203/2030skip; tsc/scopedlint0; real localhost GET anonymous401 and conflictingOrigin403, both private/no-store | Independent review pending; genuine-cookie/issuedtoken/fullM2/M3 not claimed |
+| B2-M2 endpoint slice | Actual contract RED1fail/38skip->GREEN39/39; Challenger reproduced expiry-during-actor race; regressionRED39pass/2fail->GREEN41/41; fullunit205/2050skip; tsc/scopedlint0; actual localhost anonymous401/crossOrigin403 private/no-store | Independent scoped re-review spec/qualityPASS; genuine-cookie/issuedtoken/fullM2/M3 not claimed |
 
 Independent A1/A2/A3 reviews approved the implementation; the executor's missing-table GET regression and explicit no-production declaration received a scoped re-review before reset. Old deployed function owners/grants remain unverified without authorized remote database access. This is an explicit remote gate, not local baseline evidence.
 
