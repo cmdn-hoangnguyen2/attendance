@@ -4,19 +4,27 @@
 
 - Ngày: 2026-10-01 (Asia/Ho_Chi_Minh).
 - BOSS đã duyệt thiết kế trong chat: bốn profiles, routing theo milestone,
-  Challenger read-only; không thay application code hoặc global config.
-- Trạng thái: đã ghi sáu files, static verification và independent scoped review PASS;
-  runtime activation vẫn pending như mục dưới.
+  Challenger read-only; cập nhật mới: ba Sol writers và một reviewer-coordinator.
+  Không thay application code hoặc global config.
+- Trạng thái ban đầu: sáu files, static verification và independent scoped review PASS.
+  Update workflow hiện tại đã có static verification/review riêng; runtime activation
+  vẫn pending, không claim existing agents đã đổi model.
 
 ## 2. Feature
 
 - Scout: gpt-5.6-sol/high; Architect: gpt-6-astra/high.
 - Builder: gpt-6.1-sol/high; Challenger: gpt-6-astra/medium.
-- Chỉ Builder sửa implementation; controller giữ Git/shared files/infrastructure.
-- Update được BOSS duyệt: hai code writers chỉ khi disjoint files/dependencies.
-  Fresh/reloaded Sol6.1 thứ hai bị actual thread limit; BOSS cho phép reuse Astra6
-  Medium config-review agent làm endpoint writer tạm. Challenger Astra khác review;
-  không đổi permanent TOML/model mapping và không claim profile sandbox được load.
+- Ba code writers dùng Builder gpt-6.1-sol/high, chỉ chạy song song khi disjoint
+  files và load-bearing dependencies đã được chấp nhận.
+- Một Challenger gpt-6-astra/medium review độc lập và đề xuất phân phối task:
+  task ID, writer, owned files, dependencies, checks, stop point và blockers.
+  Controller xác nhận/dispatch; giữ Git/shared files/infrastructure.
+- Harness hiện tại chỉ cho ba active children cộng controller: authoring batch tối
+  đa ba writers; handoff nhường slot cho reviewer, hoặc hai writers + reviewer.
+  Không claim bốn workers đồng thời và không đổi global cap để vượt runtime limit.
+- Ngoại lệ Astra Medium endpoint writer trước đây được BOSS cho phép sau actual
+  thread limit nay hết hiệu lực cho task mới. Giữ nguyên lịch sử model/report;
+  không đổi existing agent bằng follow-up hoặc fallback Astra khi Sol không tạo được.
 
 ## 3. Lý do change
 
@@ -30,6 +38,8 @@
 - Tạo standalone project profiles trong .codex/agents/, không đổi global defaults.
 - Dùng docs/operations/agent-team.md làm workflow chung.
 - Scope mỗi dispatch là một milestone; Scout/Architect chỉ chạy khi cần.
+- Reviewer ưu tiên frozen diff/fix round trước task queue mới; không tự sửa code,
+  spawn worker hoặc mở rộng approved plan. Writers dùng chung một Builder profile.
 - Model IDs và effort được đối chiếu catalog bundled của Codex CLI 0.159.2.
 - Challenger có spec/quality verdict; PASS không thay thế runtime acceptance.
 - Không thêm nickname_candidates, dependency, secrets hoặc quyền vượt sandbox.
@@ -44,15 +54,30 @@
 - docs/operations/agent-team.md
 - enhancement/2026-10-01-project-agent-team.md
 - Không sửa UI, business handlers, repositories, tests, migrations hoặc .env.
-- Các thay đổi B2-M1 profile provisioning đang có được giữ nguyên.
+- Update hiện tại đồng bộ thêm routing trong master plan và ignored B execution ledger.
+- Giữ nguyên tất cả application checkpoints đã có, bao gồm endpoint 138dda5.
 
 ## 6. Lợi ích
 
 - File ownership rõ; review độc lập; không planning lại A-H.
 - Handoff nhỏ và có bằng chứng; không giả lập thành công khi thiếu runtime gates.
+- Mục tiêu giảm chờ authoring/review; chưa có benchmark chứng minh tăng tốc.
 - Model/effort theo vai trò mà BOSS đã chọn, không ảnh hưởng project khác.
 
 ## Verification
+
+### Update ba writers + reviewer-coordinator
+
+- PASS mới: tomllib parse bốn profiles; exact sáu fields, model/effort/sandbox mappings,
+  nonempty instructions/common workflow link; mandatory Sol writer và read-only
+  reviewer TASK_QUEUE/controller-dispatch assertions. Không thêm quyền hay config keys.
+- PASS mới: git diff --check; root đọc scoped diff, chỉ năm tracked config/docs files.
+- PASS mới: independent /root/challenger_b2_token SPEC_VERDICT/QUALITY_VERDICT/PASS
+  cho năm files; không có concrete finding, không sửa file hoặc chạy lại app tests.
+- Không dispatch task application trong update này. Live Sol allocation/TOML activation
+  chưa được kiểm chứng mới; không thay model của agent cũ hoặc chứng minh tăng tốc.
+
+### Cấu hình ban đầu (historical evidence)
 
 - PASS: Python 3.13.7 tomllib parse cả bốn profiles; exact sáu fields, names,
   model/effort/sandbox mappings, nonempty instructions và common workflow references.

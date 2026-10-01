@@ -9,8 +9,8 @@ approved MVP scope or application architecture.
 | --- | --- | --- | --- |
 | Scout | gpt-5.6-sol | high | read-only |
 | Architect | gpt-6-astra | high | read-only |
-| Builder | gpt-6.1-sol | high | workspace-write |
-| Challenger | gpt-6-astra | medium | read-only |
+| Builder (Writer 1-3) | gpt-6.1-sol | high | workspace-write |
+| Challenger (reviewer-coordinator) | gpt-6-astra | medium | read-only |
 
 Profiles live in `.codex/agents/*.toml` in this worktree, not global Codex config.
 No nickname, dependency, provider, secret, relaxed approval or extra writable-root
@@ -23,18 +23,32 @@ Read the approved spec/package plan and latest ledger before dispatch. Keep
 `docs/superpowers/plans/2026-09-30-mvp-hardening.md` and its A-H dependencies.
 Do not repeat completed work or replace the master plan with a new architecture.
 
-1. Dispatch Scout only when repository facts are missing.
-2. Dispatch Architect only when a material solution decision is unresolved.
+The target execution team is three code writers and one reviewer-coordinator.
+Writers reuse the Builder profile with distinct task identities; no duplicate profile
+files are required. Scout and Architect remain optional consultants, not mandatory
+stages or additional continuously running workers.
+
+1. Reviewer-coordinator prepares a task queue from the approved plan/current ledger:
+   task ID, proposed writer, exclusive files, dependencies, checks and stop point.
+   Controller validates that queue and performs actual dispatch/ownership changes.
+2. Dispatch Scout only when repository facts are missing.
+3. Dispatch Architect only when a material solution decision is unresolved.
    An adequate approved contract proceeds directly to Builder.
-3. Give Builder one bounded milestone and exclusive file ownership.
-4. Freeze the implementation and dispatch Challenger with the task-scoped diff.
-5. Send concrete findings back to Builder, then request scoped re-review.
-6. Controller verifies required evidence, records status and checkpoints the result.
+4. Give each Builder one bounded milestone and exclusive file ownership.
+5. Freeze the implementation and dispatch Challenger with the task-scoped diff.
+6. Send concrete findings back to its Builder, then request scoped re-review.
+7. Controller verifies required evidence, records status and checkpoints the result.
    Review PASS is not automatically DONE, package acceptance, merge or deployment.
 
-Four profiles do not mean four simultaneous children. This session supports three
-subagents plus the controller. Dependent stages run sequentially. Independent
-read-only research may overlap implementation only within available slots.
+Four target workers do not mean four simultaneous children. This session supports
+three active subagents plus the controller; saved config cannot override that cap.
+Use up to three Sol writers for a genuinely independent authoring batch. When a
+writer hands off, schedule the reviewer-coordinator in the freed slot, allowing
+the other two writers to continue. Prefer two writers plus reviewer when review
+would otherwise queue up; use fewer writers when dependencies require it.
+A completed child is not proof a fresh allocation will succeed: respect actual
+thread-limit errors. Do not keep idle agents running just to fill slots or claim
+four simultaneous workers. Dependent stages and shared-file writes stay serialized.
 
 ## Dispatch and durable handoff
 
@@ -49,16 +63,17 @@ facts/unknowns, exact commands/results, deviations and remaining evidence gates.
 No tokens, cookies, keys, personal-account data or full environment output in reports.
 
 One writer per file. Builder owns implementation; Challenger never writes fixes.
-BOSS approved two concurrent Builders for disjoint milestones. Overlap authoring
-only when files and load-bearing dependencies are independent; reserve the third
-child slot for Scout/Architect or a ready slice's Challenger. Run covering checks
-and acceptance per slice, then combined checks at integration. Do not run two
-writers on shared files or accept an integration before its dependencies pass.
-Temporary session exception approved by BOSS: if fresh/reloaded Sol 6.1 Builder
-allocation returns thread limit, reuse the existing Astra 6 Medium config-review
-agent as endpoint writer only. Keep its model unchanged and disclose the exception;
-another Astra Challenger reviews that implementation. Do not modify permanent
-profile mappings or claim native Builder sandbox activation.
+BOSS approved up to three concurrent Builders for disjoint milestones. Every code
+writer must use gpt-6.1-sol/high; no silent model substitution when allocation fails.
+Overlap authoring only when files and load-bearing dependencies are independent.
+Run covering checks and independent acceptance per slice, then combined checks at
+integration. Do not accept an integration before its dependencies pass.
+The reviewer-coordinator owns read-only review/task-distribution proposals, not
+code corrections, actual dispatch or shared-file writes. Prioritize a frozen slice
+and its concrete findings before planning more authoring; follow the critical path.
+Historical exception: BOSS temporarily allowed an existing Astra Medium endpoint
+writer after Sol allocation failed. That exception is now revoked for future work;
+retain its genuine endpoint report/model history rather than relabeling past work.
 Controller alone manages Git, shared config/interfaces/docs, Docker, test targets,
 resets and external configuration unless the human explicitly changes authority.
 If Builder writes stall, stop the pending writer before controller applies a
