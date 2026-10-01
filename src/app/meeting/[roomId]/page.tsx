@@ -3,13 +3,12 @@
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useAuthMock } from "@/context/AuthMockContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   AttendanceStatus,
   ConfirmationPhrase,
   FundContributionReason,
   FundContributionStatus,
-  GlobalRole,
   JoinRequestStatus,
   MeetingStatus,
   MembershipStatus,
@@ -68,7 +67,7 @@ export default function MeetingDetailPage() {
   const router = useRouter();
   const roomId = params?.roomId as string;
 
-  const { currentUser, isAuthenticated, isLoading: isAuthLoading } = useAuthMock();
+  const { currentUser, isAuthenticated, isAdmin, isLoading: isAuthLoading } = useAuth();
 
   // Redirect to /login if unauthenticated
   useEffect(() => {
@@ -202,7 +201,6 @@ export default function MeetingDetailPage() {
 
   // Kiểm tra quyền hạn
   const isOwner = Boolean(currentUser && room && room.ownerId === currentUser.id);
-  const isAdmin = currentUser?.role === GlobalRole.ADMIN;
   const isOwnerOrAdmin = isOwner || isAdmin;
   const isMember = Boolean(
     currentUser &&

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Notification01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
-import { useAuthMock } from "@/context/AuthMockContext";
+import { useAuth } from "@/context/AuthContext";
 import { useUserRealtime } from "@/lib/realtime/useUserRealtime";
 import { notificationRepository } from "@/lib/repository/notificationRepository";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,7 @@ function timeAgo(dateString: string) {
 }
 
 export function NotificationPopover() {
-  const { currentUser } = useAuthMock();
+  const { currentUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const popoverRef = useRef<HTMLDivElement>(null);

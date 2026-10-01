@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthMock } from "@/context/AuthMockContext";
+import { useAuth } from "@/context/AuthContext";
 import type { FundContribution, Payment, Room, User } from "@/types/domain";
 import { formatVND } from "@/lib/utils";
 import { PaymentInfoModal } from "@/modules/funds/presentation/PaymentInfoModal";
@@ -25,7 +25,7 @@ import { FundFilterTab, FundContributionStatus, RoomStatus } from "@/types/domai
 
 export default function PersonalFundsPage() {
   const router = useRouter();
-  const { currentUser, isAuthenticated, isLoading: isAuthLoading } = useAuthMock();
+  const { currentUser, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   // Redirect to /login if unauthenticated
   useEffect(() => {

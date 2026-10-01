@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { AuthMockProvider } from "@/context/AuthMockContext";
-import { RoleSwitcherBanner } from "@/components/layout/RoleSwitcherBanner";
+import { AuthProvider } from "@/context/AuthContext";
 import { AppShell } from "@/components/layout/AppShell";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -24,10 +23,9 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${plusJakartaSans.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-canvas font-sans text-text-primary">
-        <AuthMockProvider>
-          <RoleSwitcherBanner />
+        <AuthProvider>
           <AppShell>{children}</AppShell>
-        </AuthMockProvider>
+        </AuthProvider>
       </body>
     </html>
   );

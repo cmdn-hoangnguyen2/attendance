@@ -6,7 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Button } from "@/components/ui/Button";
 import { ResponsiveDialog } from "@/components/ui/ResponsiveDialog";
-import { useAuthMock } from "@/context/AuthMockContext";
+import { useAuth } from "@/context/AuthContext";
 import { usePresence } from "@/lib/realtime/usePresence";
 import { userRepository } from "@/lib/repository";
 import type { User } from "@/types/domain";
@@ -15,7 +15,7 @@ export function OnlineUsersSidebar() {
   const [searchTerm, setSearchTerm] = useState("");
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const { currentUser, logout } = useAuthMock();
+  const { currentUser, logout } = useAuth();
 
   const onlinePresenceMap = usePresence(
     currentUser ? { id: currentUser.id, name: currentUser.displayName } : null,

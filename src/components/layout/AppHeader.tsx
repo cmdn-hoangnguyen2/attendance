@@ -9,7 +9,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
-import { useAuthMock } from "@/context/AuthMockContext";
+import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 
 import { NotificationPopover } from "./NotificationPopover";
@@ -21,7 +21,7 @@ export interface AppHeaderProps {
 
 export function AppHeader({ isMenuOpen = false, onMenuToggle }: AppHeaderProps) {
   const pathname = usePathname();
-  const { currentUser, isAuthenticated, isAdmin, login } = useAuthMock();
+  const { currentUser, isAuthenticated, isAdmin, login } = useAuth();
   const isLoginPage = pathname === "/login";
   const userInitial = currentUser?.displayName.charAt(0).toUpperCase() ?? "";
   const menuIcon = isMenuOpen ? Cancel01Icon : Menu01Icon;

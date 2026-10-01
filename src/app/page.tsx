@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { OnlineUsersSidebar } from "@/components/layout/OnlineUsersSidebar";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Pagination } from "@/components/ui/Pagination";
-import { useAuthMock } from "@/context/AuthMockContext";
+import { useAuth } from "@/context/AuthContext";
 import { useLobbyRealtime } from "@/lib/realtime/useLobbyRealtime";
 import {
   joinRequestRepository,
@@ -34,7 +34,7 @@ import {
 
 export default function HomePage() {
   const router = useRouter();
-  const { currentUser, isAuthenticated, isLoading: isAuthLoading, login } = useAuthMock();
+  const { currentUser, isAuthenticated, isLoading: isAuthLoading, login } = useAuth();
 
   // Redirect to /login if unauthenticated
   useEffect(() => {

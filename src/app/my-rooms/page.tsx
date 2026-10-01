@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuthMock } from "@/context/AuthMockContext";
+import { useAuth } from "@/context/AuthContext";
 import type { Room, RoomVisibility, User } from "@/types/domain";
 import { RoomCard } from "@/modules/rooms/presentation/RoomCard";
 import { CreateRoomModal } from "@/modules/rooms/presentation/CreateRoomModal";
@@ -25,7 +25,7 @@ type MyRoomsTab = "owned" | "joined";
 
 export default function MyRoomsPage() {
   const router = useRouter();
-  const { currentUser, isAuthenticated, isLoading: isAuthLoading } = useAuthMock();
+  const { currentUser, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   // Redirect to /login if unauthenticated
   useEffect(() => {

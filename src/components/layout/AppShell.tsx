@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Logout01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
-import { useAuthMock } from "@/context/AuthMockContext";
+import { useAuth } from "@/context/AuthContext";
 
 import { AppHeader } from "./AppHeader";
 import { AppNavigation, type AppNavigationItem } from "./AppNavigation";
@@ -17,7 +17,7 @@ export interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
-  const { isAuthenticated, isAdmin, logout } = useAuthMock();
+  const { isAuthenticated, isAdmin, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const drawerRef = useRef<HTMLDialogElement>(null);
   const items = getAppNavigationItems({ isAuthenticated, isAdmin }) as AppNavigationItem[];

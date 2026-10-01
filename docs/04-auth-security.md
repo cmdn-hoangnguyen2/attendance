@@ -4,25 +4,31 @@
 
 - **Authentication:** Auth0 proves identity.
 - **Session management:** Auth0 Next.js SDK manages app session.
-- **Authorization:** Auth0 session custom claim resolves global role; app database resolves user lifecycle and room ownership. Both are checked in every mutation.
+- **Authorization:** Trusted Auth0 namespaced session claims resolve global role; the app database resolves user lifecycle and room ownership. Every privileged mutation must check both. B1 establishes the actor boundary; B2/B3 and the feature packages integrate Data API policies and commands.
 
 ## Token decision
 
 Do **not** manually save ID tokens, access tokens, or refresh tokens in `localStorage` or `sessionStorage`.
 
-An ID token is primarily identity data, but it is still a signed bearer credential. Any XSS that reads it can exfiltrate it. Auth0 explicitly says an ID token is not needed to call APIs and recommends no token storage in that situation. For this app, use the Auth0 Next.js SDK server session, ideally a server-side/custom session store if cookie size becomes relevant; expose only a narrow profile DTO to client UI.
+The Auth0 Next.js SDK owns the application session. `/api/me` exposes only the application profile and resolved global role; it does not return a bearer token. A missing session returns 401, an archived account returns 403, and configuration/provisioning failure returns a sanitized 503 with finite client recovery.
+
+B2 introduces a separate session-authorized, no-store Supabase token endpoint. The approved Supabase third-party Auth0 integration specifically uses the ID token through the Supabase `accessToken` callback; its literal `role: authenticated` claim is a Postgres role, not application admin authority. Cache that token in memory only, clear it on logout/401 and stop on expiry. Tenant configuration and real-token acceptance are still pending B2. See [Supabase Auth0 integration](https://supabase.com/docs/guides/auth/third-party/auth0).
 
 ## Login onboarding
 
 1. User returns from Auth0 callback.
 2. Server reads Auth0 session.
-3. Transactionally find user by immutable `auth0Subject`, with email secondary lookup only for migration conflict handling.
-4. Create active user if absent; update safe profile fields if present.
-5. If `soft_deleted`, deny app access and show a neutral support message.
+3. `/api/me` upserts by immutable `auth0Subject`; repeated requests resolve the same application UUID. No email lookup or migration fallback exists in the reset database.
+4. Create an active user if absent; update only safe profile fields if present. Do not overwrite lifecycle state or write an authorization role into the deprecated database role column.
+5. If the stored status is `archived`, deny access without reactivation and show retry/logout recovery. A subsequent login does not unarchive the user.
+
+`requireActor()` reuses that verified-session/profile boundary. Email, database `users.role`, unnamespaced role and literal JWT `role=authenticated` never grant application admin. Trusted claims are `https://diemdanh.cmdn/role`, or admin entries in the documented namespaced roles/permissions arrays. No runtime mock provider, role switcher or proxy bypass remains.
 
 Never trust `role`, `ownerId`, `roomId`, amount, or visibility from client input without server-side lookup.
 
 ## Access rules
+
+The following is the approved target permission matrix; completion requires the B-G command/RLS tests, not just B1 profile tests.
 
 | Action | Required server check |
 | --- | --- |
