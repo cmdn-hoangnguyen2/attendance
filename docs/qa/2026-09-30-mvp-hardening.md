@@ -6,7 +6,7 @@ Evidence date: 2026-10-01 (Asia/Ho_Chi_Minh). Package A and concurrent B1 implem
 
 | Check | Actual outcome | Remaining gate |
 | --- | --- | --- |
-| Full unit suite, `node --test 'tests/unit/**/*.test.mjs'` | Latest 141 passed, 0 failed, 0 skipped after bounded profile provisioning slice | Authenticated runtime and domain integration are separate |
+| Full unit suite, `node --test 'tests/unit/**/*.test.mjs'` | Latest 164 passed, 0 failed, 0 skipped after bounded memory-only token cache slice | Authenticated runtime and domain integration are separate; native TS import emits MODULE_TYPELESS_PACKAGE_JSON tooling warning |
 | TypeScript, direct installed compiler with `--noEmit --incremental false` | Exit 0 | Re-run after further changes |
 | `git diff --check` | Exit 0 | Re-run at commit |
 | Verified local reset | Completed 2026-09-30T17:57:17Z; project `diemdanh-mvp-hardening`, API `http://127.0.0.1:54321`, CLI 2.118.0 `db reset --local --no-seed` | Remote development reset has NOT run |
@@ -18,6 +18,7 @@ Evidence date: 2026-10-01 (Asia/Ho_Chi_Minh). Package A and concurrent B1 implem
 | Actual preflight missing-table regression | RED5/6 (old HEAD falsely printed PASS); GREEN6/6 after zero-row GET/exact nonnegative count; independent review approved | Transport substitute is child-test-only; not live domain evidence |
 | Native Auth0 on port3000 | Existing Google session completed genuine callback; profile remained after hard reload; actual local DB count1/active1, no duplicate provisioning; real sidebar logout removed profile and subsequent Home settled on login | Archived/failure cases and multi-role HTTP sessions still pending |
 | B2-M1 profile slice | Actual imported helper RED0/5 (missing module) -> GREEN5/5; TypeScript/scoped ESLint exit0; two independent read-only reviews approved | No live concurrent-create/archive race or realtime refresh evidence; token-cache/SQL helpers pending |
+| B2-M1 token cache | Actual absent-module contract RED1fail/22skip -> GREEN23/23,0skip; fullunit164/164; TypeScript/scoped ESLint exit0; Challenger spec/quality PASS | Module-type tooling warning is LOW; endpoint/logout/client/fullRLS/real-issued-token acceptance remain M2/M3 |
 
 Independent A1/A2/A3 reviews approved the implementation; the executor's missing-table GET regression and explicit no-production declaration received a scoped re-review before reset. Old deployed function owners/grants remain unverified without authorized remote database access. This is an explicit remote gate, not local baseline evidence.
 

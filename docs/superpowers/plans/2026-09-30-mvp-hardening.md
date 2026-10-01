@@ -90,7 +90,7 @@ Existing-file shorthand in package tasks resolves as follows: Home=`src/app/page
 | A1/A2 | Guard, seed-free baseline, Storage executor independently approved | Real isolated-local reset, all15tables0/privatebucket0; pgTAP276PASS | Remote reset/live old owners require authorized remote link/credentials; not performed |
 | A3 | Scanner/harness and missing-table follow-up reviewed/approved; checkpoint `cc282f2` | Regression6/6, fullunit136PASS; inventory12 remaining; dedicated serviceGET0/anon-denied | Final zero-mock belongs F/H |
 | B1 | Source approved; checkpoint `44a2a4f` | Anonymous401/no-store, native Home->login, genuine Auth0 callback/hardreload/logout on3000 and one active profile/no duplicate | Archived/failure journeys and multi-role HTTP sessions |
-| B2 | M1-profile implemented and independently reviewed; token cache is the next bounded slice; M2/M3 not started | Profile helper5/5, fullunit141/141, TypeScript/scopedlint exit0 | Remaining M1 cache/SQL helpers, full SQL matrix and real issued-token DataAPI/Realtime/Storage |
+| B2 | M1-profile checkpoint633f443; token cache implemented/Challenger PASS; SQL-helper tests next; M2/M3 not started | Profile5/5, cache23/23, fullunit164/164, TypeScript/scopedlint exit0 | Remaining M1 SQL helpers, full SQL matrix and real issued-token DataAPI/Realtime/Storage |
 | B3/C-H | Not implemented | None claimed | Foundation dependency gates |
 
 H1 native finding: login Google primary button uses dark normal text on cobalt, approximately3.03:1 at14px; fix common-button foreground and validate normal/hover/focus/disabled/loading in the owning task. See QA evidence; no opportunistic second redesign.
