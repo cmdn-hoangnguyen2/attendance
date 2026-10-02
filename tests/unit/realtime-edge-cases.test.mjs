@@ -1,5 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
+import { createRealtimeChannelName } from "../../src/lib/realtime/createRealtimeChannelName.mjs";
 import { MockSupabaseClient } from "./mock-supabase.mjs";
 
 describe("Realtime Edge Cases & Resiliency (Unit Tests)", () => {
@@ -10,7 +11,7 @@ describe("Realtime Edge Cases & Resiliency (Unit Tests)", () => {
     let channel2 = null;
 
     function effectSetup(roomId) {
-      const channel = client.channel(`room:${roomId}:${Date.now()}`);
+      const channel = client.channel(createRealtimeChannelName(`room:${roomId}`));
       channel.on("postgres_changes", { event: "*", schema: "public", table: "rooms" }, () => {});
       channel.subscribe();
       return channel;
@@ -43,7 +44,7 @@ describe("Realtime Edge Cases & Resiliency (Unit Tests)", () => {
     const roomId = "room-alpha";
 
     function subscribeRoom(sessionId) {
-      const channel = client.channel(`room:${roomId}:${Date.now()}`);
+      const channel = client.channel(createRealtimeChannelName(`room:${roomId}`));
 
       if (sessionId) {
         channel.on("postgres_changes", {

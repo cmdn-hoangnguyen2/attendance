@@ -1,9 +1,23 @@
+import type { PageResult } from "@/types/pagination";
 import type {
   JoinRequest,
+  JoinRequestStatus,
   Room,
   RoomMembership,
   RoomVisibility,
+  RoomType,
 } from "@/types/domain";
+
+export interface RoomCatalogItem {
+  room: Room;
+  ownerName: string;
+  isMember: boolean;
+  requestStatus: JoinRequestStatus | null;
+}
+
+export interface MyRoomItem extends RoomCatalogItem {
+  invitation: { id: string; status: string } | null;
+}
 
 export interface RoomRepository {
   findById(id: string): Promise<Room | null>;
@@ -14,8 +28,27 @@ export interface RoomRepository {
   }): Promise<Room[]>;
   findByOwnerId(ownerId: string): Promise<Room[]>;
   findJoinedByUserId(userId: string): Promise<Room[]>;
+  findCatalogPage(options: {
+    search?: string;
+    visibility?: RoomVisibility;
+    type?: RoomType;
+    page: number;
+    pageSize: number;
+  }): Promise<PageResult<RoomCatalogItem>>;
+  findMyRoomsPage(options: {
+    section: 'owned' | 'joined' | 'pending' | 'invited';
+    search?: string;
+    page: number;
+    pageSize: number;
+  }): Promise<PageResult<MyRoomItem>>;
+  findEligibleInvitees(
+    roomId: string,
+    search: string,
+    page: number
+  ): Promise<PageResult<{ id: string; displayName: string; email: string }>>;
   create(room: {
     name: string;
+    type?: RoomType;
     visibility: RoomVisibility;
     ownerId: string;
   }): Promise<Room>;

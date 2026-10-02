@@ -8,7 +8,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test 'tests/unit/**/*.test.mjs'"
+    "test": "node --test 'tests/unit/**/*.test.mjs'",
+    "dev:reset:plan": "node scripts/devReset.mjs --plan --local",
+    "dev:reset": "node scripts/devReset.mjs --execute --local",
+    "dev:reset:plan:linked": "node scripts/devReset.mjs --plan --linked",
+    "dev:reset:linked": "node scripts/devReset.mjs --execute --linked",
+    "test:db": "pnpm dlx supabase@2.118.0 test db tests/database",
+    "test:integration": "node --test 'tests/integration/*.test.mjs'",
+    "test:contracts": "node --test 'tests/contracts/*.test.mjs'",
+    "test:integration:preflight": "node tests/integration/supabaseHarness.mjs",
+    "test:contracts:preflight": "node tests/contracts/httpHarness.mjs",
+    "test:runtime-data": "node scripts/scanRuntimeData.mjs"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^4.30.0",

@@ -1,44 +1,47 @@
 "use client";
 
-import React from "react";
+import type { ReactNode } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
+
+import { cn } from "@/lib/utils";
 
 export interface EmptyStateProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: any;
   title: string;
   description?: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
   className?: string;
 }
 
-/**
- * Standardized EmptyState card across DiemDanhCMDN pages.
- * Conforms 100% to 8pt-grid-spacing (p-12, gap-4) and neutral gray borders.
- */
-export function EmptyState({
-  icon,
-  title,
-  description,
-  action,
-  className = "",
-}: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
+  const descriptionContent = description ? (
+    <p className="EmptyState__description max-w-md text-pretty text-sm leading-6 text-text-secondary">
+      {description}
+    </p>
+  ) : null;
+  const actionContent = action ? (
+    <div className="EmptyState__action pt-2">{action}</div>
+  ) : null;
+
   return (
-    <div
-      className={`flex flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-white p-12 text-center shadow-xs ${className}`.trim()}
+    <section
+      className={cn(
+        "EmptyState",
+        "flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-border bg-surface-subtle p-8 text-center md:p-12",
+        className,
+      )}
     >
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-600">
-        <HugeiconsIcon icon={icon} size={28} />
+      <div className="EmptyState__icon flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary">
+        <HugeiconsIcon icon={icon} size={24} aria-hidden />
       </div>
-      <h3 className="text-base font-bold text-neutral-900 mb-1">
-        {title}
-      </h3>
-      {description ? (
-        <p className="max-w-md text-xs text-neutral-500 leading-relaxed mb-6">
-          {description}
-        </p>
-      ) : null}
-      {action ? <div>{action}</div> : null}
-    </div>
+      <div className="EmptyState__content flex flex-col items-center gap-2">
+        <h2 className="EmptyState__title text-lg font-semibold leading-8 text-text-primary">
+          {title}
+        </h2>
+        {descriptionContent}
+      </div>
+      {actionContent}
+    </section>
   );
 }

@@ -1,31 +1,40 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { JoinRequestStatus, RoomFilterTab, RoomVisibility, type Room, type User } from "@/types/domain";
-import { useAuthMock } from "@/context/AuthMockContext";
-import { RoomCard } from "@/modules/rooms/presentation/RoomCard";
-import { RoomListFilter } from "@/modules/rooms/presentation/RoomListFilter";
-import { CreateRoomModal } from "@/modules/rooms/presentation/CreateRoomModal";
-import { RoomSkeletonGrid } from "@/modules/rooms/presentation/RoomSkeletonGrid";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Alert02Icon, PlusSignIcon, Search01Icon } from "@hugeicons/core-free-icons";
+
+import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { OnlineUsersSidebar } from "@/components/layout/OnlineUsersSidebar";
+import { PageLayout } from "@/components/layout/PageLayout";
+import { Pagination } from "@/components/ui/Pagination";
+import { useAuth } from "@/context/AuthContext";
+import { useLobbyRealtime } from "@/lib/realtime/useLobbyRealtime";
 import {
   joinRequestRepository,
   membershipRepository,
   roomRepository,
   userRepository,
 } from "@/lib/repository";
-import { useLobbyRealtime } from "@/lib/realtime/useLobbyRealtime";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { CreateRoomModal } from "@/modules/rooms/presentation/CreateRoomModal";
+import { RoomCard } from "@/modules/rooms/presentation/RoomCard";
+import { RoomListFilter } from "@/modules/rooms/presentation/RoomListFilter";
+import { RoomSkeletonGrid } from "@/modules/rooms/presentation/RoomSkeletonGrid";
 import {
-  PlusSignIcon,
-  Search01Icon,
-} from "@hugeicons/core-free-icons";
-import { PageContainer } from "@/components/layout/PageContainer";
-import { EmptyState } from "@/components/ui/EmptyState";
+  JoinRequestStatus,
+  RoomFilterTab,
+  RoomType,
+  RoomVisibility,
+  type Room,
+  type User,
+} from "@/types/domain";
 
 export default function HomePage() {
   const router = useRouter();
-  const { currentUser, isAuthenticated, isLoading: isAuthLoading, login } = useAuthMock();
+  const { currentUser, isAuthenticated, isLoading: isAuthLoading, login } = useAuth();
 
   // Redirect to /login if unauthenticated
   useEffect(() => {
@@ -35,6 +44,7 @@ export default function HomePage() {
   }, [isAuthLoading, isAuthenticated, router]);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadError, setHasLoadError] = useState(false);
   const [roomsList, setRoomsList] = useState<Room[]>([]);
   const [usersMap, setUsersMap] = useState<Map<string, User>>(new Map());
   const [joinedRoomIds, setJoinedRoomIds] = useState<Set<string>>(new Set());
@@ -62,7 +72,10 @@ export default function HomePage() {
     let isMounted = true;
 
     async function fetchData() {
-      setIsLoading(true);
+      if (roomsList.length === 0) {
+        setIsLoading(true);
+      }
+      setHasLoadError(false);
       try {
         const [rooms, users] = await Promise.all([
           roomRepository.findCatalog(),
@@ -96,6 +109,7 @@ export default function HomePage() {
         }
       } catch (err) {
         console.error("Failed to load lobby rooms:", err);
+        if (isMounted) setHasLoadError(true);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -113,6 +127,13 @@ export default function HomePage() {
   // Filtered rooms logic
   const filteredRooms = useMemo(() => {
     return roomsList.filter((room) => {
+      // Filter Channel type: only visible to members/owners
+      if (room.type === "channel") {
+        const isOwner = currentUser?.id === room.ownerId;
+        const isMember = isOwner || joinedRoomIds.has(room.id);
+        if (!isMember) return false;
+      }
+
       // Filter by tab
       if (activeTab === RoomFilterTab.PUBLIC && room.visibility !== RoomVisibility.PUBLIC) return false;
       if (activeTab === RoomFilterTab.PRIVATE && room.visibility !== RoomVisibility.PRIVATE) return false;
@@ -130,15 +151,18 @@ export default function HomePage() {
   // Handle creating a new room
   const handleCreateRoom = async ({
     name,
+    type,
     visibility,
   }: {
     name: string;
+    type: RoomType;
     visibility: RoomVisibility;
   }) => {
     const ownerId = currentUser?.id ?? "00000000-0000-0000-0000-000000000001";
     try {
       const created = await roomRepository.create({
         name,
+        type,
         visibility,
         ownerId,
       });
@@ -213,115 +237,126 @@ export default function HomePage() {
   // Prevent unauthenticated flash: while checking or if not authenticated, show skeleton
   if (isAuthLoading || !isAuthenticated) {
     return (
-      <div className="flex-1 bg-neutral-50/50">
-        <PageContainer as="main" className="py-12">
+      <PageLayout>
+        <div className="HomePage__loading flex flex-col gap-6">
           <RoomSkeletonGrid />
-        </PageContainer>
-      </div>
+        </div>
+      </PageLayout>
     );
   }
 
-  return (
-    <div className="flex-1 bg-neutral-50/50">
-      <PageContainer as="main">
-        {/* Hero Banner (Padding: 32px = p-8, neutral border) */}
-        <section className="relative mb-8 overflow-hidden rounded-3xl border border-neutral-200 bg-white p-8 shadow-xs">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="max-w-2xl flex flex-col gap-1.5">
-              <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-neutral-900">
-                Không gian Phòng họp
-              </h1>
-              <p className="text-sm text-neutral-500 leading-relaxed">
-                Tham gia phòng họp, tự điểm danh trước giờ bắt đầu và theo dõi nghĩa vụ quỹ minh bạch.
-              </p>
-            </div>
+  const actionButton = (
+    <Button
+      className="HomePage__create-room-action w-full sm:w-auto"
+      size="touch"
+      onClick={() => {
+        if (!isAuthenticated) {
+          login();
+          return;
+        }
+        setIsCreateModalOpen(true);
+      }}
+    >
+      <span className="HomePage__create-room-label flex items-center gap-2"><HugeiconsIcon icon={PlusSignIcon} size={24} aria-hidden />Tạo phòng</span>
+    </Button>
+  );
 
-            {/* CTA Create Room Button: Pill layout */}
-            <div className="flex shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  if (!isAuthenticated) {
-                    login();
-                    return;
-                  }
-                  setIsCreateModalOpen(true);
-                }}
-                className="flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-neutral-900 shadow-xs transition-all hover:bg-primary-hover hover:text-white hover:shadow-md active:scale-[0.99]"
-              >
-                <HugeiconsIcon icon={PlusSignIcon} size={18} />
-                <span>Tạo phòng mới</span>
-              </button>
-            </div>
-          </div>
-        </section>
+  const roomCards = filteredRooms.map((room) => {
+    const owner = usersMap.get(room.ownerId);
+    const isOwner = currentUser?.id === room.ownerId;
+    const isMember = isOwner || joinedRoomIds.has(room.id);
+    const joinStatus = requestStatusMap[room.id] ?? "none";
 
-        {/* Filter and Search Bar */}
-        <div className="mb-6">
-          <RoomListFilter
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
+    return (
+      <RoomCard
+        key={room.id}
+        room={room}
+        owner={owner}
+        currentUser={currentUser}
+        isOwner={isOwner}
+        isMember={isMember}
+        joinRequestStatus={joinStatus}
+        onRequestJoin={handleRequestJoin}
+        onCancelRequest={handleCancelRequest}
+        layout="catalog"
+      />
+    );
+  });
+
+  const trimmedSearchQuery = searchQuery.trim();
+  const hasActiveRoomFilter = Boolean(trimmedSearchQuery) || activeTab !== RoomFilterTab.ALL;
+  const emptyStateAction = hasActiveRoomFilter ? (
+    <Button
+      className="HomePage__clear-filter-action"
+      variant="secondary"
+      size="touch"
+      onClick={() => {
+        setSearchQuery("");
+        setActiveTab(RoomFilterTab.ALL);
+      }}
+    >
+      Xóa bộ lọc
+    </Button>
+  ) : null;
+  const emptyStateDescription = trimmedSearchQuery
+    ? `Không có kết quả nào khớp với từ khóa "${trimmedSearchQuery}". Vui lòng thử tìm kiếm với tên khác.`
+    : "Hiện chưa có phòng họp nào trong danh mục đã chọn.";
+  const handlePageChange = () => undefined;
+
+  const renderRoomListContent = () => {
+    if (isLoading) {
+      return <RoomSkeletonGrid />;
+    }
+
+    if (hasLoadError && roomsList.length === 0) {
+      return <EmptyState icon={Alert02Icon} title="Chưa thể tải danh sách phòng" description="Vui lòng kiểm tra kết nối và tải lại trang." />;
+    }
+
+    if (filteredRooms.length === 0) {
+      return (
+        <EmptyState
+          icon={Search01Icon}
+          title="Không tìm thấy phòng họp nào"
+          description={emptyStateDescription}
+          action={emptyStateAction}
+        />
+      );
+    }
+
+    return (
+      <section className="HomePage__room-results flex flex-col gap-6" aria-label="Danh sách kết quả phòng họp">
+        <div className="HomePage__room-grid grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {roomCards}
         </div>
+        <div className="HomePage__pagination">
+          <Pagination currentPage={1} totalPages={1} onPageChange={handlePageChange} />
+        </div>
+      </section>
+    );
+  };
 
-        {/* Loading State */}
-        {isLoading ? (
-          <RoomSkeletonGrid />
-        ) : filteredRooms.length > 0 ? (
-          /* Rooms Bento Grid: Desktop-first 4 cột (lg:grid-cols-4), gap 24px (gap-6) */
-          <section aria-label="Danh sách các phòng họp">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredRooms.map((room) => {
-                const owner = usersMap.get(room.ownerId);
-                const isOwner = currentUser?.id === room.ownerId;
-                const isMember = isOwner || joinedRoomIds.has(room.id);
-                const joinStatus = requestStatusMap[room.id] ?? "none";
+  const roomListContent = renderRoomListContent();
 
-                return (
-                  <RoomCard
-                    key={room.id}
-                    room={room}
-                    owner={owner}
-                    currentUser={currentUser}
-                    isOwner={isOwner}
-                    isMember={isMember}
-                    joinRequestStatus={joinStatus}
-                    onRequestJoin={handleRequestJoin}
-                    onCancelRequest={handleCancelRequest}
-                  />
-                );
-              })}
-            </div>
-          </section>
-        ) : (
-          /* Standardized Empty State Component */
-          <EmptyState
-            icon={Search01Icon}
-            title="Không tìm thấy phòng họp nào"
-            description={
-              searchQuery
-                ? `Không có kết quả nào khớp với từ khóa "${searchQuery}". Vui lòng thử tìm kiếm với tên khác.`
-                : "Hiện chưa có phòng họp nào trong danh mục đã chọn."
-            }
-            action={
-              searchQuery || activeTab !== "all" ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setActiveTab("all");
-                  }}
-                  className="rounded-full border border-neutral-300 bg-white px-5 py-2 text-xs font-semibold text-neutral-700 hover:border-neutral-900 hover:bg-neutral-50 transition-colors"
-                >
-                  Xóa bộ lọc tìm kiếm
-                </button>
-              ) : null
-            }
-          />
-        )}
-      </PageContainer>
+  return (
+    <PageLayout contextRail={<OnlineUsersSidebar />}>
+      <div className="HomePage flex flex-col gap-8">
+        <PageHeader
+          id="home-page-title"
+          title="Không gian cộng đồng"
+          description="Tìm phòng phù hợp, tham gia cuộc họp và kết nối với các thành viên."
+          action={actionButton}
+        />
+        {/* Filter and Search Bar */}
+        <RoomListFilter
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          filteredRoomsCount={filteredRooms.length}
+        />
+
+        {roomListContent}
+      </div>
 
       {/* Modal Tạo Phòng Họp */}
       <CreateRoomModal
@@ -329,6 +364,6 @@ export default function HomePage() {
         onClose={() => setIsCreateModalOpen(false)}
         onCreateRoom={handleCreateRoom}
       />
-    </div>
+    </PageLayout>
   );
 }

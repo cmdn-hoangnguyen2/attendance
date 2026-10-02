@@ -1,5 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
+import { createRealtimeChannelName } from "../../src/lib/realtime/createRealtimeChannelName.mjs";
 import { MockSupabaseClient } from "./mock-supabase.mjs";
 
 describe("Room Realtime Flow (Unit Tests)", () => {
@@ -25,7 +26,7 @@ describe("Room Realtime Flow (Unit Tests)", () => {
         }, 300);
       };
 
-      const channelName = `room:${roomId}:${Date.now()}`;
+      const channelName = createRealtimeChannelName(`room:${roomId}`);
       channel = client.channel(channelName);
 
       // 1. Attendance records (if sessionId present)

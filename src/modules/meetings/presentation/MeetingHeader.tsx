@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   RoomDetailTab,
@@ -12,16 +12,17 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
-  Globe02Icon,
-  LockIcon,
-  UserGroupIcon,
   Calendar01Icon,
   Coins01Icon,
-  Settings01Icon,
   Logout01Icon,
+  Settings01Icon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
-import { RoomSettingsModal } from "@/modules/rooms/presentation/RoomSettingsModal";
+
+import { Button } from "@/components/ui/Button";
 import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { RoomSettingsModal } from "@/modules/rooms/presentation/RoomSettingsModal";
 
 export type MeetingTab = RoomDetailTab;
 
@@ -47,6 +48,7 @@ export function MeetingHeader({
   activeTab,
   onTabChange,
   membersCount,
+  fundsCount,
   isOwnerOrAdmin,
   isMember,
   isOwner,
@@ -60,97 +62,81 @@ export function MeetingHeader({
   const isArchived = room.status === RoomStatus.ARCHIVED;
 
   const tabs: PillTabItem<MeetingTab>[] = isArchived
-    ? [{ key: RoomDetailTab.FUNDS, label: "Quỹ phòng (Lưu trữ)", icon: Coins01Icon }]
+    ? [{ key: RoomDetailTab.FUNDS, label: `Quỹ (${fundsCount})`, icon: Coins01Icon }]
     : [
-        { key: RoomDetailTab.MEMBERS, label: "Thành viên", icon: UserGroupIcon },
         { key: RoomDetailTab.ATTENDANCE, label: "Điểm danh", icon: Calendar01Icon },
-        { key: RoomDetailTab.FUNDS, label: "Quỹ phòng", icon: Coins01Icon },
+        { key: RoomDetailTab.MEMBERS, label: `Thành viên (${membersCount})`, icon: UserGroupIcon },
+        { key: RoomDetailTab.FUNDS, label: `Quỹ (${fundsCount})`, icon: Coins01Icon },
       ];
 
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-6 lg:p-8 shadow-xs">
-      {/* Top Row: Back button & Breadcrumb */}
-      <div className="mb-4 flex items-center justify-between">
+    <header className="MeetingHeader border-b border-border pb-6">
+      <div className="MeetingHeader__utility-row flex flex-wrap items-center justify-between gap-4">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 px-3.5 py-1 text-xs font-semibold text-neutral-600 hover:border-neutral-900 hover:text-neutral-900 transition-colors"
+          className="MeetingHeader__back-link inline-flex min-h-10 items-center gap-2 rounded-md px-2 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-subtle hover:text-text-primary"
         >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={15} />
-          <span>Về trang chủ</span>
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={16} aria-hidden />
+          <span>Danh sách phòng</span>
         </Link>
 
-        {isArchived ? (
-          <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-bold text-neutral-600 border border-neutral-200">
-            Phòng đã lưu trữ
-          </span>
-        ) : null}
+        {isArchived ? <StatusBadge tone="neutral">Phòng đã lưu trữ</StatusBadge> : null}
       </div>
 
-      {/* Main Info Row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-100 pb-6">
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-neutral-900">
+      <div className="MeetingHeader__identity-row mt-6 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="MeetingHeader__identity min-w-0">
+          <div className="MeetingHeader__title-row flex flex-wrap items-center gap-2">
+            <h1 className="MeetingHeader__title min-w-0 text-2xl font-bold tracking-tight text-text-primary md:text-[32px] md:leading-10">
               {room.name}
             </h1>
-            {isPublic ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200/60">
-                <HugeiconsIcon icon={Globe02Icon} size={13} />
-                <span>Công khai</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-600 border border-neutral-200">
-                <HugeiconsIcon icon={LockIcon} size={13} />
-                <span>Riêng tư</span>
-              </span>
-            )}
+            <StatusBadge tone={isPublic ? "success" : "neutral"}>
+              {isPublic ? "Công khai" : "Riêng tư"}
+            </StatusBadge>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500">
-            <span>
-              Chủ phòng: <strong className="text-neutral-900">{owner?.displayName ?? "Chưa rõ"}</strong>
-            </span>
-            <span>•</span>
-            <span>{membersCount} thành viên</span>
+          <dl className="MeetingHeader__metadata mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-text-secondary">
+            <div className="MeetingHeader__metadata-item flex gap-2">
+              <dt>Chủ phòng</dt>
+              <dd className="font-semibold text-text-primary">{owner?.displayName ?? "Chưa rõ"}</dd>
+            </div>
+            <div className="MeetingHeader__metadata-item flex gap-2">
+              <dt>Thành viên</dt>
+              <dd className="font-semibold text-text-primary">{membersCount}</dd>
+            </div>
             {isOwnerOrAdmin ? (
-              <>
-                <span>•</span>
-                <span className="font-semibold text-primary-dark">Quản trị viên phòng</span>
-              </>
+              <div className="MeetingHeader__metadata-item flex gap-2">
+                <dt>Quyền</dt>
+                <dd className="font-semibold text-primary">Quản trị phòng</dd>
+              </div>
             ) : null}
-          </div>
+          </dl>
         </div>
 
-        {/* Action Buttons: Leave Room for Member, Settings for Owner / Admin */}
-        <div className="flex items-center gap-2">
-          {isMember && !isOwner && !isArchived && onOpenLeaveModal && (
-            <button
-              type="button"
-              onClick={onOpenLeaveModal}
-              className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50/60 px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-rose-400"
-              title="Rời khỏi phòng họp này"
-              aria-label="Rời khỏi phòng họp"
-            >
-              <HugeiconsIcon icon={Logout01Icon} size={15} />
-              <span>Rời phòng</span>
-            </button>
-          )}
+        <div className="MeetingHeader__actions flex flex-wrap items-center gap-2">
+          {isMember && !isOwner && !isArchived && onOpenLeaveModal ? (
+            <Button variant="ghost" onClick={onOpenLeaveModal}>
+              <HugeiconsIcon icon={Logout01Icon} size={16} aria-hidden />
+              Rời phòng
+            </Button>
+          ) : null}
 
-          {isOwnerOrAdmin && !isArchived && (
-            <button
-              type="button"
+          {isOwnerOrAdmin && !isArchived ? (
+            <Button
+              variant="secondary"
               onClick={() => setIsSettingsModalOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-neutral-700 shadow-2xs transition-all hover:border-neutral-900 hover:bg-neutral-900 hover:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-neutral-400"
-              title="Cài đặt phòng họp (Mã QR, Chuyển quyền, Lưu trữ)"
-              aria-label="Cài đặt phòng họp"
+              aria-label="Mở cài đặt phòng họp"
             >
-              <HugeiconsIcon icon={Settings01Icon} size={18} />
-            </button>
-          )}
+              <HugeiconsIcon icon={Settings01Icon} size={16} aria-hidden />
+              Cài đặt phòng
+            </Button>
+          ) : null}
         </div>
       </div>
 
-      {/* Modal Cài Đặt Phòng Họp */}
+      <nav className="MeetingHeader__tabs mt-6" aria-label="Nội dung phòng">
+        <PillTabs tabs={tabs} activeKey={activeTab} onChange={onTabChange} />
+      </nav>
+
       <RoomSettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
@@ -159,15 +145,6 @@ export function MeetingHeader({
         onOpenTransferModal={onOpenTransferModal}
         onOpenArchiveModal={onOpenArchiveModal}
       />
-
-      {/* Tab Navigation: PillTabs */}
-      <div className="mt-6 flex">
-        <PillTabs
-          tabs={tabs}
-          activeKey={activeTab}
-          onChange={onTabChange}
-        />
-      </div>
-    </div>
+    </header>
   );
 }

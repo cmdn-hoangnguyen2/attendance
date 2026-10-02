@@ -2,14 +2,14 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthMock } from "@/context/AuthMockContext";
+import { useAuth } from "@/context/AuthContext";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Login01Icon } from "@hugeicons/core-free-icons";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading, login, isMockActive, setRole } = useAuthMock();
+  const { isAuthenticated, isLoading, login } = useAuth();
 
   // Redirect to home if already authenticated
   useEffect(() => {
@@ -22,10 +22,6 @@ export default function LoginPage() {
     login();
   };
 
-  const handleMockLogin = () => {
-    setRole("user");
-    router.replace("/");
-  };
 
   return (
     <div className="flex-1 bg-neutral-50/50">
@@ -59,15 +55,6 @@ export default function LoginPage() {
               <span>Tiếp tục với Google</span>
             </button>
 
-            {isMockActive ? (
-              <button
-                type="button"
-                onClick={handleMockLogin}
-                className="flex w-full items-center justify-center rounded-full border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
-              >
-                <span>Chế độ Giả lập (Dev)</span>
-              </button>
-            ) : null}
           </div>
         </section>
       </PageContainer>

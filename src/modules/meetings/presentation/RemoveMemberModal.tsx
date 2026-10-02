@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { ConfirmationPhrase, type User } from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, Alert02Icon } from "@hugeicons/core-free-icons";
+import { Alert02Icon } from "@hugeicons/core-free-icons";
+
+import { Button } from "@/components/ui/Button";
+import { ResponsiveDialog } from "@/components/ui/ResponsiveDialog";
 
 export interface RemoveMemberModalProps {
   isOpen: boolean;
@@ -29,17 +32,7 @@ export function RemoveMemberModal({
     onClose();
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
-    };
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
-
-  if (!isOpen || !member) return null;
+  if (!member) return null;
 
   const isConfirmed = hasOutstandingDebt
     ? typedPhrase.trim() === REQUIRED_PHRASE
@@ -52,113 +45,65 @@ export function RemoveMemberModal({
     }
   };
 
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="remove-member-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-in fade-in"
-      onClick={onClose}
-    >
-      {/* Modal Container: Padding 32px (p-8, space-5), bo góc 16px (rounded-2xl) */}
-      <div
-        className="w-full max-w-lg rounded-2xl border border-rose-200 bg-white p-8 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header Modal */}
-        <div className="flex items-start justify-between border-b border-neutral-100 pb-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
-              <HugeiconsIcon icon={Alert02Icon} size={22} />
-            </span>
-            <div>
-              <h2 id="remove-member-title" className="text-lg font-bold text-neutral-dark">
-                Xác nhận xóa thành viên
-              </h2>
-              <p className="text-xs text-neutral-muted">
-                Thao tác quản trị phòng họp
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng cửa sổ"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-muted hover:bg-neutral-100"
-          >
-            <HugeiconsIcon icon={Cancel01Icon} size={20} />
-          </button>
-        </div>
-
-        {/* Content Body: Gap 24px (space-y-6, space-4) */}
-        <div className="mt-6 space-y-6">
-          <p className="text-sm text-neutral-dark">
-            Bạn đang yêu cầu xóa thành viên{" "}
-            <strong className="font-bold text-rose-600">{member.displayName}</strong> (
-            {member.email}) ra khỏi phòng họp này.
-          </p>
-
-          {/* Cảnh báo tác động nghiệp vụ nghiêm ngặt */}
-          <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-4 text-xs text-rose-900 space-y-2">
-            <strong className="font-bold">Các tác động bảo lưu dữ liệu:</strong>
-            <ul className="list-disc pl-5 space-y-1 text-rose-800">
-              <li>Tư cách thành viên (membership) trong phòng sẽ chấm dứt ngay lập tức.</li>
-              <li>
-                Toàn bộ bản ghi đóng quỹ và lịch sử thanh toán của thành viên{" "}
-                <strong>vẫn được bảo lưu bất biến</strong> để phục vụ kiểm toán.
-              </li>
-              <li>
-                Thành viên vẫn tiếp tục nhìn thấy các khoản quỹ này tại trang cá nhân{" "}
-                <code>/funds</code>.
-              </li>
-            </ul>
-          </div>
-
-          {/* Khối yêu cầu gõ chuỗi xác thực tiếng Anh nếu thành viên còn nợ quỹ */}
-          {hasOutstandingDebt ? (
-            <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50/50 p-4">
-              <label htmlFor="confirm-phrase" className="text-xs font-semibold text-amber-900">
-                Thành viên này hiện đang có khoản quỹ chưa hoàn thành. Để đảm bảo an toàn, vui lòng
-                nhập chính xác cụm từ sau để xác nhận:
-              </label>
-              <div className="select-all rounded bg-white px-3 py-1.5 font-mono text-xs font-bold text-rose-700 border border-amber-300">
-                {REQUIRED_PHRASE}
-              </div>
-              <input
-                id="confirm-phrase"
-                type="text"
-                value={typedPhrase}
-                onChange={(e) => setTypedPhrase(e.target.value)}
-                placeholder="Nhập cụm từ tiếng Anh ở trên..."
-                className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm text-neutral-dark focus:border-rose-500 focus:outline-none"
-              />
-            </div>
-          ) : null}
-
-          {/* Action Buttons: Margin top 32px (mt-8, space-5) */}
-          <div className="mt-8 flex items-center justify-end gap-3 border-t border-neutral-100 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-muted hover:bg-neutral-50"
-            >
-              Hủy bỏ
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={!isConfirmed}
-              className={`rounded-lg px-5 py-2 text-sm font-semibold transition-all ${
-                isConfirmed
-                  ? "bg-rose-600 text-white shadow-xs hover:bg-rose-700"
-                  : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
-              }`}
-            >
-              Xác nhận xóa
-            </button>
-          </div>
-        </div>
-      </div>
+  const footer = (
+    <div className="RemoveMemberModal__actions grid grid-cols-1 gap-2 sm:flex sm:justify-end">
+      <Button variant="secondary" size="touch" onClick={handleClose}>Hủy bỏ</Button>
+      <Button variant="destructive" size="touch" onClick={handleConfirm} disabled={!isConfirmed}>Xác nhận xóa</Button>
     </div>
+  );
+
+  return (
+    <ResponsiveDialog
+      isOpen={isOpen}
+      onClose={handleClose}
+      labelledBy="remove-member-title"
+      size="sm"
+      footer={footer}
+    >
+      <div className="RemoveMemberModal">
+        <div className="RemoveMemberModal__heading flex items-start gap-4">
+          <span className="RemoveMemberModal__icon flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-danger-soft text-danger">
+            <HugeiconsIcon icon={Alert02Icon} size={24} aria-hidden />
+          </span>
+          <div className="RemoveMemberModal__heading-copy min-w-0">
+            <h2 id="remove-member-title" className="RemoveMemberModal__title text-xl font-bold text-text-primary">Xóa thành viên</h2>
+            <p className="RemoveMemberModal__subtitle mt-2 text-sm text-text-secondary">Thao tác quản trị phòng</p>
+          </div>
+        </div>
+
+        <p className="RemoveMemberModal__summary mt-6 text-sm leading-6 text-text-primary">
+          Bạn đang yêu cầu xóa <strong>{member.displayName}</strong> ({member.email}) khỏi phòng họp này.
+        </p>
+
+        <div className="RemoveMemberModal__impact mt-6 rounded-lg bg-danger-soft p-4">
+          <h3 className="RemoveMemberModal__impact-title text-sm font-semibold text-danger">Dữ liệu được bảo lưu</h3>
+          <ul className="RemoveMemberModal__impact-list mt-2 list-disc space-y-2 pl-6 text-sm leading-6 text-text-secondary">
+            <li className="RemoveMemberModal__impact-item">Tư cách thành viên trong phòng chấm dứt ngay lập tức.</li>
+            <li className="RemoveMemberModal__impact-item">Bản ghi đóng quỹ và lịch sử thanh toán vẫn được giữ nguyên để kiểm toán.</li>
+            <li className="RemoveMemberModal__impact-item">Thành viên vẫn xem được các khoản quỹ tại trang <code>/funds</code>.</li>
+          </ul>
+        </div>
+
+        {hasOutstandingDebt ? (
+          <div className="RemoveMemberModal__confirmation mt-6">
+            <label htmlFor="confirm-phrase" className="RemoveMemberModal__confirmation-label text-sm font-semibold leading-6 text-text-primary">
+              Thành viên còn nghĩa vụ quỹ. Nhập chính xác cụm từ sau để xác nhận:
+            </label>
+            <code className="RemoveMemberModal__phrase mt-2 block select-all rounded-md bg-surface-subtle px-4 py-2 text-sm font-bold text-danger">
+              {REQUIRED_PHRASE}
+            </code>
+            <input
+              id="confirm-phrase"
+              type="text"
+              value={typedPhrase}
+              onChange={(event) => setTypedPhrase(event.target.value)}
+              placeholder="Nhập cụm từ ở trên"
+              className="RemoveMemberModal__confirmation-input ui-field mt-4"
+              autoComplete="off"
+            />
+          </div>
+        ) : null}
+      </div>
+    </ResponsiveDialog>
   );
 }

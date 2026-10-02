@@ -35,3 +35,7 @@ next-env.d.ts
 # OS
 .DS_Store
 *.pem
+
+# Supabase CLI local metadata (never commit linked target or generated keys)
+/supabase/.temp/
+/supabase/.branches/

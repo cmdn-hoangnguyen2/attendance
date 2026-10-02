@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { createRealtimeChannelName } from "@/lib/realtime/createRealtimeChannelName.mjs";
 
 export interface UseLobbyRealtimeOptions {
   onDataChange: () => void;
@@ -36,7 +37,7 @@ export function useLobbyRealtime({
       }, 300);
     };
 
-    const channelName = `lobby:global:${Date.now()}`;
+    const channelName = createRealtimeChannelName("lobby:global");
     const channel = supabase.channel(channelName);
 
     // 1. Listen for changes in rooms (created, status changed, renamed)

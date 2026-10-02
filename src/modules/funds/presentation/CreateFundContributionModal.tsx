@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   AttendanceStatus,
   FundContributionReason,
@@ -8,13 +8,10 @@ import {
   type User,
 } from "@/types/domain";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Coins01Icon,
-  Cancel01Icon,
-  Alert02Icon,
-  PlusSignIcon,
-  UserIcon,
-} from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Coins01Icon } from "@hugeicons/core-free-icons";
+
+import { Button } from "@/components/ui/Button";
+import { ResponsiveDialog } from "@/components/ui/ResponsiveDialog";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
 import { formatVND } from "@/lib/utils";
 
@@ -36,7 +33,6 @@ export interface CreateFundContributionModalProps {
 export function CreateFundContributionModal({
   isOpen,
   onClose,
-  roomId,
   roomMembers,
   candidate,
   preselectedUserId,
@@ -46,10 +42,10 @@ export function CreateFundContributionModal({
     candidate
       ? candidate.userId
       : preselectedUserId
-      ? preselectedUserId
-      : roomMembers.length > 0
-      ? roomMembers[0].id
-      : "",
+        ? preselectedUserId
+        : roomMembers.length > 0
+          ? roomMembers[0].id
+          : "",
   );
   const [amount, setAmount] = useState(() => candidate?.suggestedAmount || 10000);
   const [reason, setReason] = useState<FundContributionReason>(() =>
@@ -66,20 +62,8 @@ export function CreateFundContributionModal({
     onClose();
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
-    };
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!selectedUserId) {
       setError("Vui lòng chọn thành viên cần đóng quỹ.");
       return;
@@ -95,7 +79,7 @@ export function CreateFundContributionModal({
 
     onCreateContribution({
       contributorId: selectedUserId,
-      amount: Math.round(amount), // integer VND
+      amount: Math.round(amount),
       reason,
       reasonDetails: reason === FundContributionReason.OTHER ? reasonDetails.trim() : undefined,
     });
@@ -103,107 +87,66 @@ export function CreateFundContributionModal({
   };
 
   const presetAmounts = [5000, 10000, 20000, 50000];
+  const footer = (
+    <div className="CreateFundContributionModal__actions grid grid-cols-1 gap-2 sm:flex sm:justify-end">
+      <Button variant="secondary" size="touch" onClick={handleClose}>Hủy</Button>
+      <Button type="submit" form="create-fund-form" size="touch">Xác nhận tạo</Button>
+    </div>
+  );
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="create-fund-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-in fade-in"
-      onClick={onClose}
+    <ResponsiveDialog
+      isOpen={isOpen}
+      onClose={handleClose}
+      labelledBy="create-fund-title"
+      size="sm"
+      footer={footer}
     >
-      {/* Modal Container: Padding 32px (p-8, space-5), bo góc 16px (rounded-2xl) */}
-      <div
-        className="w-full max-w-md rounded-2xl border border-neutral-border bg-white p-8 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header Modal */}
-        <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-surface text-primary-dark">
-              <HugeiconsIcon icon={Coins01Icon} size={20} />
-            </span>
-            <div>
-              <h2 id="create-fund-title" className="text-lg font-bold text-neutral-dark">
-                Tạo khoản đóng quỹ
-              </h2>
-              <p className="text-xs text-neutral-muted">Ghi nhận nghĩa vụ quỹ phòng họp</p>
-            </div>
+      <div className="CreateFundContributionModal ui-section-stack">
+        <div className="CreateFundContributionModal__heading flex items-start gap-4">
+          <span className="CreateFundContributionModal__icon flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+            <HugeiconsIcon icon={Coins01Icon} size={24} aria-hidden />
+          </span>
+          <div className="CreateFundContributionModal__heading-copy min-w-0">
+            <h2 id="create-fund-title" className="CreateFundContributionModal__title text-xl font-bold text-text-primary">Tạo khoản đóng quỹ</h2>
+            <p className="CreateFundContributionModal__description mt-2 text-sm text-text-secondary">Ghi nhận nghĩa vụ quỹ phòng họp.</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng cửa sổ"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-muted hover:bg-neutral-100 hover:text-neutral-dark"
-          >
-            <HugeiconsIcon icon={Cancel01Icon} size={20} />
-          </button>
+          <Button className="CreateFundContributionModal__close shrink-0 px-2" variant="ghost" autoFocus aria-label="Đóng cửa sổ" onClick={handleClose}>
+            <HugeiconsIcon icon={Cancel01Icon} size={20} aria-hidden />
+          </Button>
         </div>
 
-        {/* Form Fields: Spacing giữa các field 24px (space-y-6, space-4) */}
-        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-          {/* Field 1: Chọn thành viên */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="contributor-select" className="text-sm font-semibold text-neutral-dark">
-              Thành viên đóng quỹ <span className="text-rose-500">*</span>
-            </label>
+        <form id="create-fund-form" className="CreateFundContributionModal__form ui-section-stack" onSubmit={handleSubmit}>
+          <div className="CreateFundContributionModal__field flex flex-col gap-2">
+            <label htmlFor="contributor-select" className="text-sm font-semibold text-text-primary">Thành viên đóng quỹ <span className="text-danger">*</span></label>
             <SelectDropdown
               id="contributor-select"
               value={selectedUserId}
-              onChange={(val) => setSelectedUserId(val)}
+              onChange={setSelectedUserId}
               disabled={!!candidate}
-              options={roomMembers.map((member) => ({
-                value: member.id,
-                label: `${member.displayName} (${member.email})`,
-              }))}
+              options={roomMembers.map((member) => ({ value: member.id, label: `${member.displayName} (${member.email})` }))}
             />
           </div>
 
-          {/* Field 2: Số tiền (integer VND) */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <label htmlFor="fund-amount" className="text-sm font-semibold text-neutral-dark">
-                Số tiền (VND) <span className="text-rose-500">*</span>
-              </label>
-              <span className="text-xs font-bold text-primary-dark">{formatVND(amount)}</span>
+          <div className="CreateFundContributionModal__field flex flex-col gap-2">
+            <div className="CreateFundContributionModal__field-heading flex items-center justify-between gap-4">
+              <label htmlFor="fund-amount" className="text-sm font-semibold text-text-primary">Số tiền (VND) <span className="text-danger">*</span></label>
+              <span className="text-sm font-bold tabular-nums text-primary">{formatVND(amount)}</span>
             </div>
-            <input
-              id="fund-amount"
-              type="number"
-              step="1000"
-              min="1000"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              className="w-full rounded-lg border border-neutral-border bg-neutral-50/50 px-4 py-2 text-sm text-neutral-dark focus:border-primary focus:bg-white focus:outline-none"
-            />
-            {/* Quick preset buttons: gap 8px (gap-2) */}
-            <div className="flex items-center gap-2 pt-1">
+            <input id="fund-amount" type="number" step="1000" min="1000" value={amount} onChange={(event) => setAmount(Number(event.target.value))} className="ui-field" />
+            <div className="CreateFundContributionModal__presets flex flex-wrap gap-2">
               {presetAmounts.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => setAmount(preset)}
-                  className={`rounded px-2.5 py-1 text-xs font-medium border transition-colors ${
-                    amount === preset
-                      ? "border-primary bg-neutral-surface text-primary-dark font-bold"
-                      : "border-neutral-200 text-neutral-muted hover:bg-neutral-50"
-                  }`}
-                >
-                  +{preset / 1000}k
-                </button>
+                <Button key={preset} type="button" variant={amount === preset ? "primary" : "secondary"} size="compact" onClick={() => setAmount(preset)}>+{preset / 1000}k</Button>
               ))}
             </div>
           </div>
 
-          {/* Field 3: Lý do (Reason) */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="fund-reason" className="text-sm font-semibold text-neutral-dark">
-              Lý do đóng quỹ <span className="text-rose-500">*</span>
-            </label>
+          <div className="CreateFundContributionModal__field flex flex-col gap-2">
+            <label htmlFor="fund-reason" className="text-sm font-semibold text-text-primary">Lý do đóng quỹ <span className="text-danger">*</span></label>
             <SelectDropdown
               id="fund-reason"
               value={reason}
-              onChange={(val) => setReason(val as FundContributionReason)}
+              onChange={(value) => setReason(value as FundContributionReason)}
               options={[
                 { value: FundContributionReason.LATE, label: FundContributionReason.LATE },
                 { value: FundContributionReason.BUSY_WITHOUT_PERMISSION, label: FundContributionReason.BUSY_WITHOUT_PERMISSION },
@@ -212,43 +155,16 @@ export function CreateFundContributionModal({
             />
           </div>
 
-          {/* Field 4 (Conditional): Chi tiết lý do nếu chọn 'Khác' */}
           {reason === FundContributionReason.OTHER ? (
-            <div className="flex flex-col gap-2 animate-in fade-in">
-              <label htmlFor="reason-details" className="text-sm font-semibold text-neutral-dark">
-                Chi tiết lý do <span className="text-rose-500">*</span>
-              </label>
-              <textarea
-                id="reason-details"
-                rows={2}
-                value={reasonDetails}
-                onChange={(e) => setReasonDetails(e.target.value)}
-                placeholder="VD: Không chuẩn bị tài liệu họp tuần theo cam kết..."
-                className="w-full rounded-lg border border-neutral-border bg-neutral-50/50 px-4 py-2 text-sm text-neutral-dark placeholder:text-neutral-400 focus:border-primary focus:bg-white focus:outline-none"
-              />
+            <div className="CreateFundContributionModal__field flex flex-col gap-2">
+              <label htmlFor="reason-details" className="text-sm font-semibold text-text-primary">Chi tiết lý do <span className="text-danger">*</span></label>
+              <textarea id="reason-details" rows={3} value={reasonDetails} onChange={(event) => setReasonDetails(event.target.value)} placeholder="Nhập chi tiết lý do" className="ui-field h-auto min-h-24 resize-y" />
             </div>
           ) : null}
 
-          {error ? <p className="text-xs font-medium text-rose-500">{error}</p> : null}
-
-          {/* Actions: Margin-top 32px (mt-8, space-5) */}
-          <div className="mt-8 flex items-center justify-end gap-3 border-t border-neutral-100 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-muted hover:bg-neutral-50"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-neutral-dark shadow-xs transition-colors hover:bg-primary-hover hover:text-white"
-            >
-              Xác nhận tạo
-            </button>
-          </div>
+          {error ? <p className="CreateFundContributionModal__error text-sm font-medium text-danger" role="alert">{error}</p> : null}
         </form>
       </div>
-    </div>
+    </ResponsiveDialog>
   );
 }

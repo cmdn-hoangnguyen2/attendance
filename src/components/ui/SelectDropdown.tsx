@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowDown01Icon, CheckmarkCircle01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  ArrowDown01Icon,
-  CheckmarkCircle01Icon,
-} from "@hugeicons/core-free-icons";
+
+import { cn } from "@/lib/utils";
 
 export interface SelectOption<T extends string = string> {
   value: T;
@@ -25,57 +24,39 @@ export interface SelectDropdownProps<T extends string = string> {
   ariaLabel?: string;
 }
 
-/**
- * Premium custom dropdown component adhering to DiemDanhCMDN Design System.
- * Replaces default HTML <select> with accessible, customizable, and animated dropdown.
- * Strictly conforms to 8pt-grid-spacing and zhon-conventions.
- */
 export function SelectDropdown<T extends string = string>({
   options,
   value,
   onChange,
   placeholder = "Chọn một mục...",
   disabled = false,
-  className = "",
+  className,
   id,
   ariaLabel,
 }: SelectDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const selectedOption = options.find((option) => option.value === value);
+  const selectedLabel = selectedOption?.label ?? placeholder;
 
-  const selectedOption = options.find((opt) => opt.value === value);
-
-  // Close on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
+      const clickedOutside =
+        containerRef.current && !containerRef.current.contains(event.target as Node);
+      if (clickedOutside) setIsOpen(false);
     }
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  // Handle ESC key
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setIsOpen(false);
-      }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsOpen(false);
     }
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+
+    if (isOpen) window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
   const handleSelect = (option: SelectOption<T>) => {
@@ -84,83 +65,93 @@ export function SelectDropdown<T extends string = string>({
     setIsOpen(false);
   };
 
+  const optionElements = options.map((option) => {
+    const isSelected = option.value === value;
+    const descriptionContent = option.description ? (
+      <span className="SelectDropdown__option-description text-xs font-normal leading-4 text-text-tertiary">
+        {option.description}
+      </span>
+    ) : null;
+    const selectedIcon = isSelected ? (
+      <HugeiconsIcon
+        className="SelectDropdown__selected-icon shrink-0 text-primary"
+        icon={CheckmarkCircle01Icon}
+        size={16}
+        aria-hidden
+      />
+    ) : null;
+
+    return (
+      <button
+        className={cn(
+          "SelectDropdown__option",
+          isSelected && "SelectDropdown__option--selected",
+          "flex min-h-12 w-full items-center justify-between gap-4 rounded-md px-4 py-2 text-left text-sm transition-colors",
+          isSelected
+            ? "bg-primary-soft font-semibold text-primary-active"
+            : "text-text-primary hover:bg-surface-subtle",
+          option.disabled && "cursor-not-allowed opacity-50",
+        )}
+        key={option.value}
+        type="button"
+        disabled={option.disabled}
+        onClick={() => handleSelect(option)}
+        role="option"
+        aria-selected={isSelected}
+      >
+        <span className="SelectDropdown__option-content flex min-w-0 flex-col gap-1">
+          <span className="SelectDropdown__option-label truncate">{option.label}</span>
+          {descriptionContent}
+        </span>
+        {selectedIcon}
+      </button>
+    );
+  });
+
+  const menuContent = isOpen ? (
+    <div
+      className="SelectDropdown__menu absolute z-50 mt-2 max-h-60 w-full min-w-[200px] overflow-auto rounded-lg border border-border bg-surface p-2 shadow-lg"
+      tabIndex={-1}
+      role="listbox"
+    >
+      {optionElements}
+    </div>
+  ) : null;
+
   return (
     <div
+      className={cn("SelectDropdown", "relative inline-block text-left", className)}
       ref={containerRef}
-      className={`relative inline-block text-left ${className}`}
     >
-      {/* Trigger Button: bo góc 12px (rounded-xl), padding 8px trên dưới, 16px hai bên (py-2 px-4) */}
       <button
-        type="button"
+        className={cn(
+          "SelectDropdown__trigger",
+          isOpen && "SelectDropdown__trigger--open",
+          "flex min-h-12 w-full items-center justify-between gap-2 rounded-md border border-border bg-surface px-4 py-2 text-sm font-semibold text-text-primary transition-colors",
+          "hover:border-border-strong focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:min-h-10",
+          isOpen && "border-primary",
+        )}
         id={id}
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen((currentOpen) => !currentOpen)}
         aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        disabled={disabled}
-        onClick={() => setIsOpen((prev) => !prev)}
-        className={`flex w-full items-center justify-between gap-3 rounded-xl border border-neutral-border bg-white px-4 py-2 text-xs font-semibold text-neutral-dark shadow-xs transition-all hover:border-primary focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 ${
-          isOpen ? "border-primary ring-2 ring-primary/20" : ""
-        }`}
       >
-        <span className="truncate">
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
+        <span className="SelectDropdown__value truncate">{selectedLabel}</span>
         <HugeiconsIcon
+          className={cn(
+            "SelectDropdown__chevron",
+            "shrink-0 text-text-tertiary transition-transform duration-150",
+            isOpen && "rotate-180 text-primary",
+          )}
           icon={ArrowDown01Icon}
           size={16}
-          className={`shrink-0 text-neutral-muted transition-transform duration-200 ${
-            isOpen ? "rotate-180 text-primary-dark" : ""
-          }`}
+          aria-hidden
         />
       </button>
-
-      {/* Floating Menu List: bo góc 16px (rounded-2xl), padding 8px (p-2), shadow-xl */}
-      {isOpen && (
-        <div
-          role="listbox"
-          tabIndex={-1}
-          className="absolute z-50 mt-2 max-h-60 w-full min-w-[200px] overflow-auto rounded-2xl border border-neutral-border bg-white p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 focus:outline-hidden"
-        >
-          {options.map((option) => {
-            const isSelected = option.value === value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                disabled={option.disabled}
-                onClick={() => handleSelect(option)}
-                className={`flex w-full items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-left text-xs transition-colors ${
-                  isSelected
-                    ? "bg-neutral-surface font-bold text-primary-dark"
-                    : "text-neutral-dark hover:bg-neutral-50"
-                } ${
-                  option.disabled
-                    ? "cursor-not-allowed opacity-40 hover:bg-transparent"
-                    : ""
-                }`}
-              >
-                <div className="flex flex-col gap-0.5 truncate">
-                  <span className="truncate">{option.label}</span>
-                  {option.description ? (
-                    <span className="text-[11px] font-normal text-neutral-muted">
-                      {option.description}
-                    </span>
-                  ) : null}
-                </div>
-                {isSelected ? (
-                  <HugeiconsIcon
-                    icon={CheckmarkCircle01Icon}
-                    size={16}
-                    className="shrink-0 text-primary-dark"
-                  />
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {menuContent}
     </div>
   );
 }

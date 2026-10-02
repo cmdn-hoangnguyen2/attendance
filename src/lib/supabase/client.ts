@@ -1,18 +1,42 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+import { getSupabaseToken } from "@/lib/supabase/tokenProvider";
 import type { Database } from "@/types/database";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+export function createBrowserSupabaseClient(): SupabaseClient<Database> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  const configurationError = "Supabase public configuration is missing or invalid.";
+  if (!supabaseUrl || !supabaseAnonKey) throw new Error(configurationError);
 
-export function createBrowserSupabaseClient() {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // Return a dummy/fallback client if env vars are not set during build
-    return createClient<Database>(
-      supabaseUrl || "https://placeholder.supabase.co",
-      supabaseAnonKey || "placeholder-key"
-    );
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(supabaseUrl);
+  } catch {
+    throw new Error(configurationError);
   }
-  return createClient<Database>(supabaseUrl, supabaseAnonKey);
+  if (!["https:", "http:"].includes(parsedUrl.protocol)) {
+    throw new Error(configurationError);
+  }
+
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    accessToken: getSupabaseToken,
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
 }
 
-export const supabase = createBrowserSupabaseClient();
+let sharedClient: SupabaseClient<Database> | undefined;
+
+// Importing a consumer during build/tests does not require public configuration.
+// The first SDK operation creates the real client, and methods retain its receiver.
+export const supabase = new Proxy({} as SupabaseClient<Database>, {
+  get(_target, property) {
+    sharedClient ??= createBrowserSupabaseClient();
+    const value = Reflect.get(sharedClient, property, sharedClient);
+    return typeof value === "function" ? value.bind(sharedClient) : value;
+  },
+});

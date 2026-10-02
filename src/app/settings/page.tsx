@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuthMock } from "@/context/AuthMockContext";
+import { useAuth } from "@/context/AuthContext";
 import type { Room, User } from "@/types/domain";
 import { UsersManagementTab } from "@/modules/admin/presentation/UsersManagementTab";
 import { RoomsManagementTab } from "@/modules/admin/presentation/RoomsManagementTab";
@@ -19,11 +19,11 @@ import {
 import { PageContainer } from "@/components/layout/PageContainer";
 
 import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
-import { ConfirmationPhrase, GlobalRole, SettingsTab } from "@/types/domain";
+import { ConfirmationPhrase, SettingsTab } from "@/types/domain";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { currentUser, isAuthenticated, isLoading: isAuthLoading, setRole, login, isMockActive } = useAuthMock();
+  const { currentUser, isAuthenticated, isAdmin, isLoading: isAuthLoading, login } = useAuth();
 
   // Redirect to /login if unauthenticated
   useEffect(() => {
@@ -80,7 +80,6 @@ export default function SettingsPage() {
   }, [usersList]);
 
   // Kiểm tra quyền Admin
-  const isAdmin = Boolean(currentUser && currentUser.role === GlobalRole.ADMIN);
 
   // Handler: Xóa mềm người dùng
   const handleArchiveUser = async (userId: string, replacementAdminId?: string) => {
@@ -170,16 +169,6 @@ export default function SettingsPage() {
                 <span>Trang chủ</span>
               </Link>
 
-              {isMockActive ? (
-                <button
-                  type="button"
-                  onClick={() => setRole("admin")}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs font-bold text-neutral-900 shadow-xs hover:bg-primary-hover hover:text-white transition-all"
-                >
-                  <HugeiconsIcon icon={SecurityCheckIcon} size={16} />
-                  <span>Chuyển sang Admin</span>
-                </button>
-              ) : (
                 <button
                   type="button"
                   onClick={login}
@@ -188,7 +177,6 @@ export default function SettingsPage() {
                   <HugeiconsIcon icon={SecurityCheckIcon} size={16} />
                   <span>Đăng nhập tài khoản Admin</span>
                 </button>
-              )}
             </div>
           </div>
         </PageContainer>

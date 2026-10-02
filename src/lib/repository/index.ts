@@ -31,3 +31,4 @@ export const roomPaymentImageRepository = new SupabaseRoomPaymentImageRepository
 
 export const userRepository = new SupabaseUserRepository(supabase);
 export const auditLogRepository = new SupabaseAuditLogRepository(supabase);
+export * from "./notificationRepository";

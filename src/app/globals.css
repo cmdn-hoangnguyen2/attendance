@@ -1,14 +1,29 @@
 @import "tailwindcss";
 
-@theme {
-  --color-primary: #10D9A3;
-  --color-primary-hover: #05966B;
-  --color-primary-dark: #05966B;
-  --color-neutral-white: #FFFFFF;
-  --color-neutral-surface: #E8FBF4;
-  --color-neutral-dark: #0B1F1A;
-  --color-neutral-muted: #4B665D;
-  --color-neutral-border: #C9F2E3;
+@theme inline {
+  --color-canvas: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F5F7FB;
+  --color-primary: #2F5BD3;
+  --color-primary-hover: #2446A8;
+  --color-primary-active: #1D3987;
+  --color-primary-soft: #E9EEFF;
+  --color-community: #F59E42;
+  --color-text-primary: #172033;
+  --color-text-secondary: #596275;
+  --color-text-tertiary: #667085;
+  --color-border: #DDE2EA;
+  --color-border-strong: #B8C0CE;
+  --color-success: #17745A;
+  --color-success-soft: #E8F6F0;
+  --color-warning: #7A4A00;
+  --color-warning-soft: #FFF4D6;
+  --color-danger: #B4233A;
+  --color-danger-soft: #FDECEF;
+  --color-info: #2F5BD3;
+  --color-info-soft: #E9EEFF;
+  --color-neutral: #596275;
+  --color-neutral-soft: #EEF1F5;
 
   /* 8-point grid: 4px is reserved for approved micro-adjustments. */
   --spacing-1: 4px;
@@ -22,30 +37,76 @@
   --spacing-20: 80px;
   --spacing-24: 96px;
 
-  /* Radius values follow the same 4px/8px grid. */
-  --radius-sm: 4px;
+  /* Controls start at 8px; panels and overlays use 16px and 24px. */
+  --radius-sm: 8px;
   --radius-md: 8px;
   --radius-lg: 16px;
   --radius-xl: 24px;
 
-  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-plus-jakarta), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 :root {
   --background: #FFFFFF;
-  --foreground: #0B1F1A;
+  --foreground: #172033;
 }
 
-/* 8-point grid base tokens */
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--color-canvas);
+  color: var(--color-text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Focus visible standard */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+@utility tabular-numbers {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Shared presentation recipes: one owner for page rhythm, rows and fields. */
+@layer components {
+  .ui-page-stack {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .ui-section-stack {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .ui-data-row {
+    min-width: 0;
+    padding-block: 24px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ui-data-row:last-child {
+    border-bottom: 0;
+  }
+
+  .ui-field {
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: 8px 16px;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 14px;
+    line-height: 24px;
+  }
+
+  .ui-field:disabled {
+    cursor: not-allowed;
+    background: var(--color-surface-subtle);
+  }
 }

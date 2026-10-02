@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuthMock } from "@/context/AuthMockContext";
+import { useAuth } from "@/context/AuthContext";
 import type { Room, RoomVisibility, User } from "@/types/domain";
 import { RoomCard } from "@/modules/rooms/presentation/RoomCard";
 import { CreateRoomModal } from "@/modules/rooms/presentation/CreateRoomModal";
@@ -12,21 +12,20 @@ import { useLobbyRealtime } from "@/lib/realtime/useLobbyRealtime";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Folder01Icon,
-  CrownIcon,
-  UserGroupIcon,
-  Search01Icon,
-  PlusSignIcon,
   Home01Icon,
 } from "@hugeicons/core-free-icons";
-import { PageContainer } from "@/components/layout/PageContainer";
+import { PageLayout } from "@/components/layout/PageLayout";
+import { Pagination } from "@/components/ui/Pagination";
 import { PillTabs, type PillTabItem } from "@/components/ui/PillTabs";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 type MyRoomsTab = "owned" | "joined";
 
 export default function MyRoomsPage() {
   const router = useRouter();
-  const { currentUser, isAuthenticated, isLoading: isAuthLoading } = useAuthMock();
+  const { currentUser, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   // Redirect to /login if unauthenticated
   useEffect(() => {
@@ -120,158 +119,80 @@ export default function MyRoomsPage() {
     }
   };
 
-  // Nếu người dùng chưa đăng nhập hoặc đang kiểm tra phiên
-  if (isAuthLoading || !isAuthenticated || !currentUser) {
-    return (
-      <div className="flex-1 bg-neutral-50/50">
-        <PageContainer as="main">
-          <div className="flex flex-col gap-6 py-8 animate-pulse">
-            <div className="h-12 w-64 rounded-xl bg-neutral-200" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="h-48 rounded-2xl bg-neutral-100" />
-              <div className="h-48 rounded-2xl bg-neutral-100" />
-              <div className="h-48 rounded-2xl bg-neutral-100" />
-            </div>
-          </div>
-        </PageContainer>
-      </div>
+  const openCreateRoom = () => setIsCreateModalOpen(true);
+  const closeCreateRoom = () => setIsCreateModalOpen(false);
+  const tabItems: PillTabItem<MyRoomsTab>[] = [
+    { key: "owned", label: "Tôi quản lý" },
+    { key: "joined", label: "Tôi tham gia" },
+  ];
+  const createAction = <Button className="MyRooms__create w-full sm:w-auto" size="touch" onClick={openCreateRoom}>Tạo phòng</Button>;
+  const isSearching = Boolean(searchQuery.trim());
+  let emptyTitle = activeTab === "owned" ? "Bạn chưa quản lý phòng nào" : "Bạn chưa tham gia phòng nào";
+  let emptyDescription = activeTab === "owned"
+    ? "Tạo phòng để bắt đầu điểm danh và quản lý quỹ cùng nhóm."
+    : "Tìm một phòng phù hợp tại Trang chủ.";
+  if (isSearching) {
+    emptyTitle = "Không tìm thấy phòng";
+    emptyDescription = "Thử tên khác hoặc xóa nội dung tìm kiếm.";
+  }
+  let emptyAction = activeTab === "owned" ? createAction : (
+    <Link className="MyRooms__discover inline-flex min-h-12 items-center gap-2 rounded-md px-4 font-semibold text-primary hover:bg-primary-soft" href="/">
+      <HugeiconsIcon icon={Home01Icon} size={20} aria-hidden />
+      Khám phá phòng
+    </Link>
+  );
+  if (isSearching) {
+    emptyAction = <Button variant="secondary" size="touch" onClick={() => setSearchQuery("")}>Xóa tìm kiếm</Button>;
+  }
+  const roomItems = displayedRooms.map((room) => (
+    <li className="MyRooms__item" key={room.id}>
+      <RoomCard
+        room={room}
+        owner={usersMap.get(room.ownerId)}
+        currentUser={currentUser}
+        isOwner={currentUser?.id === room.ownerId}
+        isMember={true}
+        joinRequestStatus="approved"
+        onRequestJoin={() => {}}
+        onCancelRequest={() => {}}
+      />
+    </li>
+  ));
+  const skeletonItems = [1, 2, 3].map((item) => (
+    <div className="MyRooms__skeleton h-24 rounded-lg bg-surface-subtle" key={item} />
+  ));
+  let results = (
+    <EmptyState icon={Folder01Icon} title={emptyTitle} description={emptyDescription} action={emptyAction} />
+  );
+  if (displayedRooms.length > 0) {
+    results = (
+      <section className="MyRooms__results ui-section-stack" aria-label="Danh sách phòng">
+        <p className="MyRooms__count text-sm text-text-secondary" role="status">{displayedRooms.length} phòng</p>
+        <ul className="MyRooms__list divide-y divide-border">{roomItems}</ul>
+        <Pagination currentPage={1} totalPages={1} onPageChange={() => {}} />
+      </section>
     );
   }
-
-  const tabItems: PillTabItem<MyRoomsTab>[] = [
-    {
-      key: "owned",
-      label: "Phòng tôi tạo",
-      icon: CrownIcon,
-    },
-    {
-      key: "joined",
-      label: "Phòng đã tham gia",
-      icon: UserGroupIcon,
-    },
-  ];
-
+  if (isLoading) {
+    results = <div className="MyRooms__loading ui-section-stack animate-pulse" role="status" aria-label="Đang tải phòng">{skeletonItems}</div>;
+  }
+  if (isAuthLoading || !isAuthenticated || !currentUser) {
+    return <PageLayout><div className="MyRooms__loading ui-section-stack animate-pulse" role="status" aria-label="Đang kiểm tra phiên đăng nhập">{skeletonItems}</div></PageLayout>;
+  }
   return (
-    <div className="flex-1 bg-neutral-50/50">
-      <PageContainer as="main">
-        {/* Header Trang: Tiêu đề & Action (Pill button) */}
-        <section aria-labelledby="my-rooms-title" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 id="my-rooms-title" className="text-2xl font-extrabold tracking-tight text-neutral-900">
-              Phòng của tôi
-            </h1>
-            <p className="text-sm text-neutral-500 mt-1">
-              Quản lý phòng họp bạn làm chủ hoặc đang tham gia.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-neutral-900 shadow-xs transition-all hover:bg-primary-hover hover:text-white"
-          >
-            <HugeiconsIcon icon={PlusSignIcon} size={18} />
-            <span>Tạo phòng mới</span>
-          </button>
-        </section>
-
-        {/* Thanh điều hướng PillTabs & Bộ lọc tìm kiếm */}
-        <section aria-label="Bộ lọc phòng của tôi" className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
-          <PillTabs
-            tabs={tabItems}
-            activeKey={activeTab}
-            onChange={setActiveTab}
-          />
-
-          {/* Input Tìm kiếm: Pill layout */}
-          <div className="relative w-full sm:w-72">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm theo tên phòng..."
-              className="w-full rounded-full border border-neutral-200 bg-white py-2 pl-9 pr-4 text-xs text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-neutral-200"
-            />
-            <HugeiconsIcon
-              icon={Search01Icon}
-              size={16}
-              className="absolute left-3 top-2.5 text-neutral-400"
-            />
+    <PageLayout>
+      <div className="MyRooms ui-page-stack">
+        <PageHeader id="my-rooms-title" title="Phòng của tôi" description="Trở lại phòng của nhóm, tiếp tục công việc hôm nay." action={createAction} />
+        <section className="MyRooms__filters flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between" aria-label="Bộ lọc phòng của tôi">
+          <PillTabs tabs={tabItems} activeKey={activeTab} onChange={setActiveTab} />
+          <div className="MyRooms__search flex w-full flex-col gap-2 lg:max-w-xs">
+            <label className="MyRooms__search-label text-sm font-semibold text-text-primary" htmlFor="my-rooms-search">Tìm phòng</label>
+            <input className="MyRooms__search-input ui-field" id="my-rooms-search" type="search" value={searchQuery} placeholder="Nhập tên phòng…" onChange={(event) => setSearchQuery(event.target.value)} />
           </div>
         </section>
-
-        {/* Danh sách phòng: Grid 4 cột chuẩn Desktop */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-48 rounded-2xl bg-neutral-200" />
-            ))}
-          </div>
-        ) : displayedRooms.length > 0 ? (
-          <section aria-label="Danh sách kết quả phòng">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {displayedRooms.map((room) => {
-                const owner = usersMap.get(room.ownerId);
-                return (
-                  <RoomCard
-                    key={room.id}
-                    room={room}
-                    owner={owner}
-                    currentUser={currentUser}
-                    isOwner={currentUser.id === room.ownerId}
-                    isMember={true}
-                    joinRequestStatus="approved"
-                    onRequestJoin={() => {}}
-                    onCancelRequest={() => {}}
-                  />
-                );
-              })}
-            </div>
-          </section>
-        ) : (
-          /* Reusable Empty State Component */
-          <EmptyState
-            icon={Folder01Icon}
-            title={
-              activeTab === "owned"
-                ? "Bạn chưa làm chủ phòng họp nào"
-                : "Bạn chưa tham gia phòng họp nào"
-            }
-            description={
-              activeTab === "owned"
-                ? "Hãy tạo phòng họp mới để bắt đầu quản lý phiên họp và điểm danh cho các thành viên trong nhóm."
-                : "Khám phá danh sách các phòng họp công khai trên Trang chủ để gửi yêu cầu tham gia."
-            }
-            action={
-              activeTab === "owned" ? (
-                <button
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs font-bold text-neutral-900 shadow-xs hover:bg-primary-hover hover:text-white transition-all"
-                >
-                  <HugeiconsIcon icon={PlusSignIcon} size={16} />
-                  <span>Tạo phòng ngay</span>
-                </button>
-              ) : (
-                <Link
-                  href="/"
-                  className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-2.5 text-xs font-semibold text-neutral-800 shadow-xs hover:border-neutral-900 hover:bg-neutral-50 transition-colors"
-                >
-                  <HugeiconsIcon icon={Home01Icon} size={16} />
-                  <span>Khám phá phòng họp</span>
-                </Link>
-              )
-            }
-          />
-        )}
-
-        {/* Modal Tạo Phòng */}
-        <CreateRoomModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onCreateRoom={handleCreateRoom}
-        />
-      </PageContainer>
-    </div>
+        {results}
+        <CreateRoomModal isOpen={isCreateModalOpen} onClose={closeCreateRoom} onCreateRoom={handleCreateRoom} />
+      </div>
+    </PageLayout>
   );
 }

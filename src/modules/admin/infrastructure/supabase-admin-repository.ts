@@ -51,7 +51,8 @@ export class SupabaseUserRepository implements UserRepository {
       .eq("auth0_subject", auth0Subject)
       .maybeSingle();
 
-    if (error || !data) return null;
+    if (error) throw new Error("Failed to look up user by Auth0 subject");
+    if (!data) return null;
     return this.mapUser(data);
   }
 

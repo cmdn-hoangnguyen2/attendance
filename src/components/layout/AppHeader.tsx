@@ -1,192 +1,116 @@
 "use client";
 
-import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuthMock } from "@/context/AuthMockContext";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Home01Icon,
-  Folder01Icon,
-  Coins01Icon,
-  Settings01Icon,
-  Login01Icon,
-  Logout01Icon,
-  Menu01Icon,
   Cancel01Icon,
+  Login01Icon,
+  Menu01Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
-export function AppHeader() {
+import { useAuth } from "@/context/AuthContext";
+import { cn } from "@/lib/utils";
+
+import { NotificationPopover } from "./NotificationPopover";
+
+export interface AppHeaderProps {
+  isMenuOpen?: boolean;
+  onMenuToggle?: () => void;
+}
+
+export function AppHeader({ isMenuOpen = false, onMenuToggle }: AppHeaderProps) {
   const pathname = usePathname();
-  const { currentUser, isAuthenticated, isAdmin, login, logout, isMockActive } = useAuthMock();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [prevPathname, setPrevPathname] = useState(pathname);
+  const { currentUser, isAuthenticated, isAdmin, login } = useAuth();
+  const isLoginPage = pathname === "/login";
+  const userInitial = currentUser?.displayName.charAt(0).toUpperCase() ?? "";
+  const menuIcon = isMenuOpen ? Cancel01Icon : Menu01Icon;
 
-  // Auto-close mobile menu during render when route changes
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname);
-    setIsMobileMenuOpen(false);
+  const handleLogin = () => login();
+
+  const adminBadge = isAdmin ? (
+    <span className="AppHeader__admin-badge rounded-full bg-primary-soft px-2 py-1 text-xs font-semibold text-primary-active">
+      Admin
+    </span>
+  ) : null;
+
+  let authContent = null;
+  if (!isLoginPage && isAuthenticated && currentUser) {
+    authContent = (
+      <div className="AppHeader__user-actions flex items-center gap-2">
+        <NotificationPopover />
+        <div className="AppHeader__avatar flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-community text-sm font-bold text-text-primary">
+          {userInitial}
+        </div>
+        <div className="AppHeader__user-details hidden min-w-0 flex-col lg:flex">
+          <div className="AppHeader__user-name-row flex items-center gap-2">
+            <span className="AppHeader__user-name max-w-40 truncate text-sm font-semibold text-text-primary">
+              {currentUser.displayName}
+            </span>
+            {adminBadge}
+          </div>
+          <span className="AppHeader__user-email max-w-48 truncate text-xs text-text-tertiary">
+            {currentUser.email}
+          </span>
+        </div>
+      </div>
+    );
   }
 
-  const handleLogout = () => {
-    logout();
-  };
+  if (!isLoginPage && !isAuthenticated) {
+    authContent = (
+      <button
+        className="AppHeader__login inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-hover active:bg-primary-active focus-visible:outline-none"
+        type="button"
+        onClick={handleLogin}
+      >
+        <HugeiconsIcon icon={Login01Icon} size={18} aria-hidden />
+        <span className="AppHeader__login-label">Đăng nhập</span>
+      </button>
+    );
+  }
 
-  const handleLogin = () => {
-    login();
-  };
-
-  const navLinks = [
-    { href: "/", label: "Trang chủ", icon: Home01Icon, show: true },
-    { href: "/my-rooms", label: "Phòng của tôi", icon: Folder01Icon, show: isAuthenticated },
-    { href: "/funds", label: "Quỹ", icon: Coins01Icon, show: isAuthenticated },
-    { href: "/settings", label: "Cài đặt", icon: Settings01Icon, show: isAdmin },
-  ];
-
-  const isLoginPage = pathname === "/login";
+  const menuButton = !isLoginPage && onMenuToggle ? (
+    <button
+      className={cn(
+        "AppHeader__menu-toggle",
+        "hidden h-10 w-10 items-center justify-center rounded-md border border-border bg-surface text-text-secondary transition-colors hover:bg-surface-subtle hover:text-text-primary focus-visible:outline-none md:inline-flex xl:hidden",
+        isMenuOpen && "AppHeader__menu-toggle--open border-primary text-primary",
+      )}
+      type="button"
+      onClick={onMenuToggle}
+      aria-label={isMenuOpen ? "Đóng menu điều hướng" : "Mở menu điều hướng"}
+      aria-expanded={isMenuOpen}
+    >
+      <HugeiconsIcon icon={menuIcon} size={20} aria-hidden />
+    </button>
+  ) : null;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-neutral-border bg-white/95 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        {/* Brand Logo & Name */}
-        <div className="flex items-center gap-8">
+    <header className="AppHeader sticky top-0 z-40 h-16 border-b border-border bg-surface">
+      <div className="AppHeader__inner flex h-full w-full items-center justify-between gap-4 px-4 md:px-6 xl:px-8">
+        <div className="AppHeader__leading flex min-w-0 items-center gap-4">
+          {menuButton}
           <Link
+            className="AppHeader__brand flex min-w-0 items-center gap-2 rounded-md focus-visible:outline-none"
             href="/"
-            className="flex items-center gap-3 text-decoration-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="DiemDanhCMDN — Trang chủ"
           >
-            {/* Logo icon container: 40x40px (chuẩn 8pt) */}
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-primary-dark text-white shadow-xs">
-              <span className="font-extrabold text-base tracking-wider">CM</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-lg leading-tight text-neutral-dark">
+            <span className="AppHeader__brand-mark flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold tracking-wide text-white">
+              CM
+            </span>
+            <span className="AppHeader__brand-copy hidden min-w-0 flex-col sm:flex">
+              <span className="AppHeader__brand-name truncate text-base font-bold leading-6 text-text-primary">
                 DiemDanhCMDN
               </span>
-              <span className="text-[11px] font-medium text-neutral-muted">
+              <span className="AppHeader__brand-tagline truncate text-xs leading-4 text-text-tertiary">
                 Điểm danh & Quản lý Quỹ
               </span>
-            </div>
+            </span>
           </Link>
-
-          {/* Navigation Links (Desktop) - hidden on /login */}
-          {!isLoginPage && (
-            <nav aria-label="Menu chính" className="hidden md:flex items-center gap-2">
-              {navLinks
-                .filter((item) => item.show)
-                .map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
-                        isActive
-                          ? "bg-neutral-surface text-primary-dark"
-                          : "text-neutral-muted hover:bg-neutral-50 hover:text-neutral-dark"
-                      }`}
-                    >
-                      <HugeiconsIcon icon={item.icon} size={18} />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-            </nav>
-          )}
         </div>
-
-        {/* User Auth Section & Mobile Menu Button - hidden on /login */}
-        {!isLoginPage && (
-          <div className="flex items-center gap-3">
-            {isAuthenticated && currentUser ? (
-              <div className="flex items-center gap-3">
-                {/* User Avatar Circle: 32x32px (chuẩn 8pt) */}
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-surface font-bold text-xs text-primary-dark border border-neutral-border">
-                  {currentUser.displayName.charAt(0).toUpperCase()}
-                </div>
-
-                {/* User Information (Desktop only) */}
-                <div className="hidden sm:flex flex-col text-left">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm leading-none text-neutral-dark">
-                      {currentUser.displayName}
-                    </span>
-                    {isAdmin ? (
-                      <span className="rounded bg-neutral-surface px-1.5 py-0.5 text-[10px] font-bold text-primary-dark border border-neutral-border">
-                        Admin
-                      </span>
-                    ) : null}
-                  </div>
-                  <span className="text-xs text-neutral-muted leading-none mt-1">
-                    {currentUser.email}
-                  </span>
-                </div>
-
-                {/* Logout Button */}
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="flex items-center gap-1.5 rounded-lg border border-neutral-border px-3 py-1.5 text-xs font-semibold text-neutral-muted transition-colors hover:bg-neutral-50 hover:text-neutral-dark"
-                  title={isMockActive ? "Đăng xuất khỏi phiên giả lập" : "Đăng xuất"}
-                >
-                  <HugeiconsIcon icon={Logout01Icon} size={16} />
-                  <span className="hidden sm:inline">Thoát</span>
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={handleLogin}
-                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-neutral-dark shadow-xs transition-colors hover:bg-primary-hover hover:text-white"
-              >
-                <HugeiconsIcon icon={Login01Icon} size={18} />
-                <span>Đăng nhập</span>
-              </button>
-            )}
-
-            {/* Mobile Menu Toggle Button: 40x40px touch target (chuẩn 8pt) */}
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex h-10 w-10 md:hidden items-center justify-center rounded-xl border border-neutral-border bg-neutral-surface text-primary-dark transition-colors hover:bg-neutral-border/60 focus-visible:ring-2 focus-visible:ring-primary"
-              aria-expanded={isMobileMenuOpen}
-              aria-label="Mở menu điều hướng"
-            >
-              <HugeiconsIcon icon={isMobileMenuOpen ? Cancel01Icon : Menu01Icon} size={20} />
-            </button>
-          </div>
-        )}
+        {authContent}
       </div>
-
-      {/* Mobile Navigation Dropdown Menu - hidden on /login */}
-      {!isLoginPage && isMobileMenuOpen && (
-        <nav
-          aria-label="Menu di động"
-          className="border-t border-neutral-border bg-white px-6 py-4 md:hidden shadow-lg animate-in slide-in-from-top-2"
-        >
-          <div className="flex flex-col gap-1.5">
-            {navLinks
-              .filter((item) => item.show)
-              .map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                      isActive
-                        ? "bg-neutral-surface text-primary-dark"
-                        : "text-neutral-muted hover:bg-neutral-50 hover:text-neutral-dark"
-                    }`}
-                  >
-                    <HugeiconsIcon icon={item.icon} size={20} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-          </div>
-        </nav>
-      )}
     </header>
   );
 }

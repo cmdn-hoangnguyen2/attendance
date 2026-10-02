@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
+
+import { cn } from "@/lib/utils";
 
 export interface PillTabItem<T extends string = string> {
   key: T;
@@ -17,43 +18,56 @@ export interface PillTabsProps<T extends string = string> {
   className?: string;
 }
 
-/**
- * Standardized Pill-layout segmented tab filter across DiemDanhCMDN.
- * Conforms 100% to 8pt-grid-spacing and zhon-conventions.
- */
 export function PillTabs<T extends string = string>({
   tabs,
   activeKey,
   onChange,
-  className = "",
+  className,
 }: PillTabsProps<T>) {
+  const tabElements = tabs.map((tab) => {
+    const isActive = activeKey === tab.key;
+    const iconContent = tab.icon ? (
+      <HugeiconsIcon
+        className="PillTabs__icon shrink-0"
+        icon={tab.icon}
+        size={16}
+        aria-hidden
+      />
+    ) : null;
+
+    return (
+      <button
+        className={cn(
+          "PillTabs__tab",
+          isActive && "PillTabs__tab--active",
+          "inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold transition-colors duration-150",
+          "focus-visible:outline-none",
+          isActive
+            ? "bg-surface text-primary shadow-sm"
+            : "text-text-secondary hover:bg-surface hover:text-text-primary",
+        )}
+        key={tab.key}
+        type="button"
+        onClick={() => onChange(tab.key)}
+        role="tab"
+        aria-selected={isActive}
+      >
+        {iconContent}
+        <span className="PillTabs__label">{tab.label}</span>
+      </button>
+    );
+  });
+
   return (
     <div
+      className={cn(
+        "PillTabs",
+        "inline-flex max-w-full items-center gap-2 overflow-x-auto rounded-lg border border-border bg-surface-subtle p-2",
+        className,
+      )}
       role="tablist"
-      className={`inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-100/90 p-1 ${className}`.trim()}
     >
-      {tabs.map((tab) => {
-        const isActive = activeKey === tab.key;
-        return (
-          <button
-            key={tab.key}
-            role="tab"
-            aria-selected={isActive}
-            type="button"
-            onClick={() => onChange(tab.key)}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 ${
-              isActive
-                ? "bg-white text-neutral-900 shadow-xs"
-                : "text-neutral-500 hover:text-neutral-900"
-            }`}
-          >
-            {tab.icon ? (
-              <HugeiconsIcon icon={tab.icon} size={15} />
-            ) : null}
-            <span>{tab.label}</span>
-          </button>
-        );
-      })}
+      {tabElements}
     </div>
   );
 }

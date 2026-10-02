@@ -37,9 +37,17 @@ export enum RoomStatusEnum {
 export type RoomStatus = "active" | "archived";
 export const RoomStatus = RoomStatusEnum;
 
+export enum RoomTypeEnum {
+  MEETING = "meeting",
+  CHANNEL = "channel",
+}
+export type RoomType = "meeting" | "channel";
+export const RoomType = RoomTypeEnum;
+
 export interface Room {
   id: string;
   name: string;
+  type?: RoomType;
   visibility: RoomVisibility;
   ownerId: string;
   status: RoomStatus;
@@ -82,6 +90,25 @@ export interface JoinRequest {
   reviewedBy?: string;
   createdAt: string;
   reviewedAt?: string;
+}
+
+export enum InvitationStatusEnum {
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  DECLINED = "declined",
+  CANCELLED = "cancelled",
+}
+export type InvitationStatus = "pending" | "accepted" | "declined" | "cancelled";
+export const InvitationStatus = InvitationStatusEnum;
+
+export interface RoomInvitation {
+  id: string;
+  roomId: string;
+  inviterId: string;
+  inviteeId: string;
+  status: InvitationStatus;
+  createdAt: string;
+  resolvedAt: string | null;
 }
 
 export enum MeetingStatusEnum {
@@ -249,3 +276,45 @@ export enum RoomDetailTabEnum {
 }
 export type RoomDetailTab = "attendance" | "funds" | "members" | "settings";
 export const RoomDetailTab = RoomDetailTabEnum;
+
+export interface PeerDebt {
+  id: string;
+  roomId: string;
+  creditorId: string;
+  debtorId: string;
+  amount: number;
+  reason?: string;
+  status: "outstanding" | "paid";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+
+export interface PaymentCorrection {
+  id: string;
+  paymentId: string;
+  correctedBy: string;
+  correctedAt: string;
+  reason: string;
+}
+
+export interface PersonalFundItem {
+  contribution: FundContribution;
+  roomSummary: {
+    id: string;
+    name: string;
+    archived: boolean;
+    ownerName: string;
+  };
+  payment: Payment | null;
+  correction: PaymentCorrection | null;
+}
