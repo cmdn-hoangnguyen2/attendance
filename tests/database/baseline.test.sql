@@ -1,4 +1,6 @@
--- Run only against the verified disposable development database.
+-- Run after the full current migration chain on a freshly rebuilt disposable,
+-- no-seed database, before real login/profile provisioning. The empty-state
+-- invariant belongs to A reset acceptance, not a populated developer database.
 -- The transaction rolls back every test record, including append-only records.
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
@@ -25,7 +27,10 @@ BEGIN
       RETURN NEXT is(record_count, 0::bigint, table_name || ' has no baseline records');
       RETURN NEXT ok((SELECT relrowsecurity FROM pg_class WHERE oid = to_regclass('public.' || table_name)), table_name || ' has RLS');
       RETURN NEXT ok(NOT has_table_privilege('anon', 'public.' || table_name, 'SELECT,INSERT,UPDATE,DELETE'), table_name || ' denies anon grants');
-      RETURN NEXT ok(NOT has_table_privilege('authenticated', 'public.' || table_name, 'SELECT,INSERT,UPDATE,DELETE'), table_name || ' denies authenticated grants');
+      RETURN NEXT is(has_table_privilege('authenticated','public.' || table_name,'SELECT'),
+        table_name<>'audit_logs',table_name || ' has the expected current scoped SELECT grant');
+      RETURN NEXT ok(NOT has_table_privilege('authenticated', 'public.' || table_name, 'INSERT,UPDATE,DELETE'),
+        table_name || ' denies authenticated table-wide privileged writes');
       RETURN NEXT ok(has_table_privilege('service_role', 'public.' || table_name, 'SELECT')
         AND has_table_privilege('service_role', 'public.' || table_name, 'INSERT')
         AND has_table_privilege('service_role', 'public.' || table_name, 'UPDATE')
@@ -39,9 +44,20 @@ FROM (VALUES ('fund_candidates','suggested_amount'), ('fund_contributions','amou
   ('payments','amount'), ('peer_debts','amount'), ('peer_payments','amount')) AS amounts(table_name,column_name)
 WHERE to_regclass('public.' || table_name) IS NOT NULL;
 
-SELECT ok(NOT EXISTS (SELECT FROM pg_policies WHERE schemaname = 'public'), 'no browser business policy until package B');
-SELECT ok(NOT EXISTS (SELECT FROM pg_proc JOIN pg_namespace ON pg_namespace.oid = pronamespace
-  WHERE nspname = 'public' AND prosecdef), 'no postgres-owned SECURITY DEFINER authorization shortcut');
+SELECT is((SELECT count(*) FROM pg_policies WHERE schemaname='public' AND cmd='SELECT'),
+  14::bigint,'full chain has the approved business SELECT policies');
+SELECT is((SELECT count(*) FROM pg_policies WHERE schemaname='public' AND cmd='UPDATE'
+  AND tablename='app_notifications'),1::bigint,'only notifications have an UPDATE policy');
+SELECT ok(NOT EXISTS (SELECT FROM pg_policies WHERE schemaname='public'
+  AND (roles<>ARRAY['authenticated']::name[] OR cmd NOT IN('SELECT','UPDATE')
+    OR (cmd='UPDATE' AND tablename<>'app_notifications'))),
+  'current business policies never grant anon or privileged browser mutations');
+SELECT is(ARRAY(SELECT p.oid::regprocedure::text FROM pg_proc p
+  JOIN pg_namespace n ON n.oid=p.pronamespace
+  WHERE n.nspname='public' AND p.prosecdef ORDER BY p.oid::regprocedure::text),
+  ARRAY(SELECT signature FROM (VALUES ('current_app_user_id()'),('can_manage_room(uuid)'),
+    ('can_read_room(uuid)'),('can_read_join_request(uuid)')) approved(signature) ORDER BY signature),
+  'only approved bounded SECURITY DEFINER helpers exist; no role shortcut');
 -- Reproduce the old shortcut in a transaction-only helper. Its true result must
 -- never confer table rights, even when its SECURITY DEFINER owner is postgres.
 CREATE FUNCTION public._baseline_test_unsafe_role_helper() RETURNS boolean
@@ -53,7 +69,8 @@ SELECT is((SELECT count(*) FROM storage.buckets WHERE id = 'payment-images' AND 
   AND file_size_limit = 5242880 AND allowed_mime_types @> ARRAY['image/jpeg','image/png','image/webp']
   AND cardinality(allowed_mime_types) = 3), 1::bigint, 'private restricted payment bucket');
 SELECT is((SELECT count(*) FROM storage.objects WHERE bucket_id = 'payment-images'), 0::bigint, 'no payment Storage metadata after reset');
-SELECT ok(NOT EXISTS (SELECT FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects'), 'no browser Storage policies until package B');
+SELECT ok(NOT EXISTS (SELECT FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects'),
+  'bounded B2 row access adds no browser Storage object policies');
 SELECT ok(EXISTS (SELECT FROM pg_publication_tables WHERE pubname = 'supabase_realtime'
   AND schemaname = 'public' AND tablename = table_name), table_name || ' published')
 FROM unnest(ARRAY['attendance_records','meeting_sessions','fund_candidates','join_requests',
@@ -118,6 +135,8 @@ BEGIN
     RETURN NEXT throws_ok(format('DELETE FROM %I',table_name),'P0001',NULL,table_name || ' rejects delete');
   END LOOP;
   -- Existing rows ensure UPDATE/DELETE cannot appear secure merely by matching zero rows.
+  PERFORM set_config('request.jwt.claim','',true);
+  PERFORM set_config('request.jwt.claims','{}',true);
   FOREACH role_name IN ARRAY ARRAY['anon','authenticated'] LOOP
     EXECUTE format('SET LOCAL ROLE %I',role_name);
     RETURN NEXT ok(public._baseline_test_unsafe_role_helper(), role_name || ' sees unsafe postgres-owned helper return true');
@@ -128,7 +147,13 @@ BEGIN
       RETURN NEXT throws_ok(format('INSERT INTO public.%I DEFAULT VALUES',table_name),'42501',NULL,role_name || ' ' || table_name || ' direct insert denied');
       RETURN NEXT throws_ok(format('UPDATE public.%I SET id=id',table_name),'42501',NULL,role_name || ' ' || table_name || ' direct update denied');
       RETURN NEXT throws_ok(format('DELETE FROM public.%I',table_name),'42501',NULL,role_name || ' ' || table_name || ' direct delete denied');
-      RETURN NEXT throws_ok(format('SELECT * FROM public.%I',table_name),'42501',NULL,role_name || ' ' || table_name || ' direct read denied');
+      IF role_name='anon' OR table_name='audit_logs' THEN
+        RETURN NEXT throws_ok(format('SELECT * FROM public.%I',table_name),'42501',NULL,
+          role_name || ' ' || table_name || ' direct read denied');
+      ELSE
+        RETURN NEXT results_eq(format('SELECT id FROM public.%I',table_name),'SELECT NULL::uuid WHERE false',
+          role_name || ' ' || table_name || ' unsafe definer return grants no rows');
+      END IF;
     END LOOP;
     RESET ROLE;
   END LOOP;

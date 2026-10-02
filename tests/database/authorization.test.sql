@@ -1,4 +1,5 @@
--- M1 only: real SQL helpers with synthetic claims, not signed-token acceptance.
+-- M1 identity guarantees under the full current migration chain.
+-- Synthetic claims exercise real SQL, not signed-token acceptance.
 -- Run against the verified local development database; never reset or seed it.
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
@@ -57,15 +58,25 @@ BEGIN
 END $$;
 SELECT pg_temp.assert_helper_metadata();
 
--- M1 must preserve the restrictive baseline for every business table.
+-- B2 adds scoped SELECT and column-only notification read-state access.
+-- M1 helpers must never confer service-role CRUD authority on their callers.
 SELECT ok(c.relrowsecurity, c.relname || ' retains RLS')
 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE n.nspname = 'public' AND c.relkind = 'r';
 SELECT ok(NOT has_table_privilege('anon', 'public.' || c.relname, 'SELECT,INSERT,UPDATE,DELETE')
-  AND NOT has_table_privilege('authenticated', 'public.' || c.relname, 'SELECT,INSERT,UPDATE,DELETE'),
-  c.relname || ' retains browser CRUD denial')
+  AND NOT has_table_privilege('authenticated', 'public.' || c.relname, 'INSERT,UPDATE,DELETE'),
+  c.relname || ' retains anon CRUD and authenticated privileged-write denial')
 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE n.nspname = 'public' AND c.relkind = 'r';
+SELECT is(has_table_privilege('authenticated', 'public.' || c.relname, 'SELECT'),
+  c.relname <> 'audit_logs', c.relname || ' has the expected current SELECT grant')
+FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'public' AND c.relkind = 'r';
+SELECT ok(has_column_privilege('authenticated','public.app_notifications','is_read','UPDATE')
+  AND NOT EXISTS (SELECT FROM information_schema.columns
+    WHERE table_schema='public' AND table_name='app_notifications' AND column_name<>'is_read'
+      AND has_column_privilege('authenticated','public.app_notifications',column_name,'UPDATE')),
+  'notification UPDATE grants only the approved is_read column');
 SELECT ok(has_table_privilege('service_role', 'public.' || c.relname, 'SELECT')
   AND has_table_privilege('service_role', 'public.' || c.relname, 'INSERT')
   AND has_table_privilege('service_role', 'public.' || c.relname, 'UPDATE')
@@ -73,8 +84,14 @@ SELECT ok(has_table_privilege('service_role', 'public.' || c.relname, 'SELECT')
   c.relname || ' retains server CRUD')
 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE n.nspname = 'public' AND c.relkind = 'r';
-SELECT ok(NOT EXISTS (SELECT FROM pg_policies WHERE schemaname = 'public'),
-  'M1 adds no business policies');
+SELECT is((SELECT count(*) FROM pg_policies WHERE schemaname='public' AND cmd='SELECT'),
+  14::bigint, 'current chain has the approved scoped business SELECT policies');
+SELECT is((SELECT count(*) FROM pg_policies WHERE schemaname='public' AND cmd='UPDATE'
+  AND tablename='app_notifications'),1::bigint,'only notifications have an UPDATE policy');
+SELECT ok(NOT EXISTS (SELECT FROM pg_policies WHERE schemaname='public'
+  AND (roles<>ARRAY['authenticated']::name[] OR cmd NOT IN('SELECT','UPDATE')
+    OR (cmd='UPDATE' AND tablename<>'app_notifications'))),
+  'business policies target authenticated without privileged mutation policies');
 SELECT ok(NOT EXISTS (SELECT FROM pg_policies
   WHERE schemaname = 'storage' AND tablename = 'objects'),
   'M1 adds no Storage object policies');
@@ -95,7 +112,7 @@ DECLARE
   db_admin_subject text := 'auth0|m1-' || db_admin_id;
   padded_subject text := ' auth0|m1-' || padded_id || ' ';
   uuid_subject text := gen_random_uuid()::text;
-  fixture record; whitespace_subject text; table_name text;
+  fixture record; whitespace_subject text; table_name text; scoped_count bigint;
   business_tables text[] := ARRAY['users','rooms','room_memberships','join_requests',
     'meeting_sessions','attendance_records','fund_candidates','fund_contributions',
     'payments','room_payment_images','audit_logs','app_notifications',
@@ -216,8 +233,16 @@ BEGIN
   RETURN NEXT is(public.current_app_user_id(), active_id, 'temp users shadow cannot replace public identity');
   RETURN NEXT is(public.is_app_admin(), true, 'trusted admin resolves while caller remains authenticated');
   FOREACH table_name IN ARRAY business_tables LOOP
-    RETURN NEXT throws_ok(format('SELECT * FROM public.%I', table_name), '42501', NULL,
-      'trusted authenticated admin cannot directly SELECT ' || table_name);
+    IF table_name='audit_logs' THEN
+      RETURN NEXT throws_ok('SELECT * FROM public.audit_logs', '42501', NULL,
+        'trusted authenticated admin cannot directly read audit evidence');
+    ELSE
+      EXECUTE format('SELECT count(*) FROM public.%I WHERE id=ANY(%L::uuid[])',table_name,
+        ARRAY[active_id,archived_id,db_admin_id,numeric_id,padded_id,uuid_subject_id,fixture_room_id])
+        INTO scoped_count;
+      RETURN NEXT is(scoped_count,CASE WHEN table_name IN('users','rooms') THEN 1::bigint ELSE 0::bigint END,
+        'trusted authenticated admin gets only the expected current fixture SELECT scope for ' || table_name);
+    END IF;
     RETURN NEXT throws_ok(format('INSERT INTO public.%I DEFAULT VALUES', table_name), '42501', NULL,
       'trusted authenticated admin cannot directly INSERT ' || table_name);
     RETURN NEXT throws_ok(format('UPDATE public.%I SET id=id', table_name), '42501', NULL,

@@ -17,7 +17,10 @@ import type {
   JoinRequestRepository,
   MembershipRepository,
   RoomRepository,
+  RoomCatalogItem,
+  MyRoomItem,
 } from "../domain/repository";
+import type { PageResult } from "@/types/pagination";
 
 export class SupabaseRoomRepository implements RoomRepository {
   private client: SupabaseClient<Database>;
@@ -151,6 +154,50 @@ export class SupabaseRoomRepository implements RoomRepository {
     });
 
     return rooms.map((r) => this.mapRoom(r, countMap.get(r.id) ?? 0));
+  }
+
+  async findCatalogPage(options: {
+    search?: string;
+    visibility?: RoomVisibility;
+    type?: RoomType;
+    page: number;
+    pageSize: number;
+  }): Promise<PageResult<RoomCatalogItem>> {
+    const { data, error } = await (this.client.rpc as any)("get_room_catalog", {
+      search: options.search ?? null,
+      visibility: options.visibility ?? null,
+      room_type: options.type ?? null,
+      page: options.page,
+      page_size: options.pageSize,
+    });
+
+    if (error) throw error;
+    return data as unknown as PageResult<RoomCatalogItem>;
+  }
+
+  async findMyRoomsPage(options: {
+    section: 'owned' | 'joined' | 'pending' | 'invited';
+    search?: string;
+    page: number;
+    pageSize: number;
+  }): Promise<PageResult<MyRoomItem>> {
+    const { data, error } = await (this.client.rpc as any)("get_my_rooms", {
+      section: options.section,
+      search: options.search ?? null,
+      page: options.page,
+      page_size: options.pageSize,
+    });
+
+    if (error) throw error;
+    return data as unknown as PageResult<MyRoomItem>;
+  }
+
+  async findEligibleInvitees(
+    roomId: string,
+    search: string,
+    page: number
+  ): Promise<PageResult<{ id: string; displayName: string; email: string }>> {
+    return { items: [], total: 0, page, pageSize: 12 };
   }
 
   async create(roomData: {

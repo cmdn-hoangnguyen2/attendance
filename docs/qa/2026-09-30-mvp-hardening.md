@@ -6,13 +6,13 @@ Evidence date: 2026-10-01 (Asia/Ho_Chi_Minh). Package A and concurrent B1 implem
 
 | Check | Actual outcome | Remaining gate |
 | --- | --- | --- |
-| Full unit suite, `node --test 'tests/unit/**/*.test.mjs'` | Latest 205 passed, 0 failed, 0 skipped after endpoint expiry-race correction | Authenticated runtime and domain integration are separate; native TS import emits MODULE_TYPELESS_PACKAGE_JSON tooling warning |
+| Full unit suite, `node --test 'tests/unit/**/*.test.mjs'` | Latest exit0 after browser lifecycle/wiring changes; tool output truncated, count not re-asserted | Authenticated runtime and domain integration are separate; native TS import emits MODULE_TYPELESS_PACKAGE_JSON tooling warning |
 | TypeScript, direct installed compiler with `--noEmit --incremental false` | Exit 0 | Re-run after further changes |
 | `git diff --check` | Exit 0 | Re-run at commit |
 | Verified local reset | Completed 2026-09-30T17:57:17Z; project `diemdanh-mvp-hardening`, API `http://127.0.0.1:54321`, CLI 2.118.0 `db reset --local --no-seed` | Remote development reset has NOT run |
 | Database/Storage after reset | All 15 business tables have 0 records; `payment-images` is private with 0 objects | No business schema/bucket existed before this isolated-local reset; this does not prove removal of remote records |
 | `supabase test db tests/database/baseline.test.sql` | 276 assertions PASS against actual local PostgreSQL 17 | B-G authorization/transaction matrices remain pending |
-| Latest runtime scan | Exit 1; 12 occurrences | B2/C/F/H must close them; zero-mock gate is NOT passed |
+| Latest runtime scan | Exit 1; 10 occurrences after browser dummy configuration removal | C/F/H must close them; zero-mock gate is NOT passed |
 | Real local Data API read, process-only dedicated credentials | Service-role zero-row GET count0; anonymous GET denied | Connectivity/default-deny proof only, not B authorization matrix |
 | Native browser B1 anonymous journey on actual worktree preview3100 | `/api/me` 401 with `private, no-store`; `/login` 200; hydrated Home redirected to `/login`; login UI contains only real Google action, no role switcher | Real login/reload/logout/archived/provisioning-failure contracts still need real sessions |
 | Actual preflight missing-table regression | RED5/6 (old HEAD falsely printed PASS); GREEN6/6 after zero-row GET/exact nonnegative count; independent review approved | Transport substitute is child-test-only; not live domain evidence |
@@ -30,6 +30,18 @@ Preview3100 initially hit Auth0 Callback URL mismatch, which is confirmed by nat
 Checkpoint commits: A `cc282f2` (31 files), B1 `44a2a4f` (24 files), neither pushed. B1 scoped ESLint exit0 with four pre-existing warnings in Home/Meeting (unused MeetingTab and hook dependencies); those are tracked for owning feature tasks, not opportunistically changed. Native direct navigation to `/api/me` after logout was blocked by the browser client, so that attempt is NOT cookie-bearing HTTP-status evidence; the verified outcome is SDK logout/profile removal/Home-to-login UI.
 
 ## Commands and outcomes
+
+Browser M2A bounded slice: actual tests-only RED16fail/0pass/0skip -> GREEN16/16PASS;
+TypeScript/scoped ESLint/diff check exit0, full unit command exit0. Independent
+Challenger spec/quality PASS. No UI redesign, token persistence, env edits or
+real-issued-token/Realtime runtime acceptance claimed.
+
+SQL M2B candidate-only rollback evidence: helpers106/106PASS; request predicate
+19/19PASS. Full permission matrix RED563assertions/150fail/413pass. Initial
+combined candidate assembly errors (pgTAP plan ordering, JavaScript dollar-string
+replacement) ran0assertions; corrected harness full matrix GREEN636/636.
+Peer additional edge cases actual RED47/30fail/17pass -> GREEN47/47, rollback.
+
 
 | Command | Actual outcome | Status |
 | --- | --- | --- |

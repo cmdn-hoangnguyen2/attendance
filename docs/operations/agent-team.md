@@ -9,8 +9,16 @@ approved MVP scope or application architecture.
 | --- | --- | --- | --- |
 | Scout | gpt-5.6-sol | high | read-only |
 | Architect | gpt-6-astra | high | read-only |
-| Builder (Writer 1-3) | gpt-6.1-sol | high | workspace-write |
-| Challenger (reviewer-coordinator) | gpt-6-astra | medium | read-only |
+| Builder (ordinary Writer 1-3) | gpt-6.1-sol | medium | workspace-write |
+| Challenger (ordinary independent reviewer-coordinator) | gpt-6.1-sol | medium | read-only |
+
+For auth, RLS, financial and race-sensitive slices, explicitly dispatch Builder as
+gpt-6.1-sol/high and an independent reviewer as gpt-6-astra/medium when available.
+If Astra usage is unavailable, controller explicitly dispatches an independent
+gpt-6.1-sol/high reviewer and records the availability reason, actual model/effort
+and task ID in the ledger. This approved review fallback does not authorize an
+Astra writer or any silent substitution. Saved profiles describe ordinary defaults;
+risk-specific overrides require a supported fresh dispatch.
 
 Profiles live in `.codex/agents/*.toml` in this worktree, not global Codex config.
 No nickname, dependency, provider, secret, relaxed approval or extra writable-root
@@ -64,7 +72,8 @@ No tokens, cookies, keys, personal-account data or full environment output in re
 
 One writer per file. Builder owns implementation; Challenger never writes fixes.
 BOSS approved up to three concurrent Builders for disjoint milestones. Every code
-writer must use gpt-6.1-sol/high; no silent model substitution when allocation fails.
+writer must use gpt-6.1-sol/medium for ordinary slices and explicit high for auth,
+RLS, financial or race-sensitive slices; no silent substitution on allocation failure.
 Overlap authoring only when files and load-bearing dependencies are independent.
 Run covering checks and independent acceptance per slice, then combined checks at
 integration. Do not accept an integration before its dependencies pass.
@@ -109,6 +118,11 @@ Earlier interruption is appropriate for a known stalled call. Never retry blindl
 bypass a denied approval or erase saved work. These are escalation thresholds,
 not completion deadlines. After three unsuccessful fix/re-review rounds, controller
 checks the contract and reduces the slice; no endless automated fix loop.
+Save a checkpoint/artifact within each three-minute reporting interval when tools
+permit. Reuse a bounded worker for related slices only with renewed exact ownership,
+no author/reviewer independence conflict and suitable unchanged model/effort.
+Changing model/effort requires fresh dispatch. Reuse credible targeted-check evidence;
+do not repeat the full suite on unchanged code without a concrete new evidence need.
 
 Challenger returns both spec and quality verdicts plus PASS, CHANGES_REQUIRED or
 UNVERIFIED. Controller marks DONE only when all required milestone gates pass.
@@ -129,7 +143,8 @@ dispatch is a prompt/model fallback, not proof that the profile sandbox was load
 Do not claim read-only enforcement beyond the actual inherited tool permissions.
 A model change requires a supported fresh dispatch, not merely messaging an old
 child or changing the parent composer. Respect actual thread limits; no silent
-fallback to a different model if allocation fails.
+fallback to a different model if allocation fails, except the explicit, logged
+Astra-usage-unavailable independent Sol High review fallback approved above.
 
 ## References
 

@@ -1,6 +1,10 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+
+import { createBrowserAuthLifecycle } from "@/lib/supabase/browserAuthLifecycle.mjs";
+import { supabase } from "@/lib/supabase/client";
+import { clearSupabaseTokenCache } from "@/lib/supabase/tokenProvider";
 import type { User } from "@/types/domain";
 
 interface AuthContextType {
@@ -13,49 +17,56 @@ interface AuthContextType {
   login: () => void;
   logout: () => void;
 }
+interface AuthState {
+  currentUser: User | null;
+  globalRole: "admin" | "user";
+  isLoading: boolean;
+  error: string | null;
+}
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [globalRole, setGlobalRole] = useState<"admin" | "user">("user");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
-  const retry = useCallback(() => setAttempt((value) => value + 1), []);
+  const [authState, setAuthState] = useState<AuthState>({
+    currentUser: null,
+    globalRole: "user",
+    isLoading: true,
+    error: null,
+  });
+  const lifecycleRef = useRef<ReturnType<typeof createBrowserAuthLifecycle> | null>(null);
+  const retry = useCallback(() => {
+    void lifecycleRef.current?.refresh();
+  }, []);
   const login = useCallback(() => {
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = "/auth/login";
   }, []);
   const logout = useCallback(() => {
+    if (lifecycleRef.current) {
+      lifecycleRef.current.logout();
+    } else {
+      clearSupabaseTokenCache();
+    }
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = "/auth/logout";
   }, []);
+
   useEffect(() => {
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 15000);
-    let mounted = true;
-    async function loadProfile() {
-      setIsLoading(true);
-      setError(null);
-      setCurrentUser(null);
-      setGlobalRole("user");
-      try {
-        const response = await fetch("/api/me", { cache: "no-store", credentials: "same-origin", signal: controller.signal });
-        if (response.status === 401) return;
-        if (response.status === 403) throw new Error("Tài khoản đã được lưu trữ. Vui lòng liên hệ quản trị viên.");
-        if (!response.ok) throw new Error("Không thể tải hồ sơ. Vui lòng thử lại hoặc đăng nhập lại.");
-        const data = await response.json();
-        if (!data.user?.id || data.user.status !== "active" || !["admin", "user"].includes(data.globalRole)) throw new Error("Hồ sơ đăng nhập không hợp lệ.");
-        if (mounted) { setCurrentUser(data.user); setGlobalRole(data.globalRole); }
-      } catch (cause) {
-        if (mounted) setError(cause instanceof Error && cause.name !== "AbortError" ? cause.message : "Không thể tải phiên đăng nhập. Vui lòng thử lại.");
-      } finally {
-        window.clearTimeout(timeout);
-        if (mounted) setIsLoading(false);
-      }
-    }
-    void loadProfile();
-    return () => { mounted = false; window.clearTimeout(timeout); controller.abort(); };
-  }, [attempt]);
+    const lifecycle = createBrowserAuthLifecycle({
+      client: supabase,
+      eventTarget: window,
+      clearTokenCache: clearSupabaseTokenCache,
+      onStateChange: setAuthState,
+    });
+    lifecycleRef.current = lifecycle;
+    void lifecycle.start();
+
+    return () => {
+      lifecycle.dispose();
+      if (lifecycleRef.current === lifecycle) lifecycleRef.current = null;
+    };
+  }, []);
+
+  const { currentUser, globalRole, isLoading, error } = authState;
   const value = { currentUser, isAuthenticated: currentUser !== null, isAdmin: currentUser !== null && globalRole === "admin", isLoading, error, retry, login, logout };
   const content = error ? (
     <main className="AuthRecovery flex min-h-screen items-center justify-center bg-canvas p-8">

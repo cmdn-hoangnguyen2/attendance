@@ -1,137 +1,61 @@
-import { test, describe } from "node:test";
+import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createRealtimeChannelName } from "../../src/lib/realtime/createRealtimeChannelName.mjs";
 import { MockSupabaseClient } from "./mock-supabase.mjs";
 
-describe("User Realtime Flow (Unit Tests)", () => {
-  function createUserRealtimeController({ userId, onDataChange, enabled = true, client }) {
-    let debounceTimer = null;
-    let channel = null;
+const lifecycle = await import("../../src/lib/supabase/browserAuthLifecycle.mjs").catch((cause) => {
+  if (cause.code !== "ERR_MODULE_NOT_FOUND") throw cause;
+  return {};
+});
+function subscribe(options) {
+  assert.equal(typeof lifecycle.subscribeUserRealtime, "function", "hook must share actual production subscription logic");
+  return lifecycle.subscribeUserRealtime(options);
+}
 
-    function start() {
-      if (!enabled || !userId) return;
+test("financial subscription preserves contributions, payments and own notifications", (t) => {
+  const client = new MockSupabaseClient();
+  const cleanup = subscribe({ userId: "user-789", onDataChange() {}, client });
+  t.after(cleanup);
+  const channel = [...client.channels.values()][0];
+  assert.deepEqual(channel.listeners.map(({ filter }) => filter), [
+    { event: "*", schema: "public", table: "fund_contributions", filter: "contributor_id=eq.user-789" },
+    { event: "*", schema: "public", table: "payments" },
+    { event: "*", schema: "public", table: "app_notifications", filter: "user_id=eq.user-789" },
+  ]);
+});
 
-      const triggerUpdate = () => {
-        if (debounceTimer) {
-          clearTimeout(debounceTimer);
-        }
-        debounceTimer = setTimeout(() => {
-          onDataChange();
-        }, 300);
-      };
+test("actual financial callback debounces bursts and cleanup prevents delayed notifications", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const client = new MockSupabaseClient();
+  let updates = 0;
+  const cleanup = subscribe({ userId: "user-789", onDataChange: () => updates++, client });
+  const channel = [...client.channels.values()][0];
+  channel.emitChange("fund_contributions");
+  channel.emitChange("payments");
+  channel.emitChange("app_notifications");
+  assert.equal(updates, 0);
+  t.mock.timers.tick(300);
+  assert.equal(updates, 1);
+  channel.emitChange("payments");
+  cleanup();
+  t.mock.timers.tick(300);
+  assert.equal(updates, 1);
+  assert.equal(client.channels.size, 0);
+  assert.equal(channel.unsubscribed, true);
+});
 
-      const channelName = createRealtimeChannelName(`user:${userId}`);
-      channel = client.channel(channelName);
+test("simultaneous same-user financial subscriptions have distinct channels", () => {
+  const client = new MockSupabaseClient();
+  const first = subscribe({ userId: "user-789", onDataChange() {}, client });
+  const second = subscribe({ userId: "user-789", onDataChange() {}, client });
+  assert.equal(client.channels.size, 2);
+  first();
+  second();
+  assert.equal(client.channels.size, 0);
+});
 
-      // 1. Fund contribution changes for this user
-      channel.on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "fund_contributions",
-          filter: `contributor_id=eq.${userId}`,
-        },
-        triggerUpdate
-      );
-
-      // 2. Payments table changes
-      channel.on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "payments",
-        },
-        triggerUpdate
-      );
-
-      channel.subscribe();
-    }
-
-    function cleanup() {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-      if (channel) {
-        client.removeChannel(channel);
-      }
-    }
-
-    start();
-    return { channel, cleanup };
-  }
-
-  test("subscribes to fund_contributions and payments for specific user", () => {
-    const client = new MockSupabaseClient();
-    const userId = "user-789";
-
-    const controller = createUserRealtimeController({
-      userId,
-      onDataChange: () => {},
-      enabled: true,
-      client,
-    });
-
-    assert.ok(controller.channel);
-    assert.strictEqual(controller.channel.listeners.length, 2);
-
-    const fundListener = controller.channel.listeners.find((l) => l.filter.table === "fund_contributions");
-    assert.strictEqual(fundListener.filter.filter, `contributor_id=eq.${userId}`);
-
-    const paymentListener = controller.channel.listeners.find((l) => l.filter.table === "payments");
-    assert.ok(paymentListener);
-
-    controller.cleanup();
-  });
-
-  test("debounces updates when payment is recorded", async () => {
-    const client = new MockSupabaseClient();
-    let updates = 0;
-    const controller = createUserRealtimeController({
-      userId: "user-789",
-      onDataChange: () => updates++,
-      enabled: true,
-      client,
-    });
-
-    controller.channel.emitChange("fund_contributions", { eventType: "UPDATE" });
-    controller.channel.emitChange("payments", { eventType: "INSERT" });
-
-    assert.strictEqual(updates, 0);
-
-    await new Promise((resolve) => setTimeout(resolve, 350));
-    assert.strictEqual(updates, 1);
-
-    controller.cleanup();
-  });
-
-  test("creates separate channels for simultaneous subscriptions to the same user", () => {
-    const client = new MockSupabaseClient();
-    const originalNow = Date.now;
-
-    Date.now = () => 1790687403143;
-
-    try {
-      const firstController = createUserRealtimeController({
-        userId: "user-789",
-        onDataChange: () => {},
-        enabled: true,
-        client,
-      });
-
-      assert.doesNotThrow(() =>
-        createUserRealtimeController({
-          userId: "user-789",
-          onDataChange: () => {},
-          enabled: true,
-          client,
-        })
-      );
-
-      firstController.cleanup();
-    } finally {
-      Date.now = originalNow;
-    }
-  });
+test("disabled or missing-user subscriptions create no channel", () => {
+  const client = new MockSupabaseClient();
+  subscribe({ userId: "user-a", enabled: false, onDataChange() {}, client })();
+  subscribe({ userId: "", onDataChange() {}, client })();
+  assert.equal(client.channels.size, 0);
 });

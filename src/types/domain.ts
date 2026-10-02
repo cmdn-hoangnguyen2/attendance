@@ -92,6 +92,25 @@ export interface JoinRequest {
   reviewedAt?: string;
 }
 
+export enum InvitationStatusEnum {
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  DECLINED = "declined",
+  CANCELLED = "cancelled",
+}
+export type InvitationStatus = "pending" | "accepted" | "declined" | "cancelled";
+export const InvitationStatus = InvitationStatusEnum;
+
+export interface RoomInvitation {
+  id: string;
+  roomId: string;
+  inviterId: string;
+  inviteeId: string;
+  status: InvitationStatus;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
 export enum MeetingStatusEnum {
   SCHEDULED = "scheduled",
   ACTIVE = "active",
@@ -279,3 +298,23 @@ export interface AppNotification {
   createdAt: string;
 }
 
+
+export interface PaymentCorrection {
+  id: string;
+  paymentId: string;
+  correctedBy: string;
+  correctedAt: string;
+  reason: string;
+}
+
+export interface PersonalFundItem {
+  contribution: FundContribution;
+  roomSummary: {
+    id: string;
+    name: string;
+    archived: boolean;
+    ownerName: string;
+  };
+  payment: Payment | null;
+  correction: PaymentCorrection | null;
+}
